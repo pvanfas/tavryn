@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Geist_Mono, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
+const manrope = Manrope({
   subsets: ["latin"],
+  variable: "--font-manrope",
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
+  variable: "--font-geist-mono",
+  weight: "variable",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Tavryn | Autonomous SaaS & Cloud Procurement",
-  description: "AI-governed autonomous vendor negotiation and escrowed payment execution on Arc and Circle.",
+  title: "Tavryn | Procurement & Treasury Ledger",
+  description: "Enterprise SaaS and cloud contract procurement with deterministic policy enforcement and Arc testnet escrow.",
   icons: {
     icon: "/logo.png",
   },
@@ -28,10 +35,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", manrope.variable, geistMono.variable, "font-sans", geist.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <body className={`${manrope.className} min-h-full flex flex-col bg-[#f7f9f8] dark:bg-[#0b100e] text-slate-900 dark:text-slate-100 transition-colors duration-200`}>
         {children}
       </body>
     </html>

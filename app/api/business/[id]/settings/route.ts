@@ -1,0 +1,200 @@
+import { getServiceSupabase } from "@/lib/supabase";
+import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { logAgentAction } from "@/lib/tools/audit";
+import { sendWebhookNotification } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const UpdateSettingsSchema = z.object({
+  action: z.enum(["update", "test_webhook"]).default("update"),
+  webhook_url: z.string().url().nullable().optional().or(z.literal("")),
+  policy: z.object({
+    max_auto_transaction: z.coerce.number().nonnegative(),
+    min_savings: z.coerce.number().nonnegative(),
+    human_approval_required_above: z.coerce.number().nonnegative(),
+    allowed_categories: z.array(z.string()).min(1),
+    category_budgets: z.record(z.string(), z.number()).optional(),
+  }).optional(),
+});
+
+export async function GET(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: businessId } = await props.params;
+    if (!businessId) {
+      return apiError("Missing business ID", 400);
+    }
+
+    const supabase = getServiceSupabase();
+
+    const { data: business, error: bError } = await supabase
+      .from("businesses")
+      .select("id, name, wallet_address, default_currency, is_real, treasury_balance, webhook_url, created_at")
+      .eq("id", businessId)
+      .maybeSingle();
+
+    if (bError || !business) {
+      return apiError("Business not found", 404);
+    }
+
+    const { data: policy } = await supabase
+      .from("policies")
+      .select("id, max_auto_transaction, min_savings, human_approval_required_above, allowed_categories, category_budgets, created_at")
+      .eq("business_id", businessId)
+      .maybeSingle();
+
+    return apiSuccess({
+      business,
+      policy: policy || {
+        max_auto_transaction: 2000,
+        min_savings: 200,
+        human_approval_required_above: 2000,
+        allowed_categories: ["software", "cloud", "contractors"],
+        category_budgets: { software: 25000, cloud: 50000, contractors: 25000 },
+      },
+    });
+  } catch (err) {
+    return handleApiError(err, "Failed to retrieve business settings");
+  }
+}
+
+export async function PUT(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: businessId } = await props.params;
+    if (!businessId) {
+      return apiError("Missing business ID", 400);
+    }
+
+    let rawBody = {};
+    try {
+      rawBody = await req.json();
+    } catch {
+      return apiError("Malformed JSON body in request", 400);
+    }
+
+    const validation = UpdateSettingsSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return apiError("Validation failed", 400, validation.error.format());
+    }
+
+    const { webhook_url, policy } = validation.data;
+    const supabase = getServiceSupabase();
+
+    // 1. Update business webhook_url
+    if (webhook_url !== undefined) {
+      const cleanUrl = webhook_url === "" ? null : webhook_url;
+      const { error: bErr } = await supabase
+        .from("businesses")
+        .update({ webhook_url: cleanUrl })
+        .eq("id", businessId);
+
+      if (bErr) {
+        logger.error("Failed to update business webhook URL", bErr);
+        throw bErr;
+      }
+    }
+
+    // 2. Update policy
+    if (policy) {
+      const { data: existingPolicy } = await supabase
+        .from("policies")
+        .select("id")
+        .eq("business_id", businessId)
+        .maybeSingle();
+
+      if (existingPolicy) {
+        const { error: pErr } = await supabase
+          .from("policies")
+          .update({
+            max_auto_transaction: policy.max_auto_transaction,
+            min_savings: policy.min_savings,
+            human_approval_required_above: policy.human_approval_required_above,
+            allowed_categories: policy.allowed_categories,
+            category_budgets: policy.category_budgets || {
+              software: 25000,
+              cloud: 50000,
+              contractors: 25000,
+            },
+          })
+          .eq("id", existingPolicy.id);
+
+        if (pErr) throw pErr;
+      } else {
+        const { error: pInsertErr } = await supabase
+          .from("policies")
+          .insert({
+            business_id: businessId,
+            max_auto_transaction: policy.max_auto_transaction,
+            min_savings: policy.min_savings,
+            human_approval_required_above: policy.human_approval_required_above,
+            allowed_categories: policy.allowed_categories,
+            category_budgets: policy.category_budgets || {
+              software: 25000,
+              cloud: 50000,
+              contractors: 25000,
+            },
+          });
+
+        if (pInsertErr) throw pInsertErr;
+      }
+    }
+
+    // 3. Log to append-only audit trail
+    await logAgentAction({
+      businessId,
+      action: "settings_updated",
+      reason: "Updated deterministic procurement policy and notification settings",
+      confidence: 1.0,
+      input: { webhook_url, policy },
+      result: { success: true },
+    });
+
+    return apiSuccess({
+      message: "Settings updated successfully",
+      businessId,
+    });
+  } catch (err) {
+    return handleApiError(err, "Failed to update business settings");
+  }
+}
+
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: businessId } = await props.params;
+    let rawBody: any = {};
+    try {
+      rawBody = await req.json();
+    } catch {}
+
+    const targetUrl = rawBody.webhook_url;
+    if (!targetUrl) {
+      return apiError("Missing target webhook_url for test", 400);
+    }
+
+    // Dispatch test notification
+    const result = await sendWebhookNotification(
+      "🔔 Tavryn Webhook Integration Test",
+      `Successfully connected notification webhook for organization (${businessId}). The autonomous procurement agent will dispatch renewal and settlement alerts here.`,
+      process.env.NEXT_PUBLIC_SITE_URL || "https://tavryn.network",
+      targetUrl
+    );
+
+    return apiSuccess({
+      sent: result.sent,
+      reason: result.reason,
+      message: result.sent
+        ? "Webhook test notification dispatched successfully"
+        : `Webhook test completed: ${result.reason || "Dispatched"}`,
+    });
+  } catch (err) {
+    return handleApiError(err, "Failed to dispatch test webhook");
+  }
+}

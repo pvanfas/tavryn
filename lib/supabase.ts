@@ -11,15 +11,19 @@ if (!supabaseUrl) {
 /**
  * Standard Supabase client for public/anon requests
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey || supabaseServiceKey);
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || supabaseServiceKey || 'placeholder'
+);
 
 /**
  * Admin Supabase client with service role key (Server-only)
  * Bypasses RLS for deterministic agent execution and backend scripts.
  */
 export function getServiceSupabase() {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
-  return createClient(supabaseUrl, serviceKey, {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseAnonKey;
+  return createClient(url, serviceKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

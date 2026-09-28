@@ -16,7 +16,7 @@ Tavryn now has a concrete, working Next.js App Router workspace configured with 
 
 ## One decision worth explaining
 
-We chose a single Next.js App Router codebase instead of a monorepo or separated backend service. For an autonomous agent hackathon, deployment simplicity and direct server-action/tool execution keep developer velocity high while avoiding distributed system overhead.
+We chose a single Next.js App Router codebase instead of a monorepo or separated backend service. For rapid autonomous agent delivery, deployment simplicity and direct server-action/tool execution keep developer velocity high while avoiding distributed system overhead.
 
 ## The honest part
 

@@ -7,6 +7,8 @@
  * multi-round negotiation logic in subsequent milestones.
  */
 
+import { USAGE_DECLINE_SAVINGS_MULTIPLIER } from "@/lib/constants";
+
 export interface UsageMetric {
   type?: string;
   decline_pct?: number;
@@ -47,7 +49,7 @@ export function calculateSeatSavings(
 
 /**
  * Placeholder formula for usage-decline savings:
- * usage-decline saving = price * decline_pct * 0.7
+ * usage-decline saving = price * decline_pct * USAGE_DECLINE_SAVINGS_MULTIPLIER
  */
 export function calculateUsageDeclineSavings(
   price: number,
@@ -56,7 +58,7 @@ export function calculateUsageDeclineSavings(
   if (declinePct <= 0) return 0;
   // declinePct may be represented as a percentage (e.g., 31 for 31% or 0.31)
   const normalizedPct = declinePct > 1 ? declinePct / 100 : declinePct;
-  return Number((price * normalizedPct * 0.7).toFixed(2));
+  return Number((price * normalizedPct * USAGE_DECLINE_SAVINGS_MULTIPLIER).toFixed(2));
 }
 
 /**
