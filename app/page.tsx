@@ -15,6 +15,7 @@ import {
   Database,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AgentIcon } from "@/components/AgentIcon";
 import { ARC_CONFIG } from "@/lib/circle";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -304,7 +305,7 @@ export default function LandingPage() {
               {/* Step 2 */}
               <div className="rounded-2xl bg-white dark:bg-[#121915] border border-slate-200/80 dark:border-slate-800/70 p-7 shadow-xs hover:border-[#107e65]/40 transition-all">
                 <div className="h-12 w-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] flex items-center justify-center mb-6">
-                  <Image src="/agent.svg" alt="Agent" width={24} height={24} className="h-6 w-6" />
+                  <AgentIcon className="h-6 w-6" />
                 </div>
                 <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Step 02

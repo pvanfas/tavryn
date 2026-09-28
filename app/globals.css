@@ -224,3 +224,10 @@ body {
     @apply font-sans;
   }
 }
+
+@utility mask-agent {
+  display: inline-block;
+  background-color: currentColor;
+  mask: url("/agent.svg") no-repeat center / contain;
+  -webkit-mask: url("/agent.svg") no-repeat center / contain;
+}

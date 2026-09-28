@@ -21,8 +21,8 @@ export const supabase = createClient(
  * Bypasses RLS for deterministic agent execution and backend scripts.
  */
 export function getServiceSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseAnonKey;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl || 'https://placeholder.supabase.co';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || supabaseAnonKey || 'placeholder';
   return createClient(url, serviceKey, {
     auth: {
       persistSession: false,

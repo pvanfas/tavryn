@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { AgentIcon } from "@/components/AgentIcon";
 import { AppShell } from "@/components/AppShell";
 import {
   ArrowLeft,
@@ -174,34 +174,64 @@ export default function NegotiationDetailPage({
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`/api/agent/negotiate/${contractId}`);
-      if (!res.ok) throw new Error("Failed to load negotiation status");
-      const negData = await res.json();
+      let rawContract: any = null;
 
-      if (negData.negotiation) {
-        setNegotiation(negData.negotiation);
-      }
-      if (negData.memory) {
-        setVendorMemory(negData.memory);
-      }
-
-      const anaRes = await fetch(`/api/agent/analyze/${contractId}`, { method: "POST" });
-      if (anaRes.ok) {
-        const anaData = await anaRes.json();
-        if (anaData.analysis) {
-          const cData: ContractData = {
-            id: anaData.analysis.contract.id,
-            service: anaData.analysis.contract.service,
-            category: anaData.analysis.contract.category,
-            current_price: Number(anaData.analysis.contract.current_price),
-            seat_count: anaData.analysis.contract.seat_count,
-            active_seats: anaData.analysis.contract.active_seats,
-            vendors: anaData.analysis.contract.vendors,
-          };
-          setContract(cData);
-          if (cData.vendors && cData.vendors.is_simulated === false) {
-            setMode("real");
+      try {
+        const res = await fetch(`/api/agent/negotiate/${contractId}`);
+        if (res.ok) {
+          const negData = await res.json();
+          if (negData.negotiation) {
+            setNegotiation(negData.negotiation);
           }
+          if (negData.memory) {
+            setVendorMemory(negData.memory);
+          }
+          if (negData.contract) {
+            rawContract = negData.contract;
+          }
+        }
+      } catch (negErr) {
+        console.warn("Failed to load negotiation status:", negErr);
+      }
+
+      // If contract is not yet resolved, query decision endpoint
+      if (!rawContract) {
+        try {
+          const decRes = await fetch(`/api/decision/${contractId}`);
+          if (decRes.ok) {
+            const decData = await decRes.json();
+            if (decData.contract) {
+              rawContract = decData.contract;
+            }
+          }
+        } catch (decErr) {
+          console.warn("Failed to load fallback decision contract:", decErr);
+        }
+      }
+
+      // Process resolved contract data
+      if (rawContract) {
+        const vendorData = rawContract.vendors || rawContract.vendor;
+        const cData: ContractData = {
+          id: rawContract.id,
+          service: rawContract.service || "Contract",
+          category: rawContract.category || vendorData?.category || "software",
+          current_price: Number(rawContract.current_price || 0),
+          seat_count: rawContract.seat_count ?? null,
+          active_seats: rawContract.active_seats ?? null,
+          vendors: vendorData
+            ? {
+                name: vendorData.name,
+                category: vendorData.category || rawContract.category || "software",
+                contact: vendorData.contact ?? null,
+                reputation_score: vendorData.reputation_score ?? null,
+                is_simulated: vendorData.is_simulated ?? null,
+              }
+            : null,
+        };
+        setContract(cData);
+        if (vendorData && vendorData.is_simulated === false) {
+          setMode("real");
         }
       }
     } catch (err) {
@@ -416,20 +446,22 @@ export default function NegotiationDetailPage({
           <div>
             <div className="flex items-center gap-2">
               <H1 className="text-slate-900 dark:text-white">
-                {contract?.service}
+                {contract?.service || "Contract"}
               </H1>
               <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-                {contract?.category}
+                {contract?.category || contract?.vendors?.category || "Subscription"}
               </span>
-              {contract?.vendors?.is_simulated ? (
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400">
-                  Simulated Vendor
-                </span>
-              ) : (
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                  Verified Real Vendor
-                </span>
-              )}
+              {contract?.vendors ? (
+                contract.vendors.is_simulated ? (
+                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400">
+                    Simulated Vendor
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
+                    Verified Real Vendor
+                  </span>
+                )
+              ) : null}
             </div>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
               Account Executive: <span className="font-semibold text-slate-700 dark:text-slate-300">{contract?.vendors?.name || contract?.service}</span>
@@ -567,7 +599,7 @@ export default function NegotiationDetailPage({
                     </>
                   ) : (
                     <>
-                      <Image src="/agent.svg" alt="Agent" width={14} height={14} className="h-3.5 w-3.5" />
+                      <AgentIcon className="h-3.5 w-3.5" />
                       <span>{draftEmail ? "Regenerate Draft" : "Draft Outreach Email"}</span>
                     </>
                   )}
@@ -691,7 +723,7 @@ export default function NegotiationDetailPage({
                       </>
                     ) : (
                       <>
-                        <Image src="/agent.svg" alt="Agent" width={14} height={14} className="h-3.5 w-3.5" />
+                        <AgentIcon className="h-3.5 w-3.5" />
                         <span>Process & Extract Terms</span>
                       </>
                     )}
@@ -867,7 +899,7 @@ export default function NegotiationDetailPage({
                   <H3 className="text-slate-900 dark:text-white">Business Memory Used</H3>
                   {vendorMemory?.has_history ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                      <Image src="/agent.svg" alt="" width={12} height={12} className="h-3 w-3" />
+                      <AgentIcon className="h-3 w-3" />
                       Prior Deal Anchored
                     </span>
                   ) : (
@@ -957,7 +989,7 @@ export default function NegotiationDetailPage({
 
           {/* Memory Insight Quote */}
           <div className="mt-3.5 p-3 rounded-lg bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/15 dark:border-emerald-900/30 flex items-start gap-2.5">
-            <Image src="/agent.svg" alt="Agent" width={16} height={16} className="shrink-0 mt-0.5" />
+            <AgentIcon className="h-4 w-4 text-[#107e65] dark:text-[#34d399] shrink-0 mt-0.5" />
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
               <span className="font-semibold text-slate-900 dark:text-white">Active Agent Strategy: </span>
               {vendorMemory?.summary_sentence || vendorMemory?.insight || (

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { AgentIcon } from "@/components/AgentIcon";
 import {
   Search,
   ChevronLeft,
@@ -172,7 +172,7 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
                 </>
               ) : (
                 <>
-                  <Image src="/agent.svg" alt="Agent" width={14} height={14} className="shrink-0" />
+                  <AgentIcon className="h-3.5 w-3.5 shrink-0" />
                   <span>Run agent now</span>
                 </>
               )}
@@ -194,7 +194,7 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
         {agentNotice && (
           <div className="mt-3 px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-[#107e65] dark:text-[#34d399] flex items-center justify-between animate-in fade-in duration-200">
             <div className="flex items-center gap-2">
-              <Image src="/agent.svg" alt="Agent" width={16} height={16} className="shrink-0" />
+              <AgentIcon className="h-4 w-4 shrink-0" />
               <span>{agentNotice}</span>
             </div>
             <button

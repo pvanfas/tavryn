@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { H3 } from "@/components/ui/text";
+import { AgentIcon } from "@/components/AgentIcon";
 import { ARC_CONFIG } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 
@@ -195,7 +196,7 @@ export function ActivityTimeline({ businessId, businessName = "Demo Co" }: Activ
               </>
             ) : (
               <>
-                <img src="/agent.svg" alt="" className="h-4 w-4" />
+                <AgentIcon className="h-4 w-4" />
                 <span>Run full demo</span>
               </>
             )}
