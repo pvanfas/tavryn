@@ -1,12 +1,12 @@
 # Tavryn
 
-> **An agent that finds the waste, negotiates it away, and executes the financial decision.**
+> **An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.**
 
-[![Tameion Agents](https://img.shields.io/badge/Tameion%20Agents-(Arc%20%2B%20Circle)-107e65?style=flat-square)](https://tameion.thecanteenapp.com/)
+[![Tameion Agents](<https://img.shields.io/badge/Tameion%20Agents-(Arc%20%2B%20Circle)-107e65?style=flat-square>)](https://tameion.thecanteenapp.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Tests: 90 Passing](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-90%20Passing-emerald?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-8%2F8%20Passing-brightgreen?style=flat-square)](https://github.com/pvanfas/tavryn)
-[![Arc Testnet](https://img.shields.io/badge/Settlement-Arc%20Testnet%20(USDC)-blueviolet?style=flat-square)](https://testnet.arcscan.app/)
+[![Arc Testnet](<https://img.shields.io/badge/Settlement-Arc%20Testnet%20(USDC)-blueviolet?style=flat-square>)](https://testnet.arcscan.app/)
 
 ---
 
@@ -15,6 +15,7 @@
 Corporate software and cloud contracts renew automatically whether anyone uses them or not. Provisioned user seats sit idle, cloud consumption declines, yet payments silently renew at full price because finance and IT teams lack the time to audit usage, negotiate with vendor reps, and verify renewal paperwork.
 
 **Tavryn** is an autonomous procurement and treasury agent that closes the loop from discovery to on-chain capital allocation:
+
 1. **Detects Renewal Waste**: Audits active seats and declining cloud usage metrics 45 days prior to contract expiration cliffs.
 2. **Negotiates with Vendors**: Runs autonomous multi-round concession curves against vendor reps and APIs, anchored by historical business deal memory and strict walk-away ceilings.
 3. **Enforces Hard Financial Policy**: Pure deterministic code (zero LLM approval power) verifies the deal against corporate spending limits and category budgets.
@@ -72,14 +73,14 @@ flowchart TD
 
 ## 3. The 6-Stage Autonomous Loop
 
-| Stage | Action | Verification & Guardrails |
-| :--- | :--- | :--- |
-| **1. Observe** | Scans renewal calendar within 45-day window; audits active user seat allocations and declining cloud metrics. | Deterministic heuristics calculate verifiable dollar waste (`calculateSeatSavings`, `calculateUsageDeclineSavings`). |
-| **2. Analyze** | Formulates target price and maximum walk-away ceiling. Anchors opening offer to historical concession memory. | Consults `vendor_memory` for prior accepted discounts. |
-| **3. Negotiate** | Executes multi-round negotiation with counterparty sales simulator over API/webhooks. | Respects maximum round bounds (default 5) and strict price walk-away ceilings. |
-| **4. Decide** | Evaluates negotiated outcome against company spending policy (`max_auto_transaction`, `min_savings`, allowed categories). | **Deterministic TypeScript only.** The LLM cannot approve transactions or sign payments. |
-| **5. Execute** | Escrows USDC into Arc smart contract via Circle Developer-Controlled Wallets; audits vendor order confirmation; releases funds. | Concurrency unique index locks prevent double-payments; 4-field document matching prevents payment before delivery. |
-| **6. Learn** | Computes concession speed and reputation delta (+12/8/5 pts for fast/moderate/slow close); stores deal benchmarks. | Bound within [10, 100] reputation score scale. |
+| Stage            | Action                                                                                                                          | Verification & Guardrails                                                                                            |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------- |
+| **1. Observe**   | Scans renewal calendar within 45-day window; audits active user seat allocations and declining cloud metrics.                   | Deterministic heuristics calculate verifiable dollar waste (`calculateSeatSavings`, `calculateUsageDeclineSavings`). |
+| **2. Analyze**   | Formulates target price and maximum walk-away ceiling. Anchors opening offer to historical concession memory.                   | Consults `vendor_memory` for prior accepted discounts.                                                               |
+| **3. Negotiate** | Executes multi-round negotiation with counterparty sales simulator over API/webhooks.                                           | Respects maximum round bounds (default 5) and strict price walk-away ceilings.                                       |
+| **4. Decide**    | Evaluates negotiated outcome against company spending policy (`max_auto_transaction`, `min_savings`, allowed categories).       | **Deterministic TypeScript only.** The LLM cannot approve transactions or sign payments.                             |
+| **5. Execute**   | Escrows USDC into Arc smart contract via Circle Developer-Controlled Wallets; audits vendor order confirmation; releases funds. | Concurrency unique index locks prevent double-payments; 4-field document matching prevents payment before delivery.  |
+| **6. Learn**     | Computes concession speed and reputation delta (+12/8/5 pts for fast/moderate/slow close); stores deal benchmarks.              | Bound within [10, 100] reputation score scale.                                                                       |
 
 ---
 
@@ -101,13 +102,13 @@ Tavryn deeply integrates Circle's developer infrastructure and the Arc Network:
 
 ### Deployed Contract Details (Arc Testnet)
 
-| Component | Network Address / Link |
-| :--- | :--- |
-| **Chain ID** | `5042002` (Arc Layer-1 Testnet) |
-| **Native RPC** | `https://rpc.testnet.arc.network` |
-| **Block Explorer** | [https://testnet.arcscan.app](https://testnet.arcscan.app) |
+| Component              | Network Address / Link                                                                                                         |
+| :--------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| **Chain ID**           | `5042002` (Arc Layer-1 Testnet)                                                                                                |
+| **Native RPC**         | `https://rpc.testnet.arc.network`                                                                                              |
+| **Block Explorer**     | [https://testnet.arcscan.app](https://testnet.arcscan.app)                                                                     |
 | **ArcEscrow Contract** | [`0x880eF868be5484852086eA9d424b94D673752e50`](https://testnet.arcscan.app/address/0x880eF868be5484852086eA9d424b94D673752e50) |
-| **USDC Precompile** | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
+| **USDC Precompile**    | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
 
 ---
 
@@ -115,18 +116,18 @@ Tavryn deeply integrates Circle's developer infrastructure and the Arc Network:
 
 In accordance with rigorous transparency standards, here is the honest disclosure of what is live vs. simulated:
 
-| Subsystem | Status | Description |
-| :--- | :--- | :--- |
-| **Relational Database** | **Real** | Live Supabase PostgreSQL database running in production with 11 relational tables. |
-| **Database Security (RLS)** | **Real** | Active PostgreSQL Row-Level Security policies enforcing strict multi-tenant isolation. |
-| **Cryptographic Audit Chain** | **Real** | Database triggers block UPDATE/DELETE; SHA-256 hashes sequentially chain every agent action. |
-| **Deterministic Policy Engine** | **Real** | Pure TypeScript mathematics evaluating category budgets, thresholds, and human escalation boundaries. |
-| **Circle Developer SDK** | **Real** | Native `@circle-fin/developer-controlled-wallets` client wired for wallet creation and balance queries. |
-| **Arc Smart Contracts** | **Real** | Solidity contract compiled and deployed to Arc Testnet; Hardhat unit test suite passing 7/7. |
-| **Double-Payment Locking** | **Real** | Partial unique PostgreSQL indexes and SHA-256 idempotency hashes blocking race conditions. |
-| **Vendor Negotiations** | **Simulated** | Vendor sales counterparty simulated via reproducible concession curves (`lib/vendor-simulator.ts`). |
-| **Vendor Confirmation Receipts** | **Simulated** | Counterparty order documents simulated to test deterministic regex/LLM extraction and tamper detection. |
-| **USDC Balances (Fallback)** | **Hybrid** | Queries live Arc JSON-RPC; falls back gracefully to DB snapshot when public testnet RPC limits are hit. |
+| Subsystem                        | Status     | Description                                                                                                                                                                                                                   |
+| :------------------------------- | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Relational Database**          | **Real**   | Live Supabase PostgreSQL database running in production with 11 relational tables.                                                                                                                                            |
+| **Database Security (RLS)**      | **Real**   | Active PostgreSQL Row-Level Security policies enforcing strict multi-tenant isolation.                                                                                                                                        |
+| **Cryptographic Audit Chain**    | **Real**   | Database triggers block UPDATE/DELETE; SHA-256 hashes sequentially chain every agent action.                                                                                                                                  |
+| **Deterministic Policy Engine**  | **Real**   | Pure TypeScript mathematics evaluating category budgets, thresholds, and human escalation boundaries.                                                                                                                         |
+| **Circle Developer SDK**         | **Real**   | Native `@circle-fin/developer-controlled-wallets` client wired for wallet creation and balance queries.                                                                                                                       |
+| **Arc Smart Contracts**          | **Real**   | Solidity contract compiled and deployed to Arc Testnet; Hardhat unit test suite passing 7/7.                                                                                                                                  |
+| **Double-Payment Locking**       | **Real**   | Partial unique PostgreSQL indexes and SHA-256 idempotency hashes blocking race conditions.                                                                                                                                    |
+| **Vendor Negotiations**          | **Hybrid** | Simulated vendors use reproducible concession curves (`lib/vendor-simulator.ts`); real vendors (`is_simulated = false`) use human-in-the-loop AI outreach drafting and structured reply parsing (`lib/agent/real-vendor.ts`). |
+| **Vendor Confirmation Receipts** | **Hybrid** | Deterministic verification engine audits 4 contract fields (price, seats, term, date) against pasted or simulated counterparty receipts (`lib/agent/verification.ts`).                                                        |
+| **USDC Balances (Fallback)**     | **Hybrid** | Queries live Arc JSON-RPC; falls back gracefully to DB snapshot when public testnet RPC limits are hit.                                                                                                                       |
 
 ---
 
@@ -144,11 +145,13 @@ In accordance with rigorous transparency standards, here is the honest disclosur
 ## 7. How to Run Locally (Fresh Clone)
 
 ### Prerequisites
+
 - Node.js 20+ (Node 22+ recommended)
 - npm 10+
 - A free [Supabase](https://supabase.com) project (or use seeded connection)
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/pvanfas/tavryn.git
 cd tavryn
@@ -156,12 +159,15 @@ npm install
 ```
 
 ### 2. Environment Configuration
+
 Copy `.env.example` to `.env.local`:
+
 ```bash
 cp .env.example .env.local
 ```
 
 Configure your credentials in `.env.local`:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -185,28 +191,35 @@ IDEMPOTENCY_WINDOW_DAYS=14
 ```
 
 ### 3. Seed Database & Testnet Wallets
+
 Seed Demo Co, spending policies, and contracts for Slack, Datadog, and AWS:
+
 ```bash
 npm run seed
 ```
 
 ### 4. Run Verification Test Suite
+
 Run all 90 unit and integration tests:
+
 ```bash
 npm test
 ```
 
 Run Playwright end-to-end tests:
+
 ```bash
 npm run test:e2e
 ```
 
 ### 5. Launch Development Server
+
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser:
+
 - Logged-out visitors see the **Landing Page** with the one-line pitch, hero metrics, and 3-step loop.
 - Click **"Try the demo"** to immediately open Demo Co on `/dashboard`.
 - Click **"Run full demo"** on the dashboard to watch the 7-step autonomous procurement engine execute live in the Activity Timeline.
@@ -219,6 +232,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser:
 Tavryn is architected as a standard Next.js App Router application ready for 1-click Vercel deployment:
 
 ### Required Vercel Environment Variables
+
 - [x] `NEXT_PUBLIC_SUPABASE_URL`
 - [x] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [x] `SUPABASE_SERVICE_ROLE_KEY`
@@ -236,7 +250,9 @@ Tavryn is architected as a standard Next.js App Router application ready for 1-c
 - [x] `IDEMPOTENCY_WINDOW_DAYS` (`14`)
 
 ### Vercel Cron Job Configuration
+
 `vercel.json` automatically schedules daily proactive renewal evaluations at 08:00 UTC:
+
 ```json
 {
   "crons": [

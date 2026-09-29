@@ -7,6 +7,7 @@ Analysis of the reference repository `circlefin/arc-escrow` (Workflow Escrow Ref
 The reference repository demonstrates an end-to-end freelance escrow protocol built with Next.js, Supabase, Circle Developer-Controlled Wallets, and smart contracts deployed on the Arc testnet.
 
 Key components:
+
 1. **Developer-Controlled Wallets (`@circle-fin/developer-controlled-wallets`)**:
    - Manages programmatic server-side Smart Contract Account (SCA) wallets for agents and participants.
    - Signs and submits transactions without requiring browser extensions or private key custody on the application server.
@@ -25,24 +26,25 @@ Key components:
 
 ## 2. Environment Variables & Credentials
 
-From `.env.example` in `reference/arc-escrow`:
+From `.env.example`:
 
-| Variable | Scope | Purpose |
-| --- | --- | --- |
-| `CIRCLE_API_KEY` | Server | Circle API key generated from Circle Developer Console (`console.circle.com`). |
-| `CIRCLE_ENTITY_SECRET` | Server | 32-byte hex entity secret registered with Circle for signing Developer-Controlled transactions. |
-| `CIRCLE_BLOCKCHAIN` | Server | Set to `"ARC-TESTNET"` for Arc testnet operations. |
-| `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` | Public/Server | `0x3600000000000000000000000000000000000000` (precompile/ERC20 contract on Arc testnet). |
-| `NEXT_PUBLIC_AGENT_WALLET_ID` | Public/Server | Circle Wallet UUID for the system treasury/escrow agent. |
-| `NEXT_PUBLIC_AGENT_WALLET_ADDRESS` | Public/Server | On-chain EVM address (`0x...`) corresponding to the agent wallet. |
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase URL. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Supabase anonymous key. |
+| Variable                            | Scope         | Purpose                                                                                         |
+| ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `CIRCLE_API_KEY`                    | Server        | Circle API key generated from Circle Developer Console (`console.circle.com`).                  |
+| `CIRCLE_ENTITY_SECRET`              | Server        | 32-byte hex entity secret registered with Circle for signing Developer-Controlled transactions. |
+| `CIRCLE_BLOCKCHAIN`                 | Server        | Set to `"ARC-TESTNET"` for Arc testnet operations.                                              |
+| `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` | Public/Server | `0x3600000000000000000000000000000000000000` (precompile/ERC20 contract on Arc testnet).        |
+| `NEXT_PUBLIC_AGENT_WALLET_ID`       | Public/Server | Circle Wallet UUID for the system treasury/escrow agent.                                        |
+| `NEXT_PUBLIC_AGENT_WALLET_ADDRESS`  | Public/Server | On-chain EVM address (`0x...`) corresponding to the agent wallet.                               |
+| `NEXT_PUBLIC_SUPABASE_URL`          | Public        | Supabase URL.                                                                                   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`     | Public        | Supabase anonymous key.                                                                         |
 
 ---
 
 ## 3. Reusable Architecture & Code Patterns
 
 ### A. Circle Client Initialization
+
 ```typescript
 import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
 
@@ -53,6 +55,7 @@ export const circleDeveloperSdk = initiateDeveloperControlledWalletsClient({
 ```
 
 ### B. Wallet Generation (from `generate-wallet.mjs`)
+
 1. Create a Wallet Set:
    ```typescript
    const walletSetResponse = await circleDeveloperSdk.createWalletSet({
@@ -73,20 +76,24 @@ export const circleDeveloperSdk = initiateDeveloperControlledWalletsClient({
    ```
 
 ### C. Reading USDC Balance (from `api/wallet/balance/route.ts`)
+
 ```typescript
 const response = await circleDeveloperSdk.getWalletTokenBalance({
   id: walletId,
   includeAll: true,
 });
 
-const usdcBalance = response.data?.tokenBalances?.find(
-  ({ token }) => token.symbol === "USDC",
-)?.amount || "0";
+const usdcBalance =
+  response.data?.tokenBalances?.find(({ token }) => token.symbol === "USDC")
+    ?.amount || "0";
 ```
-*Note*: Because Arc testnet uses USDC as the native gas asset, we can also query on-chain balance directly via standard EVM JSON-RPC `eth_getBalance(address, "latest")` or `balanceOf(address)` on `0x3600000000000000000000000000000000000000`. This gives Tavryn double redundancy: querying Circle API when available, and verifying on-chain via Arc RPC.
+
+_Note_: Because Arc testnet uses USDC as the native gas asset, we can also query on-chain balance directly via standard EVM JSON-RPC `eth_getBalance(address, "latest")` or `balanceOf(address)` on `0x3600000000000000000000000000000000000000`. This gives Tavryn double redundancy: querying Circle API when available, and verifying on-chain via Arc RPC.
 
 ### D. Transferring USDC
+
 Using the Developer-Controlled Wallets transfer API:
+
 ```typescript
 const transferResponse = await circleDeveloperSdk.createTransaction({
   walletId,

@@ -32,13 +32,14 @@ import {
 import { getCurrentUser } from "@/lib/auth";
 
 export default function OnboardPage() {
-
   // Business State
   const [businessName, setBusinessName] = useState("");
   const [treasuryBalance, setTreasuryBalance] = useState("50000");
 
   // Policy State
-  const [policy, setPolicy] = useState<PolicyConfig>({ ...DEFAULT_POLICY_CONFIG });
+  const [policy, setPolicy] = useState<PolicyConfig>({
+    ...DEFAULT_POLICY_CONFIG,
+  });
 
   // Subscriptions List
   const [rows, setRows] = useState<ValidatedSubscriptionRow[]>([]);
@@ -66,7 +67,8 @@ export default function OnboardPage() {
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualVendor, setManualVendor] = useState("");
   const [manualService, setManualService] = useState("");
-  const [manualCategory, setManualCategory] = useState<SubscriptionCategory>("software");
+  const [manualCategory, setManualCategory] =
+    useState<SubscriptionCategory>("software");
   const [manualPrice, setManualPrice] = useState("");
   const [manualDate, setManualDate] = useState("");
   const [manualSeats, setManualSeats] = useState("");
@@ -177,7 +179,7 @@ export default function OnboardPage() {
   const validRows = rows.filter((r) => r.isValid && r.parsed);
   const totalAnnualSpend = validRows.reduce(
     (acc, r) => acc + (r.parsed ? r.parsed.annual_price : 0),
-    0
+    0,
   );
 
   const handleCommit = async () => {
@@ -201,7 +203,9 @@ export default function OnboardPage() {
         policy: {
           max_auto_transaction: Number(policy.max_auto_transaction),
           min_savings: Number(policy.min_savings),
-          human_approval_required_above: Number(policy.human_approval_required_above),
+          human_approval_required_above: Number(
+            policy.human_approval_required_above,
+          ),
           allowed_categories: policy.allowed_categories,
         },
         subscriptions: validRows.map((r) => r.parsed),
@@ -276,7 +280,9 @@ export default function OnboardPage() {
                 {fundingResult.businessName} Onboarded Successfully
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {fundingResult.contractsCount} verified contract{fundingResult.contractsCount === 1 ? "" : "s"} imported. Treasury smart wallet provisioned on Arc Testnet.
+                {fundingResult.contractsCount} verified contract
+                {fundingResult.contractsCount === 1 ? "" : "s"} imported.
+                Treasury smart wallet provisioned on Arc Testnet.
               </p>
             </div>
           </div>
@@ -307,25 +313,37 @@ export default function OnboardPage() {
               </code>
               <button
                 type="button"
-                onClick={() => handleCopy(fundingResult.walletAddress, "wallet")}
+                onClick={() =>
+                  handleCopy(fundingResult.walletAddress, "wallet")
+                }
                 className="px-3.5 py-2.5 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               >
-                {copiedField === "wallet" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedField === "wallet" ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
                 <span>{copiedField === "wallet" ? "Copied" : "Copy"}</span>
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
               <div>
-                <span className="text-slate-500 dark:text-slate-400">Network:</span>{" "}
+                <span className="text-slate-500 dark:text-slate-400">
+                  Network:
+                </span>{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {fundingResult.fundingInstructions.network} (Chain ID {fundingResult.fundingInstructions.chainId})
+                  {fundingResult.fundingInstructions.network} (Chain ID{" "}
+                  {fundingResult.fundingInstructions.chainId})
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400">Token:</span>{" "}
+                <span className="text-slate-500 dark:text-slate-400">
+                  Token:
+                </span>{" "}
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {fundingResult.fundingInstructions.token} (Arc ERC-20 Precompile)
+                  {fundingResult.fundingInstructions.token} (Arc ERC-20
+                  Precompile)
                 </span>
               </div>
             </div>
@@ -338,11 +356,17 @@ export default function OnboardPage() {
             </h3>
             <ol className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
               <li className="flex items-start gap-2.5">
-                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-                <span>Copy your newly provisioned Arc treasury wallet address above.</span>
+                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  1
+                </span>
+                <span>
+                  Copy your newly provisioned Arc treasury wallet address above.
+                </span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  2
+                </span>
                 <span>
                   Visit the{" "}
                   <a
@@ -353,12 +377,18 @@ export default function OnboardPage() {
                   >
                     Circle Faucet <ExternalLink className="h-3 w-3" />
                   </a>{" "}
-                  to mint testnet USDC to your treasury wallet, or transfer USDC directly on Arc Testnet.
+                  to mint testnet USDC to your treasury wallet, or transfer USDC
+                  directly on Arc Testnet.
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                <span>Tavryn&apos;s agent will autonomously detect the balance and execute your deterministic procurement policy.</span>
+                <span className="h-5 w-5 rounded-full bg-[#107e65]/15 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  3
+                </span>
+                <span>
+                  Tavryn&apos;s agent will autonomously detect the balance and
+                  execute your deterministic procurement policy.
+                </span>
               </li>
             </ol>
           </div>
@@ -393,7 +423,9 @@ export default function OnboardPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-[#107e65]" />
-              <span>{sampleLoading ? "Loading..." : "Load Sample Subscriptions CSV"}</span>
+              <span>
+                {sampleLoading ? "Loading..." : "Load Sample Subscriptions CSV"}
+              </span>
             </button>
           </div>
 
@@ -404,7 +436,8 @@ export default function OnboardPage() {
                 Organization &amp; Contract Ingestion
               </h1>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                Register verified contracts, configure autonomous policy ceilings, and deposit initial treasury balance
+                Register verified contracts, configure autonomous policy
+                ceilings, and deposit initial treasury balance
               </p>
             </div>
 
@@ -435,7 +468,9 @@ export default function OnboardPage() {
                   Initial Treasury Balance (USDC)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-bold">$</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-bold">
+                    $
+                  </span>
                   <input
                     type="number"
                     value={treasuryBalance}
@@ -454,7 +489,8 @@ export default function OnboardPage() {
                     Subscriptions CSV File
                   </h2>
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Columns: vendor, service, category, annual_price, renewal_date, seats, active_seats
+                    Columns: vendor, service, category, annual_price,
+                    renewal_date, seats, active_seats
                   </p>
                 </div>
 
@@ -464,7 +500,9 @@ export default function OnboardPage() {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>{showManualForm ? "Hide Manual Form" : "Add Row Manually"}</span>
+                  <span>
+                    {showManualForm ? "Hide Manual Form" : "Add Row Manually"}
+                  </span>
                 </button>
               </div>
 
@@ -472,18 +510,32 @@ export default function OnboardPage() {
               <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50/50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors">
                 <UploadCloud className="h-8 w-8 text-[#107e65] mb-2" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {csvFileName ? `Loaded: ${csvFileName}` : "Click to select CSV file"}
+                  {csvFileName
+                    ? `Loaded: ${csvFileName}`
+                    : "Click to select CSV file"}
                 </span>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Supports RFC-4180 formatted CSV</span>
-                <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                  Supports RFC-4180 formatted CSV
+                </span>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
               </label>
 
               {/* Manual Entry Form */}
               {showManualForm && (
-                <form onSubmit={handleAddManual} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 space-y-3">
+                <form
+                  onSubmit={handleAddManual}
+                  className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 space-y-3"
+                >
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vendor *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Vendor *
+                      </label>
                       <input
                         type="text"
                         placeholder="e.g., Salesforce"
@@ -491,11 +543,17 @@ export default function OnboardPage() {
                         onChange={(e) => setManualVendor(e.target.value)}
                         className="w-full text-xs font-medium px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                       />
-                      {manualErrors.vendor && <p className="text-xs font-bold text-rose-600 mt-0.5">{manualErrors.vendor}</p>}
+                      {manualErrors.vendor && (
+                        <p className="text-xs font-bold text-rose-600 mt-0.5">
+                          {manualErrors.vendor}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Service *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Service *
+                      </label>
                       <input
                         type="text"
                         placeholder="e.g., Sales Cloud"
@@ -503,14 +561,24 @@ export default function OnboardPage() {
                         onChange={(e) => setManualService(e.target.value)}
                         className="w-full text-xs font-medium px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                       />
-                      {manualErrors.service && <p className="text-xs font-bold text-rose-600 mt-0.5">{manualErrors.service}</p>}
+                      {manualErrors.service && (
+                        <p className="text-xs font-bold text-rose-600 mt-0.5">
+                          {manualErrors.service}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Category
+                      </label>
                       <select
                         value={manualCategory}
-                        onChange={(e) => setManualCategory(e.target.value as SubscriptionCategory)}
+                        onChange={(e) =>
+                          setManualCategory(
+                            e.target.value as SubscriptionCategory,
+                          )
+                        }
                         className="w-full text-xs font-medium px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                       >
                         <option value="software">Software</option>
@@ -520,7 +588,9 @@ export default function OnboardPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Annual Price ($) *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Annual Price ($) *
+                      </label>
                       <input
                         type="number"
                         placeholder="12000"
@@ -528,18 +598,28 @@ export default function OnboardPage() {
                         onChange={(e) => setManualPrice(e.target.value)}
                         className="w-full text-xs font-medium px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold"
                       />
-                      {manualErrors.annual_price && <p className="text-xs font-bold text-rose-600 mt-0.5">{manualErrors.annual_price}</p>}
+                      {manualErrors.annual_price && (
+                        <p className="text-xs font-bold text-rose-600 mt-0.5">
+                          {manualErrors.annual_price}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Renewal Date *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Renewal Date *
+                      </label>
                       <input
                         type="date"
                         value={manualDate}
                         onChange={(e) => setManualDate(e.target.value)}
                         className="w-full text-xs font-medium px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                       />
-                      {manualErrors.renewal_date && <p className="text-xs font-bold text-rose-600 mt-0.5">{manualErrors.renewal_date}</p>}
+                      {manualErrors.renewal_date && (
+                        <p className="text-xs font-bold text-rose-600 mt-0.5">
+                          {manualErrors.renewal_date}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-end">
@@ -571,22 +651,57 @@ export default function OnboardPage() {
                   <table className="w-full text-left text-xs font-sans border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        <th scope="col" className="py-3.5 px-3.5 w-12 text-center">#</th>
-                        <th scope="col" className="py-3.5 px-4 min-w-[200px]">Service &amp; Vendor</th>
-                        <th scope="col" className="py-3.5 px-3.5 min-w-[110px]">Category</th>
-                        <th scope="col" className="py-3.5 px-4 text-right min-w-[120px]">Annual Price</th>
-                        <th scope="col" className="py-3.5 px-3.5 min-w-[130px]">Renewal Date</th>
-                        <th scope="col" className="py-3.5 px-3.5 text-center min-w-[110px]">Validation</th>
-                        <th scope="col" className="py-3.5 px-3.5 text-center w-16">Action</th>
+                        <th
+                          scope="col"
+                          className="py-3.5 px-3.5 w-12 text-center"
+                        >
+                          #
+                        </th>
+                        <th scope="col" className="py-3.5 px-4 min-w-[200px]">
+                          Service &amp; Vendor
+                        </th>
+                        <th scope="col" className="py-3.5 px-3.5 min-w-[110px]">
+                          Category
+                        </th>
+                        <th
+                          scope="col"
+                          className="py-3.5 px-4 text-right min-w-[120px]"
+                        >
+                          Annual Price
+                        </th>
+                        <th scope="col" className="py-3.5 px-3.5 min-w-[130px]">
+                          Renewal Date
+                        </th>
+                        <th
+                          scope="col"
+                          className="py-3.5 px-3.5 text-center min-w-[110px]"
+                        >
+                          Validation
+                        </th>
+                        <th
+                          scope="col"
+                          className="py-3.5 px-3.5 text-center w-16"
+                        >
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
                       {rows.map((r, idx) => (
-                        <tr key={r.id} className="hover:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/[0.04] transition-colors duration-150">
-                          <td className="py-3.5 px-3.5 text-center text-slate-400 dark:text-slate-500 font-mono font-medium text-xs">{idx + 1}</td>
+                        <tr
+                          key={r.id}
+                          className="hover:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/[0.04] transition-colors duration-150"
+                        >
+                          <td className="py-3.5 px-3.5 text-center text-slate-400 dark:text-slate-500 font-mono font-medium text-xs">
+                            {idx + 1}
+                          </td>
                           <td className="py-3.5 px-4">
-                            <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{r.raw.service}</span>
-                            <span className="text-slate-500 dark:text-slate-400 font-medium ml-1.5 text-xs">({r.raw.vendor})</span>
+                            <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                              {r.raw.service}
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400 font-medium ml-1.5 text-xs">
+                              ({r.raw.vendor})
+                            </span>
                           </td>
                           <td className="py-3.5 px-3.5">
                             <span className="inline-block px-2.5 py-0.5 rounded-md capitalize text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 text-xs font-medium border border-slate-200/50 dark:border-slate-700/50">
@@ -596,7 +711,9 @@ export default function OnboardPage() {
                           <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 dark:text-white text-xs">
                             ${Number(r.raw.annual_price || 0).toLocaleString()}
                           </td>
-                          <td className="py-3.5 px-3.5 text-slate-600 dark:text-slate-300 font-medium text-xs">{r.raw.renewal_date}</td>
+                          <td className="py-3.5 px-3.5 text-slate-600 dark:text-slate-300 font-medium text-xs">
+                            {r.raw.renewal_date}
+                          </td>
                           <td className="py-3.5 px-3.5 text-center">
                             {r.isValid ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
@@ -642,7 +759,12 @@ export default function OnboardPage() {
                   <input
                     type="number"
                     value={policy.max_auto_transaction}
-                    onChange={(e) => setPolicy({ ...policy, max_auto_transaction: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        max_auto_transaction: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-3 py-2 rounded-lg border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                   />
                 </div>
@@ -654,7 +776,12 @@ export default function OnboardPage() {
                   <input
                     type="number"
                     value={policy.min_savings}
-                    onChange={(e) => setPolicy({ ...policy, min_savings: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        min_savings: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-3 py-2 rounded-lg border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                   />
                 </div>
@@ -666,7 +793,12 @@ export default function OnboardPage() {
                   <input
                     type="number"
                     value={policy.human_approval_required_above}
-                    onChange={(e) => setPolicy({ ...policy, human_approval_required_above: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        human_approval_required_above: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
                   />
                 </div>
@@ -676,13 +808,16 @@ export default function OnboardPage() {
             {/* Commit Button */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-500">
-                {validRows.length} subscription{validRows.length === 1 ? "" : "s"} ready for commit
+                {validRows.length} subscription
+                {validRows.length === 1 ? "" : "s"} ready
               </span>
 
               <button
                 type="button"
                 onClick={handleCommit}
-                disabled={isSubmitting || validRows.length === 0 || !businessName.trim()}
+                disabled={
+                  isSubmitting || validRows.length === 0 || !businessName.trim()
+                }
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? (
@@ -692,7 +827,7 @@ export default function OnboardPage() {
                   </>
                 ) : (
                   <>
-                    <span>Commit &amp; Onboard Organization</span>
+                    <span>Onboard Organization</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </>
                 )}
