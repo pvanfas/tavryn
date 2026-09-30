@@ -166,7 +166,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       currency={currency}
     >
       {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
+      <div id="treasury" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
         {/* Card 1: Treasury */}
         <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 p-5 sm:p-6 border border-slate-200/70 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_4px_12px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:border-slate-300 dark:hover:border-slate-700/80 transition-all duration-200">
           <div className="flex items-center justify-between mb-3">
@@ -268,12 +268,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </div>
 
       {/* Real-Time Agent Activity Timeline */}
-      <section aria-label="Autonomous Agent Execution Timeline">
+      <section id="negotiations" aria-label="Autonomous Agent Execution Timeline">
         <ActivityTimeline businessId={business?.id} businessName={business?.name || "Demo Co"} />
       </section>
 
       {/* Primary Ledger Card */}
-      <section aria-label="Contracts and Opportunities Ledger">
+      <section id="contracts" aria-label="Contracts and Opportunities Ledger">
         <OpportunitiesTable
           opportunities={contractOpportunities}
           businessId={business?.id}

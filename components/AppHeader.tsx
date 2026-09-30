@@ -20,7 +20,7 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  breadcrumbs = [{ label: "Dashboard", href: "/" }, { label: "Contracts Ledger" }],
+  breadcrumbs = [{ label: "Dashboard", href: "/dashboard" }, { label: "Contracts Ledger" }],
   businesses = [],
   activeBusinessId,
   treasuryBalance: _treasuryBalance,

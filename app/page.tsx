@@ -17,6 +17,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AgentIcon } from "@/components/AgentIcon";
 import { ARC_CONFIG } from "@/lib/circle";
+import { LANDING_NAV_LINKS, FOOTER_NAV_LINKS } from "@/lib/nav";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -70,33 +71,28 @@ export default function LandingPage() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <a
-              href="#how-it-works"
-              className="hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
-            >
-              The 3-Step Loop
-            </a>
-            <a
-              href="#metrics"
-              className="hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
-            >
-              Impact
-            </a>
-            <a
-              href="#architecture"
-              className="hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
-            >
-              Security
-            </a>
-            <a
-              href="https://github.com/pvanfas/tavryn"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
-            >
-              <GithubIcon className="h-4 w-4" />
-              <span>GitHub</span>
-            </a>
+            {LANDING_NAV_LINKS.map((link) =>
+              link.isExternal ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
+                >
+                  <GithubIcon className="h-4 w-4" />
+                  <span>{link.label}</span>
+                </a>
+              ) : (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
+                >
+                  {link.label}
+                </a>
+              )
+            )}
           </nav>
 
           {/* Right Action Buttons */}
@@ -156,9 +152,7 @@ export default function LandingPage() {
 
               <a
                 id="hero-video-cta"
-                href="https://www.youtube.com/watch?v=placeholder"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#how-it-works"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
               >
                 <PlayCircle className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
@@ -516,26 +510,27 @@ await release_escrow({
             <span>Built with Arc + Circle</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link
-              href="/audit"
-              className="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Audit Trail
-            </Link>
-            <Link
-              href="/dashboard"
-              className="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Dashboard
-            </Link>
-            <a
-              href="https://github.com/pvanfas/tavryn"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              GitHub
-            </a>
+            {FOOTER_NAV_LINKS.map((link) =>
+              link.isExternal ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </div>
         </div>
       </footer>

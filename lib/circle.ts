@@ -152,7 +152,8 @@ export async function getOnChainUSDCBalance(walletAddress: string): Promise<numb
   const cleanAddress = walletAddress.toLowerCase().replace(/^0x/, "").padStart(64, "0");
   const callData = `0x70a08231${cleanAddress}`;
 
-  const response = await fetch(ARC_CONFIG.rpcUrl, {
+  const rpcUrl = process.env.ARC_RPC_URL || ARC_CONFIG.rpcUrl;
+  const response = await fetch(rpcUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

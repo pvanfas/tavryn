@@ -4,15 +4,19 @@ import { AUTH_COOKIE_MAX_AGE_SECONDS, DEFAULT_SITE_URL } from "@/lib/constants";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+let browserClient: ReturnType<typeof createClient> | null = null;
+
 /**
  * Browser-side Supabase client.
  * Use in Client Components for auth operations.
  */
 export function getBrowserSupabase() {
-  return createClient(
+  if (browserClient) return browserClient;
+  browserClient = createClient(
     supabaseUrl || "https://placeholder.supabase.co",
     supabaseAnonKey || "placeholder"
   );
+  return browserClient;
 }
 
 /**

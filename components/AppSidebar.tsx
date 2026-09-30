@@ -6,20 +6,18 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { formatBusinessName } from "./UserDropdown";
+import { SIDEBAR_NAV_GROUPS, isRouteActive } from "@/lib/nav";
 import {
   LayoutDashboard,
-  FileSpreadsheet,
-  MessageSquare,
   ShieldCheck,
-  Wallet,
   PlusCircle,
   ChevronLeft,
   ChevronRight,
-  Building2,
   History,
+  X,
   Settings as SettingsIcon,
   BarChart3,
-  X,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -89,99 +87,26 @@ export function AppSidebar({
 
   const displayName = fullName || userEmail?.split("@")[0] || "Operator";
 
-  type NavItem = {
-    label: string;
-    href: string;
-    icon: LucideIcon;
-    active: boolean;
-    badge?: string;
-    pulseBadge?: boolean;
+  const ICON_MAP: Record<string, LucideIcon> = {
+    LayoutDashboard,
+    ShieldCheck,
+    History,
+    BarChart3,
+    PlusCircle,
+    SettingsIcon,
   };
 
-  type NavGroup = {
-    label: string;
-    items: NavItem[];
-  };
-
-  const navGroups: NavGroup[] = [
-    {
-      label: "Overview",
-      items: [
-        {
-          label: "Dashboard",
-          href: "/dashboard",
-          icon: LayoutDashboard,
-          active: pathname === "/dashboard",
-        },
-        {
-          label: "Contracts",
-          href: "/dashboard#contracts",
-          icon: FileSpreadsheet,
-          active:
-            pathname.startsWith("/decision") || pathname.includes("#contracts"),
-        },
-        {
-          label: "Negotiations",
-          href: "/dashboard#negotiations",
-          icon: MessageSquare,
-          active:
-            pathname.startsWith("/negotiate") ||
-            pathname.includes("#negotiations"),
-          badge: "Agent",
-          pulseBadge: true,
-        },
-      ],
-    },
-    {
-      label: "Finance",
-      items: [
-        {
-          label: "Treasury & Escrow",
-          href: "/dashboard#treasury",
-          icon: Wallet,
-          active: pathname.includes("#treasury"),
-          badge: "USDC",
-        },
-        {
-          label: "Policy Engine",
-          href: "/dashboard#policy",
-          icon: ShieldCheck,
-          active: pathname.includes("#policy"),
-        },
-      ],
-    },
-    {
-      label: "Workspace",
-      items: [
-        {
-          label: "Onboard Business",
-          href: "/onboard",
-          icon: PlusCircle,
-          active: pathname === "/onboard",
-        },
-        {
-          label: "Audit Ledger",
-          href: "/audit",
-          icon: History,
-          active: pathname === "/audit",
-          badge: "Chained",
-        },
-        {
-          label: "Traction & Metrics",
-          href: "/metrics",
-          icon: BarChart3,
-          active: pathname === "/metrics",
-          badge: "Live",
-        },
-        {
-          label: "Settings",
-          href: "/settings",
-          icon: SettingsIcon,
-          active: pathname === "/settings",
-        },
-      ],
-    },
-  ];
+  const navGroups = SIDEBAR_NAV_GROUPS.map((group) => ({
+    label: group.label,
+    items: group.items.map((item) => ({
+      label: item.label,
+      href: item.href,
+      icon: ICON_MAP[item.iconName] || LayoutDashboard,
+      active: isRouteActive(pathname, item.href, item.matchNested),
+      badge: item.badge,
+      pulseBadge: item.pulseBadge,
+    })),
+  }));
 
   const renderNavLinks = (isMobile = false) => (
     <nav

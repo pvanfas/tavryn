@@ -304,8 +304,8 @@ export default function DecisionDetailPage({
       businessName={contract?.business?.name || "Demo Co"}
       isReal={!contract?.vendor?.is_simulated}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Contracts Ledger", href: "/#contracts" },
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Contracts Ledger", href: "/dashboard" },
         { label: `${contract?.service} Decision Review` },
       ]}
       currency="USDC"
@@ -313,7 +313,7 @@ export default function DecisionDetailPage({
       {/* Top Actions Row */}
           <div className="flex items-center justify-between">
             <Link
-              href="/"
+              href="/dashboard"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

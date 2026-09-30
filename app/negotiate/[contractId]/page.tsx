@@ -415,8 +415,8 @@ export default function NegotiationDetailPage({
       businessName="Demo Co"
       isReal={!contract?.vendors?.is_simulated}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Contracts Ledger", href: "/#contracts" },
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Contracts Ledger", href: "/dashboard#contracts" },
         { label: `${contract?.service || "Vendor"} Negotiation` },
       ]}
       currency="USDC"
@@ -424,7 +424,7 @@ export default function NegotiationDetailPage({
       {/* Top Actions Bar */}
       <div className="flex items-center justify-between">
         <Link
-          href="/"
+          href="/dashboard"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

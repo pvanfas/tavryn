@@ -53,3 +53,4 @@ contracts/coverage/
 contracts/coverage.json
 contracts/.env*
 
+*.DS_Store
