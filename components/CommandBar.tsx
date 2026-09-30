@@ -11,8 +11,6 @@ import {
   History,
   Loader2,
   Lock,
-  MessageSquare,
-  Search,
   Send,
   ShieldAlert,
   ShieldCheck,
@@ -59,7 +57,9 @@ export function CommandBar({
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [confirmingAction, setConfirmingAction] = useState<string | null>(null);
-  const [confirmedResults, setConfirmedResults] = useState<Record<string, string>>({});
+  const [confirmedResults, setConfirmedResults] = useState<
+    Record<string, string>
+  >({});
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +121,9 @@ export function CommandBar({
           message: textToSend,
           businessId,
           stream: true,
-          history: messages.slice(-4).map((m) => ({ role: m.role, content: m.text })),
+          history: messages
+            .slice(-4)
+            .map((m) => ({ role: m.role, content: m.text })),
         }),
       });
 
@@ -150,7 +152,8 @@ export function CommandBar({
               try {
                 const eventData = JSON.parse(line.slice(6));
                 if (eventData.type === "chunk") {
-                  accumulatedText = eventData.fullText || accumulatedText + eventData.chunk;
+                  accumulatedText =
+                    eventData.fullText || accumulatedText + eventData.chunk;
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMsgId
@@ -168,7 +171,9 @@ export function CommandBar({
                 } else if (eventData.type === "done") {
                   setMessages((prev) =>
                     prev.map((m) =>
-                      m.id === assistantMsgId ? { ...m, isStreaming: false } : m,
+                      m.id === assistantMsgId
+                        ? { ...m, isStreaming: false }
+                        : m,
                     ),
                   );
                 }
@@ -182,7 +187,12 @@ export function CommandBar({
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId
-              ? { ...m, text: accumulatedText || "Answer complete.", card: finalCard, isStreaming: false }
+              ? {
+                  ...m,
+                  text: accumulatedText || "Answer complete.",
+                  card: finalCard,
+                  isStreaming: false,
+                }
               : m,
           ),
         );
@@ -192,7 +202,12 @@ export function CommandBar({
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId
-              ? { ...m, text: data.text || data.data?.text || "", card: data.card || data.data?.card, isStreaming: false }
+              ? {
+                  ...m,
+                  text: data.text || data.data?.text || "",
+                  card: data.card || data.data?.card,
+                  isStreaming: false,
+                }
               : m,
           ),
         );
@@ -240,7 +255,8 @@ export function CommandBar({
 
       setConfirmedResults((prev) => ({
         ...prev,
-        [actionId]: json.message || "Action successfully executed and recorded.",
+        [actionId]:
+          json.message || "Action successfully executed and recorded.",
       }));
     } catch (err) {
       alert((err as Error).message);
@@ -343,7 +359,8 @@ export function CommandBar({
                   Talk to Tavryn in plain English
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto text-[11px]">
-                  Query renewals, audit waste, explain past decisions, or initiate policy-guarded negotiations.
+                  Query renewals, audit waste, explain past decisions, or
+                  initiate policy-guarded negotiations.
                 </p>
               </div>
 
@@ -415,13 +432,19 @@ export function CommandBar({
                                 </div>
                                 <div className="text-[10px] text-slate-400">
                                   Renews{" "}
-                                  {new Date(item.renewalDate).toLocaleDateString(undefined, {
+                                  {new Date(
+                                    item.renewalDate,
+                                  ).toLocaleDateString(undefined, {
                                     month: "short",
                                     day: "numeric",
                                     year: "numeric",
                                   })}
                                   {item.seatCount && item.activeSeats && (
-                                    <> &bull; {item.activeSeats}/{item.seatCount} seats active</>
+                                    <>
+                                      {" "}
+                                      &bull; {item.activeSeats}/{item.seatCount}{" "}
+                                      seats active
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -461,7 +484,8 @@ export function CommandBar({
                                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                   <span>{item.service}</span>
                                   <span className="text-[10px] font-semibold text-slate-400">
-                                    (${item.currentPrice.toLocaleString()} baseline)
+                                    (${item.currentPrice.toLocaleString()}{" "}
+                                    baseline)
                                   </span>
                                 </div>
                                 <div className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -479,7 +503,9 @@ export function CommandBar({
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleSubmit(`Negotiate ${item.service}`)}
+                                  onClick={() =>
+                                    handleSubmit(`Negotiate ${item.service}`)
+                                  }
                                   className="px-2.5 py-1 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-[10px] font-bold shadow-2xs transition-colors cursor-pointer"
                                 >
                                   Negotiate
@@ -562,21 +588,28 @@ export function CommandBar({
                         {/* Price Delta Highlights */}
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-400 uppercase block">Baseline</span>
+                            <span className="text-[10px] text-slate-400 uppercase block">
+                              Baseline
+                            </span>
                             <span className="font-mono font-bold text-slate-400 line-through text-xs">
                               ${msg.card.data.originalPrice.toLocaleString()}
                             </span>
                           </div>
                           <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-500 uppercase block">Accepted</span>
+                            <span className="text-[10px] text-slate-500 uppercase block">
+                              Accepted
+                            </span>
                             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">
                               ${msg.card.data.finalPrice.toLocaleString()}
                             </span>
                           </div>
                           <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-950/20 border border-emerald-500/20 text-[#107e65] dark:text-[#34d399]">
-                            <span className="text-[10px] uppercase block font-bold">Annual Cut</span>
+                            <span className="text-[10px] uppercase block font-bold">
+                              Annual Cut
+                            </span>
                             <span className="font-mono font-bold text-xs">
-                              -${msg.card.data.savings.toLocaleString()} ({msg.card.data.savingsPct}%)
+                              -${msg.card.data.savings.toLocaleString()} (
+                              {msg.card.data.savingsPct}%)
                             </span>
                           </div>
                         </div>
@@ -587,14 +620,16 @@ export function CommandBar({
                             {msg.card.data.rationale}
                           </p>
                           <div className="flex flex-wrap gap-1.5 pt-1">
-                            {msg.card.data.telemetrySignals.map((signal, sIdx) => (
-                              <span
-                                key={sIdx}
-                                className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400"
-                              >
-                                &bull; {signal}
-                              </span>
-                            ))}
+                            {msg.card.data.telemetrySignals.map(
+                              (signal, sIdx) => (
+                                <span
+                                  key={sIdx}
+                                  className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400"
+                                >
+                                  &bull; {signal}
+                                </span>
+                              ),
+                            )}
                           </div>
                         </div>
 
@@ -617,7 +652,8 @@ export function CommandBar({
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                           <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             <Wallet className="h-3.5 w-3.5 text-[#107e65]" />
-                            Cumulative Procurement Savings ({msg.card.data.period})
+                            Cumulative Procurement Savings (
+                            {msg.card.data.period})
                           </span>
                           <Link
                             href={msg.card.data.link}
@@ -631,19 +667,26 @@ export function CommandBar({
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center">
                           <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#107e65] dark:text-[#34d399]">
-                            <span className="text-[10px] uppercase font-bold block">Negotiated Savings</span>
+                            <span className="text-[10px] uppercase font-bold block">
+                              Negotiated Savings
+                            </span>
                             <span className="font-mono font-bold text-base">
-                              ${msg.card.data.negotiatedSavings.toLocaleString()}
+                              $
+                              {msg.card.data.negotiatedSavings.toLocaleString()}
                             </span>
                           </div>
                           <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-500 uppercase block">Settled On-Chain</span>
+                            <span className="text-[10px] text-slate-500 uppercase block">
+                              Settled On-Chain
+                            </span>
                             <span className="font-mono font-bold text-slate-900 dark:text-white text-base">
                               ${msg.card.data.realizedSavings.toLocaleString()}
                             </span>
                           </div>
                           <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 col-span-2 sm:col-span-1">
-                            <span className="text-[10px] text-slate-500 uppercase block">Savings Rate</span>
+                            <span className="text-[10px] text-slate-500 uppercase block">
+                              Savings Rate
+                            </span>
                             <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base">
                               {msg.card.data.savingsRatePct}%
                             </span>
@@ -679,7 +722,10 @@ export function CommandBar({
                           <div className="pt-2 flex items-center justify-between gap-3">
                             <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                               <Lock className="h-3 w-3" />
-                              <span>Actions are never executed automatically from chat.</span>
+                              <span>
+                                Actions are never executed automatically from
+                                chat.
+                              </span>
                             </span>
 
                             <div className="flex items-center gap-2">
@@ -689,8 +735,12 @@ export function CommandBar({
                                 onClick={() =>
                                   handleConfirmAction(
                                     msg.id,
-                                    msg.card?.type === "action_confirmation" ? msg.card.action : "start_negotiation",
-                                    msg.card?.type === "action_confirmation" ? msg.card.params : {},
+                                    msg.card?.type === "action_confirmation"
+                                      ? msg.card.action
+                                      : "start_negotiation",
+                                    msg.card?.type === "action_confirmation"
+                                      ? msg.card.params
+                                      : {},
                                   )
                                 }
                                 className="px-3.5 py-1.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
@@ -700,7 +750,11 @@ export function CommandBar({
                                 ) : (
                                   <Check className="h-3.5 w-3.5" />
                                 )}
-                                <span>{confirmingAction === msg.id ? "Running..." : "Confirm & Execute"}</span>
+                                <span>
+                                  {confirmingAction === msg.id
+                                    ? "Running..."
+                                    : "Confirm & Execute"}
+                                </span>
                               </button>
                             </div>
                           </div>
@@ -738,7 +792,11 @@ export function CommandBar({
               </button>
             )}
             <span className="hidden sm:inline font-mono">
-              Press <kbd className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Esc</kbd> to close
+              Press{" "}
+              <kbd className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                Esc
+              </kbd>{" "}
+              to close
             </span>
           </div>
         </div>

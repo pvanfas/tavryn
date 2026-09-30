@@ -1,8 +1,13 @@
+import { generateObject } from "ai";
+import { z } from "zod";
+
+import { getAgentLanguageModel } from "@/lib/agent/provider";
 import { evaluateContractOpportunity } from "@/lib/heuristics";
 import { getTractionMetrics } from "@/lib/metrics";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
+
 import { runNegotiationLoop } from "./negotiate";
 
 // ─── CARD DATA TYPES ────────────────────────────────────────────────────────
@@ -231,7 +236,8 @@ export async function toolGetPendingApprovals(
       vendorName: contract?.vendors?.name || contract?.service || "Vendor",
       amount,
       reason:
-        a.reason || "Autonomous ceiling limit exceeded. Requires human sign-off.",
+        a.reason ||
+        "Autonomous ceiling limit exceeded. Requires human sign-off.",
       createdAt: a.created_at,
       link: contractId ? `/decision/${contractId}` : "/approvals",
     };
@@ -279,7 +285,8 @@ export async function toolExplainDecision(
     .order("created_at", { ascending: false });
 
   // Find best matching negotiation if targetPriceParam is provided
-  let matchedNeg = negotiations && negotiations.length > 0 ? negotiations[0] : null;
+  let matchedNeg =
+    negotiations && negotiations.length > 0 ? negotiations[0] : null;
   if (targetPriceParam && negotiations) {
     const specificMatch = negotiations.find(
       (n) =>
@@ -292,17 +299,26 @@ export async function toolExplainDecision(
     }
   }
 
-  const finalPrice = targetPriceParam || Number(matchedNeg?.final_price || matchedNeg?.current_offer || 7600);
+  const finalPrice =
+    targetPriceParam ||
+    Number(matchedNeg?.final_price || matchedNeg?.current_offer || 7600);
 
   // Derive original baseline price ensuring originalPrice >= finalPrice
-  let originalPrice = Number(matchedNeg?.original_price || matchedContract.current_price || 9600);
+  let originalPrice = Number(
+    matchedNeg?.original_price || matchedContract.current_price || 9600,
+  );
   if (originalPrice < finalPrice) {
     // If the contract table currently has a lower renegotiated price, find the max historical baseline
-    const historicalMax = negotiations?.reduce(
-      (max, n) => Math.max(max, Number(n.original_price || 0)),
-      0,
-    ) || 0;
-    originalPrice = Math.max(historicalMax, Math.round(finalPrice * 1.25), 9600);
+    const historicalMax =
+      negotiations?.reduce(
+        (max, n) => Math.max(max, Number(n.original_price || 0)),
+        0,
+      ) || 0;
+    originalPrice = Math.max(
+      historicalMax,
+      Math.round(finalPrice * 1.25),
+      9600,
+    );
   }
 
   const savings = Math.max(0, originalPrice - finalPrice);
@@ -420,7 +436,10 @@ export async function toolProposeNegotiation(
   const contractId = match ? match.id : undefined;
   const currentPrice = match ? Number(match.current_price) : 37200;
   const opp = match ? evaluateContractOpportunity(match as any) : null;
-  const targetPrice = opp && opp.saving > 0 ? currentPrice - opp.saving : Math.round(currentPrice * 0.8);
+  const targetPrice =
+    opp && opp.saving > 0
+      ? currentPrice - opp.saving
+      : Math.round(currentPrice * 0.8);
 
   const confirmation: ActionConfirmationData = {
     type: "action_confirmation",
@@ -564,7 +583,8 @@ export async function executeConfirmedAction(
 
   if (action === "request_approval") {
     const serviceName = (params.serviceName as string) || "Contract Renewal";
-    const reason = (params.reason as string) || "Requested from Ask Tavryn command bar";
+    const reason =
+      (params.reason as string) || "Requested from Ask Tavryn command bar";
 
     const { data: newApproval, error } = await supabase
       .from("approvals")
@@ -710,15 +730,21 @@ export async function processCommandQuery(
     lower.includes("start negotiation") ||
     lower.includes("renegotiate")
   ) {
-    const vendorTarget = text
-      .replace(/^(negotiate|start negotiation for|renegotiate|open negotiation with)\s+/i, "")
-      .trim() || "Datadog";
+    const vendorTarget =
+      text
+        .replace(
+          /^(negotiate|start negotiation for|renegotiate|open negotiation with)\s+/i,
+          "",
+        )
+        .trim() || "Datadog";
 
     const proposal = await toolProposeNegotiation(businessId, vendorTarget);
     return {
       text: `I've prepared a negotiation proposal for **${proposal.service}**. Because this will contact the vendor, please review and confirm before I begin:`,
       card: proposal,
-      toolCalls: [{ tool: "propose_negotiation", input: { vendor: vendorTarget } }],
+      toolCalls: [
+        { tool: "propose_negotiation", input: { vendor: vendorTarget } },
+      ],
       businessId,
       success: true,
     };
@@ -814,7 +840,9 @@ export async function processCommandQuery(
 
     // Extract price if asked (e.g. $7,600 or 7600)
     let targetPrice: number | undefined = undefined;
-    const priceMatch = text.match(/\$?([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{3,7})/);
+    const priceMatch = text.match(
+      /\$?([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{3,7})/,
+    );
     if (priceMatch) {
       const parsed = parseFloat(priceMatch[1].replace(/,/g, ""));
       if (!isNaN(parsed) && parsed > 0) {
@@ -822,11 +850,17 @@ export async function processCommandQuery(
       }
     }
 
-    const explanation = await toolExplainDecision(businessId, service, targetPrice);
+    const explanation = await toolExplainDecision(
+      businessId,
+      service,
+      targetPrice,
+    );
     if (!explanation) {
       return {
         text: `I could not locate a completed negotiation transcript for **${service}** in your records.`,
-        toolCalls: [{ tool: "explain_negotiation_decision", input: { service } }],
+        toolCalls: [
+          { tool: "explain_negotiation_decision", input: { service } },
+        ],
         businessId,
         success: true,
       };
@@ -861,7 +895,131 @@ export async function processCommandQuery(
     };
   }
 
-  // 4g. General fallback: inspect renewals and savings overview
+  // 4g. Dynamic LLM Intent Routing for unstructured or complex queries
+  const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
+  const hasKey = Boolean(
+    process.env.OPENAI_API_KEY ||
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.LLM_API_KEY,
+  );
+
+  if (hasKey && provider !== "mock") {
+    try {
+      const model = getAgentLanguageModel();
+      const { object } = await generateObject({
+        model,
+        schema: z.object({
+          intent: z.enum([
+            "negotiate",
+            "renewals",
+            "biggest_savings",
+            "pending_approvals",
+            "explain_decision",
+            "savings_summary",
+            "general_overview",
+          ]),
+          targetVendor: z
+            .string()
+            .optional()
+            .describe("Vendor name if applicable"),
+          days: z.number().optional().describe("Days window for renewals"),
+          targetPrice: z
+            .number()
+            .optional()
+            .describe("Price mentioned if explaining decision"),
+        }),
+        prompt: `You are a semantic command router for Tavryn, an autonomous SaaS procurement agent. Map this natural language query to the appropriate intent:\n"${text}"`,
+      });
+
+      if (object.intent === "negotiate" && object.targetVendor) {
+        const proposal = await toolProposeNegotiation(
+          businessId,
+          object.targetVendor,
+        );
+        return {
+          text: `I've prepared a negotiation proposal for **${proposal.service}**. Because this will contact the vendor, please review and confirm before I begin:`,
+          card: proposal,
+          toolCalls: [
+            {
+              tool: "propose_negotiation",
+              input: { vendor: object.targetVendor },
+            },
+          ],
+          businessId,
+          success: true,
+        };
+      }
+      if (object.intent === "biggest_savings") {
+        const savings = await toolGetBiggestSavings(businessId);
+        const top = savings.filter((s) => s.potentialSavings > 0);
+        return {
+          text: `Here are the top **${top.length} contracts with the highest potential savings**, ranked by telemetry and seat waste:`,
+          card: { type: "savings", data: top.length > 0 ? top : savings },
+          toolCalls: [{ tool: "get_biggest_savings", input: {} }],
+          businessId,
+          success: true,
+        };
+      }
+      if (object.intent === "renewals") {
+        const days = object.days || 30;
+        const renewals = await toolGetRenewals(businessId, days);
+        return {
+          text: `Found **${renewals.length} renewals** scheduled in the next ${days} days:`,
+          card: { type: "renewals", data: renewals },
+          toolCalls: [{ tool: "get_renewals", input: { days } }],
+          businessId,
+          success: true,
+        };
+      }
+      if (object.intent === "pending_approvals") {
+        const approvals = await toolGetPendingApprovals(businessId);
+        return {
+          text: `You have **${approvals.length} pending approvals** requiring review:`,
+          card: { type: "approvals", data: approvals },
+          toolCalls: [{ tool: "get_pending_approvals", input: {} }],
+          businessId,
+          success: true,
+        };
+      }
+      if (object.intent === "explain_decision" && object.targetVendor) {
+        const explanation = await toolExplainDecision(
+          businessId,
+          object.targetVendor,
+          object.targetPrice,
+        );
+        if (explanation) {
+          return {
+            text: `Here is why we accepted the rate for **${explanation.service}**:`,
+            card: { type: "decision_explanation", data: explanation },
+            toolCalls: [
+              {
+                tool: "explain_negotiation_decision",
+                input: { service: object.targetVendor },
+              },
+            ],
+            businessId,
+            success: true,
+          };
+        }
+      }
+      if (object.intent === "savings_summary") {
+        const summary = await toolGetSavingsSummary(businessId, "month");
+        return {
+          text: `Across your contracts, Tavryn has negotiated **$${summary.negotiatedSavings.toLocaleString()} in annual savings**:`,
+          card: { type: "savings_summary", data: summary },
+          toolCalls: [
+            { tool: "get_savings_summary", input: { period: "month" } },
+          ],
+          businessId,
+          success: true,
+        };
+      }
+    } catch (err) {
+      console.warn("LLM command router error, falling back to overview:", err);
+    }
+  }
+
+  // 4h. General fallback: inspect renewals and savings overview
   const renewals = await toolGetRenewals(businessId, 45);
   return {
     text: `I'm Tavryn, your autonomous procurement agent. I can answer questions about renewals, audit savings, explain past decisions, or negotiate contracts. Here are your upcoming renewals:`,

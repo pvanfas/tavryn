@@ -84,7 +84,7 @@ function LandingPage({
             href="/"
             className="flex items-center gap-3 group cursor-pointer"
           >
-            <div className="h-9 w-9 sm:h-10 sm:sm-10 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center p-1.5 shadow-xs group-hover:border-[#107e65]/50 transition-colors">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center p-1.5 shadow-xs group-hover:border-[#107e65]/50 transition-colors">
               <Image
                 src="/logo.png"
                 alt="Tavryn Logo"

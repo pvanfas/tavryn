@@ -7,7 +7,7 @@
 [![Tests: 90 Passing](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-90%20Passing-emerald?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-8%2F8%20Passing-brightgreen?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Arc Testnet](<https://img.shields.io/badge/Settlement-Arc%20Testnet%20(USDC)-blueviolet?style=flat-square>)](https://testnet.arcscan.app/)
-[![Verified Savings Proof](https://img.shields.io/badge/Verified%20Proof-Saved%20%242%2C688%20on%20Slack%20(28%25)-107e65?style=flat-square)](/r/12dd9d181715dd61ccf700593ef2f2ce)
+[![Verified Savings Proof](<https://img.shields.io/badge/Verified%20Proof-Saved%20%242%2C688%20on%20Slack%20(28%25)-107e65?style=flat-square>)](/r/12dd9d181715dd61ccf700593ef2f2ce)
 
 ---
 

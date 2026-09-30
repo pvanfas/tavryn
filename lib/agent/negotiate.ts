@@ -1,3 +1,7 @@
+import { generateText } from "ai";
+
+import { getAgentLanguageModel } from "@/lib/agent/provider";
+import { getOverrideGuidancePrompt } from "@/lib/override-memory";
 import { getServiceSupabase } from "@/lib/supabase";
 import {
   check_policy,
@@ -9,6 +13,8 @@ import {
   record_outcome,
   send_vendor_message,
 } from "@/lib/tools";
+
+import { ReviewerOutput, runReviewerAgent } from "./reviewer";
 
 export interface NegotiationOptions {
   maxRounds?: number;
@@ -64,6 +70,7 @@ export interface NegotiationLoopResult {
   explanation: NegotiationExplanation;
   conversation: NegotiationTurn[];
   memoryUsed?: MemoryUsedInfo;
+  reviewer?: ReviewerOutput | null;
 }
 
 interface ContractOutput {
@@ -241,6 +248,68 @@ export async function runNegotiationLoop(
   let isAgreed = false;
   let finalAgreedPrice: number | null = null;
 
+  const compNames = competitors.options.map((c) => c.name);
+
+  const overridePrompt = await getOverrideGuidancePrompt(
+    contract.business_id,
+    contract.vendor?.id,
+    contract.category,
+  );
+
+  // Helper for dynamic LLM negotiation messaging with resilient fallback
+  const getDynamicMessage = async (
+    mode: "open" | "concede" | "accept" | "walk_away",
+    offer: number,
+    defaultTemplate: string,
+    roundNum: number,
+  ) => {
+    const isRealLLM =
+      (process.env.LLM_PROVIDER === "openai" &&
+        (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
+      (process.env.LLM_PROVIDER === "anthropic" &&
+        (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY));
+
+    if (!isRealLLM) {
+      return defaultTemplate;
+    }
+
+    try {
+      const model = getAgentLanguageModel();
+      const prompt = `You are Tavryn, an autonomous corporate procurement negotiation agent.
+Vendor: ${vendorName}
+Service: ${serviceName}
+Original List Price: $${originalPrice}
+Target Price: $${targetPrice}
+Walk-Away Ceiling: $${walkAwayCeiling}
+Current Offer to Vendor: $${offer}
+Vendor's Previous Counter: $${lastCounter}
+Round: ${roundNum} of ${maxRounds}
+Term: ${commitmentMonths} months
+Telemetry: ${usage.seat_count ? `${usage.active_seats}/${usage.seat_count} seats active` : "Telemetry verified"}
+Market Alternatives: ${compNames.slice(0, 2).join(", ") || "competing vendors"}
+${vendorHistory?.has_history && vendorHistory.accepted_discount_pct ? `Vendor historical discount: ${vendorHistory.accepted_discount_pct}%.` : ""}
+${overridePrompt ? `${overridePrompt}\n` : ""}Goal/Mode: ${mode}
+
+Draft a concise, professional 1-2 sentence procurement negotiation message to the vendor account executive. State the exact proposed price ($${offer.toLocaleString()}). Do not include placeholders or conversational filler.`;
+
+      const { text } = await generateText({
+        model,
+        prompt,
+        temperature: 0.2,
+      });
+
+      if (text && text.trim().length > 15) {
+        return text.trim();
+      }
+    } catch (err) {
+      console.warn(
+        "[Negotiate] LLM message generation fallback to template:",
+        err,
+      );
+    }
+    return defaultTemplate;
+  };
+
   // 3. Multi-round negotiation execution loop
   for (let round = 1; round <= maxRounds; round++) {
     roundsCompleted = round;
@@ -257,11 +326,19 @@ export async function runNegotiationLoop(
         ? ` (${usage.active_seats}/${usage.seat_count} active seats)`
         : "";
 
+      let defaultMsg = "";
       if (vendorHistory?.has_history && vendorHistory.accepted_discount_pct) {
-        agentMessage = `Hello, we are reviewing our renewal for ${serviceName}. In our previous renewal, ${vendorName} accepted a ${vendorHistory.accepted_discount_pct}% discount (${commitmentMonths}-month commitment). Given our ongoing partnership and market alternatives like ${compSample || "competing vendors"}, we propose renewing at $${currentOffer.toLocaleString()} for a ${commitmentMonths}-month commitment.`;
+        defaultMsg = `Hello, we are reviewing our renewal for ${serviceName}. In our previous renewal, ${vendorName} accepted a ${vendorHistory.accepted_discount_pct}% discount (${commitmentMonths}-month commitment). Given our ongoing partnership and market alternatives like ${compSample || "competing vendors"}, we propose renewing at $${currentOffer.toLocaleString()} for a ${commitmentMonths}-month commitment.`;
       } else {
-        agentMessage = `Hello, we are reviewing our upcoming renewal for ${serviceName}. In evaluating market alternatives like ${compSample || "competing vendors"} and our internal license efficiency${seatInfo}, we propose renewing at $${currentOffer.toLocaleString()} for a ${commitmentMonths}-month commitment.`;
+        defaultMsg = `Hello, we are reviewing our upcoming renewal for ${serviceName}. In evaluating market alternatives like ${compSample || "competing vendors"} and our internal license efficiency${seatInfo}, we propose renewing at $${currentOffer.toLocaleString()} for a ${commitmentMonths}-month commitment.`;
       }
+
+      agentMessage = await getDynamicMessage(
+        "open",
+        currentOffer,
+        defaultMsg,
+        round,
+      );
     } else {
       // Determine agent's counter or concession
       const previousOffer = currentOffer;
@@ -269,16 +346,34 @@ export async function runNegotiationLoop(
       // If vendor's last counter is at or below target price, accept it!
       if (lastCounter <= targetPrice) {
         currentOffer = lastCounter;
-        agentMessage = `Thank you for working with us on this renewal. Your counter-offer of $${currentOffer.toLocaleString()} aligns with our target budget for ${serviceName}. We accept these terms for the ${commitmentMonths}-month term.`;
+        const defaultMsg = `Thank you for working with us on this renewal. Your counter-offer of $${currentOffer.toLocaleString()} aligns with our target budget for ${serviceName}. We accept these terms for the ${commitmentMonths}-month term.`;
+        agentMessage = await getDynamicMessage(
+          "accept",
+          currentOffer,
+          defaultMsg,
+          round,
+        );
       } else if (round === maxRounds) {
         // Final round decision
         if (lastCounter <= walkAwayCeiling) {
           // Counter is within our walk-away ceiling, accept vendor's counter
           currentOffer = lastCounter;
-          agentMessage = `We have reviewed our spending policy and budget thresholds with our finance desk. We can accept your revised rate of $${currentOffer.toLocaleString()} for the ${commitmentMonths}-month term to finalize this renewal.`;
+          const defaultMsg = `We have reviewed our spending policy and budget thresholds with our finance desk. We can accept your revised rate of $${currentOffer.toLocaleString()} for the ${commitmentMonths}-month term to finalize this renewal.`;
+          agentMessage = await getDynamicMessage(
+            "accept",
+            currentOffer,
+            defaultMsg,
+            round,
+          );
         } else {
           // Counter is above ceiling, walk away
-          agentMessage = `We appreciate your discussions, but your counter-offer of $${lastCounter.toLocaleString()} exceeds our firm policy ceiling of $${walkAwayCeiling.toLocaleString()}. Consequently, we are unable to renew and must transition to an alternative solution.`;
+          const defaultMsg = `We appreciate your discussions, but your counter-offer of $${lastCounter.toLocaleString()} exceeds our firm policy ceiling of $${walkAwayCeiling.toLocaleString()}. Consequently, we are unable to renew and must transition to an alternative solution.`;
+          agentMessage = await getDynamicMessage(
+            "walk_away",
+            currentOffer,
+            defaultMsg,
+            round,
+          );
 
           // Submit walk-away message
           await execTool<SendVendorMessageOutput>(send_vendor_message, {
@@ -314,22 +409,29 @@ export async function runNegotiationLoop(
           Math.min(lastCounter, previousOffer + concession),
         );
 
+        let defaultMsg = "";
         if (round === 2) {
           const utilPct =
             usage.utilization_pct ??
             (usage.seat_count
               ? Math.round(((usage.active_seats || 0) / usage.seat_count) * 100)
               : 80);
-          agentMessage = `We understand your margin requirements, but our telemetry shows average seat utilization is around ${utilPct}%. We can increase our offer to $${currentOffer.toLocaleString()} to bridge the difference.`;
+          defaultMsg = `We understand your margin requirements, but our telemetry shows average seat utilization is around ${utilPct}%. We can increase our offer to $${currentOffer.toLocaleString()} to bridge the difference.`;
         } else if (round === 3) {
-          const compNames = competitors.options
+          const compSample = competitors.options
             .map((c) => c.name)
             .slice(0, 2)
             .join(", ");
-          agentMessage = `We are comparing this against pricing packages from ${compNames || "competing providers"}. We can commit to $${currentOffer.toLocaleString()} for an immediate renewal agreement today.`;
+          defaultMsg = `We are comparing this against pricing packages from ${compSample || "competing providers"}. We can commit to $${currentOffer.toLocaleString()} for an immediate renewal agreement today.`;
         } else {
-          agentMessage = `We are nearing our maximum authorized allocation. We can make a final adjustment to $${currentOffer.toLocaleString()} to lock in this agreement.`;
+          defaultMsg = `We are nearing our maximum authorized allocation. We can make a final adjustment to $${currentOffer.toLocaleString()} to lock in this agreement.`;
         }
+        agentMessage = await getDynamicMessage(
+          "concede",
+          currentOffer,
+          defaultMsg,
+          round,
+        );
       }
     }
 
@@ -424,6 +526,58 @@ export async function runNegotiationLoop(
       .eq("id", statusRes.negotiation.id);
   }
 
+  // 5b. Reviewer Agent Adversarial Audit (Stage 0010)
+  let reviewerResult: ReviewerOutput | null = null;
+  if (isAgreed && statusRes.negotiation?.id) {
+    try {
+      reviewerResult = await runReviewerAgent(contract.business_id, {
+        negotiation: {
+          id: statusRes.negotiation.id,
+          contract_id: contractId,
+          original_price: originalPrice,
+          final_price: finalPrice,
+          current_offer: finalPrice || targetPrice,
+          rounds: roundsCompleted,
+          savings: savingsAmount,
+        },
+        contract: {
+          id: contractId,
+          service: contract.service || vendorName,
+          current_price: originalPrice,
+          category: contract.category || "software",
+          seat_count: contract.seat_count,
+          active_seats: contract.active_seats,
+        },
+        usageData: {
+          seatCount: usage?.seat_count,
+          activeSeats: usage?.active_seats,
+          utilizationPct: usage?.utilization_pct,
+          declinePct: usage?.decline_pct,
+        },
+        vendorMemory: {
+          benchmarkDiscountPct: vendorHistory?.accepted_discount_pct,
+          reputationScore: vendorHistory?.reputation_score,
+          totalDeals: vendorHistory?.deals_count,
+        },
+      });
+
+      // If reviewer rejects or challenges, escalate to human supervisor
+      if (
+        reviewerResult.verdict === "reject" ||
+        reviewerResult.verdict === "challenge"
+      ) {
+        await supabase.from("approvals").insert({
+          business_id: contract.business_id,
+          negotiation_id: statusRes.negotiation.id,
+          status: "pending",
+          reason: `Reviewer Agent ${reviewerResult.verdict.toUpperCase()}: ${reviewerResult.suggestedAction} (${reviewerResult.concerns.map((c) => c.issue).join("; ")})`,
+        });
+      }
+    } catch (reviewerErr) {
+      console.warn("[ReviewerAgent] Review skipped on error:", reviewerErr);
+    }
+  }
+
   // 6. Record final outcome in append-only agent_actions log and business memory
   await execTool(record_outcome, {
     contractId,
@@ -479,5 +633,6 @@ export async function runNegotiationLoop(
       (finalStatus.negotiation?.conversation as unknown as NegotiationTurn[]) ||
       [],
     memoryUsed,
+    reviewer: reviewerResult,
   };
 }

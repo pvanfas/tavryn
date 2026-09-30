@@ -1,17 +1,11 @@
 import {
-  ArrowDownRight,
   CheckCircle2,
-  Copy,
   ExternalLink,
   Lock,
-  Percent,
-  Receipt,
   Repeat,
   ShieldCheck,
-  TrendingDown,
 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import React from "react";
 

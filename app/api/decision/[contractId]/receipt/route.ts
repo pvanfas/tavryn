@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
@@ -113,7 +112,10 @@ export async function POST(
     }
 
     if (!transactionId) {
-      return apiError("Valid transaction ID is required to generate receipt", 400);
+      return apiError(
+        "Valid transaction ID is required to generate receipt",
+        400,
+      );
     }
 
     // 3. Create the cryptographic receipt

@@ -1,5 +1,7 @@
+import { generateObject } from "ai";
 import { z } from "zod";
 
+import { getAgentLanguageModel } from "@/lib/agent/provider";
 import { get_vendor_history, record_vendor_memory } from "@/lib/memory";
 import { getServiceSupabase } from "@/lib/supabase";
 import { find_vendor_options, get_usage } from "@/lib/tools";
@@ -268,6 +270,42 @@ export function extractTermsFromVendorReply(
   };
 
   return VendorReplyExtractionSchema.parse(extraction);
+}
+
+/**
+ * Extracts structured contract renewal terms from unstructured vendor email reply text.
+ * When live LLM credentials are configured, leverages generateObject with strict Zod validation.
+ * Gracefully falls back to deterministic regex heuristics for mock mode, offline testing, or parsing failures.
+ */
+export async function extractTermsFromVendorReplyAsync(
+  rawText: string,
+  baselinePrice: number,
+): Promise<VendorReplyExtraction> {
+  const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
+  const hasKey = Boolean(
+    process.env.OPENAI_API_KEY ||
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.LLM_API_KEY,
+  );
+
+  if (hasKey && provider !== "mock") {
+    try {
+      const model = getAgentLanguageModel();
+      const { object } = await generateObject({
+        model,
+        schema: VendorReplyExtractionSchema,
+        prompt: `You are an automated procurement analyst. Extract the vendor's renewal counter-offer terms from this email reply against an original baseline annual price of $${baselinePrice}:\n\n${rawText}`,
+      });
+      return object;
+    } catch (err) {
+      console.warn(
+        "LLM vendor reply extraction failed, falling back to deterministic extractor:",
+        err,
+      );
+    }
+  }
+
+  return extractTermsFromVendorReply(rawText, baselinePrice);
 }
 
 /**
@@ -566,8 +604,11 @@ export async function processVendorReply(
     negotiation = newNeg;
   }
 
-  // 2. Extract terms using deterministic regex & Zod
-  const extraction = extractTermsFromVendorReply(rawReply, originalPrice);
+  // 2. Extract terms using dynamic LLM extraction with deterministic regex fallback
+  const extraction = await extractTermsFromVendorReplyAsync(
+    rawReply,
+    originalPrice,
+  );
   if (acceptsUsdcOverride !== undefined) {
     extraction.accepts_usdc = acceptsUsdcOverride;
   }

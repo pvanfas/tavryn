@@ -1,6 +1,13 @@
 "use client";
 
-import { Bell, Menu, Search, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  ExternalLink,
+  Menu,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
@@ -39,6 +46,11 @@ export function AppHeader({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [walletBalance, setWalletBalance] = useState<{
+    balance: number;
+    isLow: boolean;
+    faucetUrl: string;
+  } | null>(null);
 
   // Global keyboard shortcut for Cmd+K / Ctrl+K
   useEffect(() => {
@@ -81,8 +93,60 @@ export function AppHeader({
     };
   }, [activeBusinessId]);
 
+  // Poll Arc USDC balance for active business
+  useEffect(() => {
+    if (!activeBusinessId) return;
+    let isMounted = true;
+    async function loadBalance() {
+      try {
+        const res = await fetch(
+          `/api/wallet/balance?businessId=${encodeURIComponent(activeBusinessId!)}`,
+        );
+        if (res.ok) {
+          const j = await res.json();
+          if (isMounted) {
+            setWalletBalance({
+              balance: j.balance,
+              isLow: j.isLow,
+              faucetUrl: j.faucetUrl,
+            });
+          }
+        }
+      } catch {
+        // silent
+      }
+    }
+    loadBalance();
+    const interval = setInterval(loadBalance, 45000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [activeBusinessId]);
+
   return (
     <>
+      {walletBalance?.isLow && (
+        <div className="bg-amber-500/10 dark:bg-amber-950/40 border-b border-amber-500/20 px-3 sm:px-6 py-1.5 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between transition-colors z-40 relative">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="truncate">
+              Low Arc Testnet USDC Liquidity ($
+              {walletBalance.balance.toFixed(2)} USDC). Top up to maintain
+              automated renewals.
+            </span>
+          </div>
+          <a
+            href={walletBalance.faucetUrl || "https://faucet.circle.com"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300 hover:underline shrink-0 ml-3 text-[11px]"
+          >
+            <span>Circle Arc Faucet</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
       <header className="h-14 sm:h-16 px-3 sm:px-6 bg-white/80 dark:bg-[#0e1411]/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between sticky top-0 z-30 transition-colors">
         {/* Mobile Menu Button + Breadcrumbs */}
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 mr-2">
@@ -151,7 +215,9 @@ export function AppHeader({
             aria-label="Open command bar"
           >
             <Search className="h-3.5 w-3.5 text-[#107e65] shrink-0" />
-            <span className="text-slate-500 dark:text-slate-400">Ask Tavryn...</span>
+            <span className="text-slate-500 dark:text-slate-400">
+              Ask Tavryn...
+            </span>
             <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border border-slate-200 dark:border-slate-700 shadow-2xs">
               ⌘K
             </kbd>

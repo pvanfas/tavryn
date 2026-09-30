@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  Bot,
   Building2,
   Check,
   Clock,
@@ -184,8 +185,8 @@ export function TractionMetricsClient({
         </div>
       </div>
 
-      {/* Middle Grid: Autonomous Governance & Velocity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Middle Grid: Autonomous Governance, Multi-Agent Reviewer, & Velocity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Governance & Decisions Card */}
         <div className="p-6 rounded-2xl bg-white dark:bg-[#111714] border border-slate-200/80 dark:border-slate-800/80 shadow-2xs">
           <div className="flex items-center justify-between mb-4">
@@ -269,6 +270,118 @@ export function TractionMetricsClient({
               <span>Approved: {metrics.governance.humanApprovedCount}</span>
               <span>Rejected: {metrics.governance.humanRejectedCount}</span>
               <span>Pending: {metrics.governance.humanPendingCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Multi-Agent Reviewer Telemetry Card */}
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#111714] border border-slate-200/80 dark:border-slate-800/80 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <H2 className="text-base text-slate-900 dark:text-white">
+                  Multi-Agent Audit Telemetry
+                </H2>
+              </div>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                Dual-LLM Cross-Check
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 my-4">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0c120f] border border-slate-100 dark:border-slate-800/60">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Total Deal Audits
+                </p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                  {metrics.reviewer.totalReviews}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Independent cross-checks
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0c120f] border border-slate-100 dark:border-slate-800/60">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Challenge / Veto Rate
+                </p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                  {metrics.reviewer.challengeRatePct}%
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Deals altered or challenged
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Breakdown & Ratio bar */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                Auditor Agreement Distribution
+              </span>
+              <span className="font-bold text-slate-900 dark:text-white">
+                {metrics.reviewer.totalReviews > 0
+                  ? Math.round(
+                      (metrics.reviewer.agreedCount /
+                        metrics.reviewer.totalReviews) *
+                        100,
+                    )
+                  : 100}
+                % Agreed
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex">
+              <div
+                className="bg-[#107e65] h-full transition-all"
+                style={{
+                  width: `${
+                    metrics.reviewer.totalReviews > 0
+                      ? (metrics.reviewer.agreedCount /
+                          metrics.reviewer.totalReviews) *
+                        100
+                      : 100
+                  }%`,
+                }}
+              />
+              <div
+                className="bg-amber-500 h-full transition-all"
+                style={{
+                  width: `${
+                    metrics.reviewer.totalReviews > 0
+                      ? (metrics.reviewer.challengedCount /
+                          metrics.reviewer.totalReviews) *
+                        100
+                      : 0
+                  }%`,
+                }}
+              />
+              <div
+                className="bg-rose-500 h-full transition-all"
+                style={{
+                  width: `${
+                    metrics.reviewer.totalReviews > 0
+                      ? (metrics.reviewer.rejectedCount /
+                          metrics.reviewer.totalReviews) *
+                        100
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400">
+              <span className="text-emerald-600 dark:text-emerald-400">
+                Agreed: {metrics.reviewer.agreedCount}
+              </span>
+              <span className="text-amber-600 dark:text-amber-400">
+                Challenged: {metrics.reviewer.challengedCount}
+              </span>
+              <span className="text-rose-600 dark:text-rose-400">
+                Rejected: {metrics.reviewer.rejectedCount}
+              </span>
             </div>
           </div>
         </div>

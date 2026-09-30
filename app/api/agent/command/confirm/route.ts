@@ -23,7 +23,11 @@ export async function POST(req: Request) {
 
     const validation = ConfirmActionSchema.safeParse(rawBody);
     if (!validation.success) {
-      return apiError("Invalid action confirmation payload", 400, validation.error.format());
+      return apiError(
+        "Invalid action confirmation payload",
+        400,
+        validation.error.format(),
+      );
     }
 
     const { action, params, businessId: requestedBusinessId } = validation.data;
@@ -39,7 +43,11 @@ export async function POST(req: Request) {
       businessId = firstB?.id || "b655fb94-fc62-4e3c-8898-2c5f88068159";
     }
 
-    const executionResult = await executeConfirmedAction(businessId, action, params);
+    const executionResult = await executeConfirmedAction(
+      businessId,
+      action,
+      params,
+    );
 
     return apiSuccess({
       action,

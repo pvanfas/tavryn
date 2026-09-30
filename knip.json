@@ -1,0 +1,41 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/config-schema.json",
+  "entry": ["app/**/*.{ts,tsx}", "scripts/*.ts", "tests/**/*.ts"],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,tsx}",
+    "tests/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "contracts/**",
+    "components/ui/chevron-*.tsx",
+    "components/ui/file-chart-line.tsx",
+    "components/ui/history.tsx",
+    "components/ui/layout-grid.tsx",
+    "components/ui/message-square.tsx",
+    "components/ui/plus.tsx",
+    "components/ui/settings.tsx",
+    "components/ui/shield-check.tsx",
+    "components/ui/wallet.tsx",
+    "components/ui/agent-icon.tsx"
+  ],
+  "ignoreDependencies": [
+    "@base-ui/react",
+    "class-variance-authority",
+    "cn",
+    "motion",
+    "shadcn",
+    "tw-animate-css",
+    "tailwindcss",
+    "eslint-config-prettier"
+  ],
+  "rules": {
+    "exports": "off",
+    "types": "off",
+    "unlisted": "error",
+    "binaries": "off",
+    "unresolved": "error"
+  }
+}

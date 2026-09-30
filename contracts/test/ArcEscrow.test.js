@@ -194,4 +194,132 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
     const balanceAfter = await mockUsdc.balanceOf(agent.address);
     expect(balanceAfter - balanceBefore).to.equal(amount);
   });
+
+  it("8. Success fee: Owner can set fee up to 20% cap; agent and stranger cannot", async function () {
+    // 10% fee = 1000 bps
+    await expect(arcEscrow.connect(owner).setFeeConfig(1000, owner.address))
+      .to.emit(arcEscrow, "FeeConfigUpdated")
+      .withArgs(1000, owner.address);
+
+    expect(await arcEscrow.feeBps()).to.equal(1000);
+    expect(await arcEscrow.feeRecipient()).to.equal(owner.address);
+
+    // Over 20% cap (2001 bps) -> Revert
+    await expect(
+      arcEscrow.connect(owner).setFeeConfig(2001, owner.address),
+    ).to.be.revertedWith("ArcEscrow: feeBps exceeds MAX_FEE_BPS");
+
+    // Agent attempt -> Revert
+    await expect(
+      arcEscrow.connect(agent).setFeeConfig(500, agent.address),
+    ).to.be.revertedWith("ArcEscrow: Only owner authorized");
+  });
+
+  it("9. Success fee: Zero fee when savings are zero (baseline <= negotiated)", async function () {
+    await arcEscrow.connect(owner).setFeeConfig(1000, owner.address); // 10% fee
+
+    const price = ethers.parseUnits("5000", 6);
+    const baseline = ethers.parseUnits("5000", 6); // 0 savings
+    const idempKey = ethers.encodeBytes32String("no-savings-key");
+
+    await arcEscrow
+      .connect(agent)
+      .createAgreementWithSavings(
+        vendor.address,
+        price,
+        baseline,
+        "software",
+        3600,
+        idempKey,
+      );
+
+    const ag = await arcEscrow.getAgreement(1);
+    expect(ag.savings).to.equal(0);
+    expect(ag.feeAmount).to.equal(0);
+  });
+
+  it("10. Success fee: Fee is funded, released to feeRecipient, and vendor receives price", async function () {
+    const feeRecipient = stranger.address;
+    await arcEscrow.connect(owner).setFeeConfig(1000, feeRecipient); // 10% of savings
+
+    const negotiatedPrice = ethers.parseUnits("7000", 6); // $7,000
+    const baselinePrice = ethers.parseUnits("10000", 6); // $10,000
+    // Realized savings = $3,000. 10% fee = $300.
+    const expectedFee = ethers.parseUnits("300", 6);
+    const totalToFund = ethers.parseUnits("7300", 6);
+
+    const idempKey = ethers.encodeBytes32String("savings-fee-key");
+    await arcEscrow
+      .connect(agent)
+      .createAgreementWithSavings(
+        vendor.address,
+        negotiatedPrice,
+        baselinePrice,
+        "software",
+        3600,
+        idempKey,
+      );
+
+    const ag = await arcEscrow.getAgreement(1);
+    expect(ag.savings).to.equal(ethers.parseUnits("3000", 6));
+    expect(ag.feeAmount).to.equal(expectedFee);
+
+    const agentBefore = await mockUsdc.balanceOf(agent.address);
+    const vendorBefore = await mockUsdc.balanceOf(vendor.address);
+    const recipientBefore = await mockUsdc.balanceOf(feeRecipient);
+
+    // Fund agreement (7,000 price + 300 fee = 7,300)
+    await arcEscrow.connect(agent).fundAgreement(1);
+    const agentAfterFund = await mockUsdc.balanceOf(agent.address);
+    expect(agentBefore - agentAfterFund).to.equal(totalToFund);
+
+    // Submit & Approve Milestone
+    await arcEscrow.connect(vendor).submitMilestone(1, "Milestone done");
+    await arcEscrow.connect(verifier).approveMilestone(1);
+
+    // Release funds
+    await expect(arcEscrow.connect(agent).release(1))
+      .to.emit(arcEscrow, "FundsReleased")
+      .withArgs(1, vendor.address, negotiatedPrice)
+      .and.to.emit(arcEscrow, "FeeCollected")
+      .withArgs(1, feeRecipient, expectedFee);
+
+    const vendorAfter = await mockUsdc.balanceOf(vendor.address);
+    const recipientAfter = await mockUsdc.balanceOf(feeRecipient);
+
+    expect(vendorAfter - vendorBefore).to.equal(negotiatedPrice);
+    expect(recipientAfter - recipientBefore).to.equal(expectedFee);
+  });
+
+  it("11. Success fee: Refund returns both principal and fee to depositor", async function () {
+    const feeRecipient = stranger.address;
+    await arcEscrow.connect(owner).setFeeConfig(1000, feeRecipient);
+
+    const price = ethers.parseUnits("4000", 6);
+    const baseline = ethers.parseUnits("6000", 6); // 2000 savings -> 200 fee
+    const expectedFee = ethers.parseUnits("200", 6);
+    const totalFunded = price + expectedFee; // 4200
+
+    await arcEscrow.connect(agent).createAgreementWithSavings(
+      vendor.address,
+      price,
+      baseline,
+      "software",
+      60, // 60 seconds duration
+      ethers.encodeBytes32String("refund-fee-key"),
+    );
+
+    await arcEscrow.connect(agent).fundAgreement(1);
+    const agentBefore = await mockUsdc.balanceOf(agent.address);
+
+    // Fast-forward past deadline
+    await ethers.provider.send("evm_increaseTime", [120]);
+    await ethers.provider.send("evm_mine");
+
+    // Refund
+    await arcEscrow.connect(agent).refund(1);
+    const agentAfter = await mockUsdc.balanceOf(agent.address);
+
+    expect(agentAfter - agentBefore).to.equal(totalFunded);
+  });
 });

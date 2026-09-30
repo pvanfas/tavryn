@@ -5,7 +5,6 @@ import {
   createReceipt,
   generateReceiptToken,
   getPublicReceipt,
-  PublicReceiptViewModel,
   updateReceipt,
 } from "../lib/receipt";
 import { getServiceSupabase } from "../lib/supabase";
@@ -108,10 +107,17 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
     assert.ok(token, "Token must not be empty");
     assert.strictEqual(typeof token, "string");
     // 16 bytes hex = 32 characters = 128 bits of entropy
-    assert.ok(token.length >= 32, "Token must be at least 32 hex chars (128 bits)");
+    assert.ok(
+      token.length >= 32,
+      "Token must be at least 32 hex chars (128 bits)",
+    );
 
     const token2 = generateReceiptToken();
-    assert.notStrictEqual(token, token2, "Successive tokens must be unique and unguessable");
+    assert.notStrictEqual(
+      token,
+      token2,
+      "Successive tokens must be unique and unguessable",
+    );
   });
 
   it("creates a receipt record strictly for completed transactions", async () => {
@@ -122,7 +128,10 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
     });
 
     assert.ok(res.token, "Receipt must return a token");
-    assert.ok(res.receiptUrl.startsWith("/r/"), "Receipt URL must start with /r/");
+    assert.ok(
+      res.receiptUrl.startsWith("/r/"),
+      "Receipt URL must start with /r/",
+    );
     testToken = res.token;
 
     // Verify row in database
@@ -152,15 +161,12 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
 
     assert.ok(pendingTx);
 
-    await assert.rejects(
-      async () => {
-        await createReceipt({
-          transactionId: pendingTx.id,
-          businessId,
-        });
-      },
-      /Cannot create receipt for transaction with status 'pending'/,
-    );
+    await assert.rejects(async () => {
+      await createReceipt({
+        transactionId: pendingTx.id,
+        businessId,
+      });
+    }, /Cannot create receipt for transaction with status 'pending'/);
   });
 
   it("strictly enforces allow-listed view model with zero sensitive data leak", async () => {
@@ -240,8 +246,16 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
 
     let model = await getPublicReceipt(testToken);
     assert.ok(model);
-    assert.strictEqual(model.businessName, null, "Business name should be hidden");
-    assert.strictEqual(model.vendorName, "Test Slack Inc", "Vendor name should remain visible");
+    assert.strictEqual(
+      model.businessName,
+      null,
+      "Business name should be hidden",
+    );
+    assert.strictEqual(
+      model.vendorName,
+      "Test Slack Inc",
+      "Vendor name should remain visible",
+    );
 
     // Hide vendor name
     await updateReceipt({
@@ -252,7 +266,11 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
 
     model = await getPublicReceipt(testToken);
     assert.ok(model);
-    assert.strictEqual(model.businessName, null, "Business name should be hidden");
+    assert.strictEqual(
+      model.businessName,
+      null,
+      "Business name should be hidden",
+    );
     assert.strictEqual(model.vendorName, null, "Vendor name should be hidden");
 
     // Restore visibility
@@ -285,7 +303,9 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
     );
 
     // Non-existent token also produces null
-    const ghostModel = await getPublicReceipt("0123456789abcdef0123456789abcdef");
+    const ghostModel = await getPublicReceipt(
+      "0123456789abcdef0123456789abcdef",
+    );
     assert.strictEqual(ghostModel, null, "Unknown token must return null");
   });
 });

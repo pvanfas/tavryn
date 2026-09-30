@@ -25,146 +25,144 @@ export default async function Image({
   const savingsPct = receipt?.savingsPct ? `${receipt.savingsPct}%` : "Savings";
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        backgroundColor: "#0B110F",
+        backgroundImage:
+          "radial-gradient(circle at 25px 25px, #13221C 2%, transparent 0%), radial-gradient(circle at 75px 75px, #13221C 2%, transparent 0%)",
+        backgroundSize: "100px 100px",
+        padding: "70px 80px",
+        color: "white",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }}
+    >
       <div
         style={{
-          height: "100%",
-          width: "100%",
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          backgroundColor: "#0B110F",
-          backgroundImage:
-            "radial-gradient(circle at 25px 25px, #13221C 2%, transparent 0%), radial-gradient(circle at 75px 75px, #13221C 2%, transparent 0%)",
-          backgroundSize: "100px 100px",
-          padding: "70px 80px",
-          color: "white",
-          fontFamily: "system-ui, -apple-system, sans-serif",
+          alignItems: "center",
+          gap: "16px",
         }}
       >
         <div
           style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "12px",
+            backgroundColor: "#107E65",
             display: "flex",
             alignItems: "center",
-            gap: "16px",
+            justifyContent: "center",
+            fontWeight: 900,
+            fontSize: "26px",
+            color: "#FFFFFF",
           }}
         >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "12px",
-              backgroundColor: "#107E65",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              fontSize: "26px",
-              color: "#FFFFFF",
-            }}
-          >
-            T
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
-              style={{
-                fontSize: "22px",
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-                color: "#10B981",
-              }}
-            >
-              TAVRYN
-            </span>
-            <span
-              style={{
-                fontSize: "14px",
-                color: "#94A3B8",
-                letterSpacing: "0.05em",
-              }}
-            >
-              AUTONOMOUS PROCUREMENT PROOF
-            </span>
-          </div>
+          T
         </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              backgroundColor: "rgba(16, 126, 101, 0.15)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              borderRadius: "30px",
-              padding: "8px 20px",
-              width: "fit-content",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "16px",
-                fontWeight: 700,
-                color: "#34D399",
-                letterSpacing: "0.05em",
-              }}
-            >
-              VERIFIED ON-CHAIN SAVINGS · {savingsPct} REDUCTION
-            </span>
-          </div>
-
-          <h1
-            style={{
-              fontSize: "58px",
-              fontWeight: 900,
-              lineHeight: 1.1,
-              color: "#FFFFFF",
-              margin: 0,
-            }}
-          >
-            Saved {savingsFormatted} on {service}
-          </h1>
-
-          <p
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span
             style={{
               fontSize: "22px",
-              color: "#94A3B8",
-              maxWidth: "850px",
-              lineHeight: 1.4,
-              margin: 0,
+              fontWeight: 800,
+              letterSpacing: "0.15em",
+              color: "#10B981",
             }}
           >
-            Policy-verified autonomous negotiation sealed with Arc USDC smart
-            escrow settlement.
-          </p>
+            TAVRYN
+          </span>
+          <span
+            style={{
+              fontSize: "14px",
+              color: "#94A3B8",
+              letterSpacing: "0.05em",
+            }}
+          >
+            AUTONOMOUS PROCUREMENT PROOF
+          </span>
         </div>
+      </div>
 
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            borderTop: "1px solid rgba(148, 163, 184, 0.2)",
-            paddingTop: "24px",
+            gap: "12px",
+            backgroundColor: "rgba(16, 126, 101, 0.15)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            borderRadius: "30px",
+            padding: "8px 20px",
+            width: "fit-content",
           }}
         >
-          <span style={{ fontSize: "16px", color: "#64748B" }}>
-            Network: Arc Testnet (USDC-native EVM)
-          </span>
           <span
             style={{
               fontSize: "16px",
-              fontWeight: 600,
-              color: "#10B981",
+              fontWeight: 700,
+              color: "#34D399",
+              letterSpacing: "0.05em",
             }}
           >
-            Proof: testnet.arcscan.app
+            VERIFIED ON-CHAIN SAVINGS · {savingsPct} REDUCTION
           </span>
         </div>
+
+        <h1
+          style={{
+            fontSize: "58px",
+            fontWeight: 900,
+            lineHeight: 1.1,
+            color: "#FFFFFF",
+            margin: 0,
+          }}
+        >
+          Saved {savingsFormatted} on {service}
+        </h1>
+
+        <p
+          style={{
+            fontSize: "22px",
+            color: "#94A3B8",
+            maxWidth: "850px",
+            lineHeight: 1.4,
+            margin: 0,
+          }}
+        >
+          Policy-verified autonomous negotiation sealed with Arc USDC smart
+          escrow settlement.
+        </p>
       </div>
-    ),
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          borderTop: "1px solid rgba(148, 163, 184, 0.2)",
+          paddingTop: "24px",
+        }}
+      >
+        <span style={{ fontSize: "16px", color: "#64748B" }}>
+          Network: Arc Testnet (USDC-native EVM)
+        </span>
+        <span
+          style={{
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "#10B981",
+          }}
+        >
+          Proof: testnet.arcscan.app
+        </span>
+      </div>
+    </div>,
     {
       ...size,
     },

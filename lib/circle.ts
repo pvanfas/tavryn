@@ -350,3 +350,46 @@ export async function sendUSDC(params: {
     state: response.data.state,
   };
 }
+
+/**
+ * Polls the Arc Testnet RPC directly via eth_call to query the live USDC token balance.
+ */
+export async function getArcUsdcBalance(address: string): Promise<number> {
+  if (!address || !address.startsWith("0x")) return 0;
+  try {
+    // 0x70a08231 is balanceOf(address) signature
+    const paddedAddress = address
+      .toLowerCase()
+      .replace(/^0x/, "")
+      .padStart(64, "0");
+    const data = `0x70a08231${paddedAddress}`;
+
+    const rpcUrl = process.env.ARC_RPC_URL || ARC_CONFIG.rpcUrl;
+    const res = await fetch(rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_call",
+        params: [
+          {
+            to: ARC_CONFIG.usdcContractAddress,
+            data,
+          },
+          "latest",
+        ],
+      }),
+    });
+
+    if (!res.ok) return 0;
+    const json = await res.json();
+    if (!json.result || json.result === "0x") return 0;
+    // USDC on Arc has 6 decimals
+    const rawVal = BigInt(json.result);
+    return Number(rawVal) / 1e6;
+  } catch (err) {
+    console.warn("[Circle/Arc] Failed to query live Arc USDC balance:", err);
+    return 0;
+  }
+}

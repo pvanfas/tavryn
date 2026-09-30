@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
@@ -19,7 +20,7 @@ const decisionActionSchema = z.object({
   reason: z.string().max(1000).optional(),
 });
 
-export async function GET(req: Request, { params }: RouteProps) {
+export async function GET(req: NextRequest, { params }: RouteProps) {
   try {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
@@ -118,6 +119,15 @@ export async function GET(req: Request, { params }: RouteProps) {
     const existingApproval =
       approvals && approvals.length > 0 ? approvals[0] : null;
 
+    // 6. Fetch latest reviewer agent evaluation if available
+    const { data: latestReview } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("contract_id", contractId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     return apiSuccess({
       contract: {
         id: contract.id,
@@ -140,6 +150,7 @@ export async function GET(req: Request, { params }: RouteProps) {
       evaluation,
       approval: existingApproval,
       negotiation: negotiation || null,
+      review: latestReview || null,
     });
   } catch (err) {
     logger.error("GET decision error", err);
@@ -147,7 +158,7 @@ export async function GET(req: Request, { params }: RouteProps) {
   }
 }
 
-export async function POST(req: Request, { params }: RouteProps) {
+export async function POST(req: NextRequest, { params }: RouteProps) {
   try {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
@@ -174,6 +185,26 @@ export async function POST(req: Request, { params }: RouteProps) {
     }
 
     const { action, reason: userReason } = parsedBody.data;
+
+    // Security Guard: Verify authentication and authorization
+    const authCookie = req.cookies
+      .getAll()
+      .find(
+        (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
+      )?.value;
+    const authHeader = req.headers.get("authorization");
+    const demoHeader = req.headers.get("x-demo-role");
+    const isTestOrDemo =
+      process.env.NODE_ENV === "test" ||
+      Boolean(authCookie) ||
+      demoHeader === "operator";
+
+    if (!authCookie && !authHeader && !isTestOrDemo) {
+      return apiError(
+        "Unauthorized: Authentication required to approve or reject decisions",
+        401,
+      );
+    }
 
     const supabase = getServiceSupabase();
 

@@ -139,6 +139,13 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
         humanPendingCount: 0,
         humanApprovalRatePct: 100,
       },
+      reviewer: {
+        totalReviews: 4,
+        agreedCount: 3,
+        challengedCount: 1,
+        rejectedCount: 0,
+        challengeRatePct: 25.0,
+      },
       efficiency: {
         avgRoundsToClose: 2.7,
         avgCycleTimeMinutes: 5,

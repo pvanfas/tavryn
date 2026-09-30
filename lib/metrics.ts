@@ -66,6 +66,13 @@ export interface TractionMetricsResult {
     humanPendingCount: number;
     humanApprovalRatePct: number;
   };
+  reviewer: {
+    totalReviews: number;
+    agreedCount: number;
+    challengedCount: number;
+    rejectedCount: number;
+    challengeRatePct: number;
+  };
   efficiency: {
     avgRoundsToClose: number;
     avgCycleTimeMinutes: number;
@@ -139,6 +146,13 @@ export async function getTractionMetrics(options?: {
         humanRejectedCount: 0,
         humanPendingCount: 0,
         humanApprovalRatePct: 0,
+      },
+      reviewer: {
+        totalReviews: 0,
+        agreedCount: 0,
+        challengedCount: 0,
+        rejectedCount: 0,
+        challengeRatePct: 0,
       },
       efficiency: { avgRoundsToClose: 0, avgCycleTimeMinutes: 0 },
       receiptsCount: 0,
@@ -234,6 +248,16 @@ export async function getTractionMetrics(options?: {
     receiptsCount = (rawReceipts || []).filter((r) =>
       bIdSet.has(r.business_id),
     ).length;
+  }
+
+  // 8. Fetch reviews
+  const { data: rawReviews } = await supabase
+    .from("reviews")
+    .select("id, business_id, verdict, created_at");
+  let reviews = rawReviews || [];
+  if (realOnly) {
+    const bIdSet = new Set(businessIds);
+    reviews = reviews.filter((r) => bIdSet.has(r.business_id));
   }
 
   // ─── AGGREGATIONS & CALCULATIONS ─────────────────────────────────────────────
@@ -402,6 +426,19 @@ export async function getTractionMetrics(options?: {
         ? 100
         : 0;
 
+  // Reviewer Metrics
+  const totalReviews = reviews.length;
+  const agreedCount = reviews.filter((r) => r.verdict === "agree").length;
+  const challengedCount = reviews.filter(
+    (r) => r.verdict === "challenge",
+  ).length;
+  const rejectedCount = reviews.filter((r) => r.verdict === "reject").length;
+  const challengeRatePct =
+    totalReviews > 0
+      ? Math.round(((challengedCount + rejectedCount) / totalReviews) * 1000) /
+        10
+      : 0;
+
   // Efficiency / Velocity
   const avgRoundsToClose =
     closedNegotiationsCount > 0
@@ -507,6 +544,13 @@ export async function getTractionMetrics(options?: {
       humanRejectedCount,
       humanPendingCount,
       humanApprovalRatePct,
+    },
+    reviewer: {
+      totalReviews,
+      agreedCount,
+      challengedCount,
+      rejectedCount,
+      challengeRatePct,
     },
     efficiency: {
       avgRoundsToClose,

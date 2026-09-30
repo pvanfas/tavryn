@@ -33,10 +33,18 @@ export async function POST(req: Request) {
 
     const validation = CommandQuerySchema.safeParse(rawBody);
     if (!validation.success) {
-      return apiError("Invalid command request", 400, validation.error.format());
+      return apiError(
+        "Invalid command request",
+        400,
+        validation.error.format(),
+      );
     }
 
-    const { message, stream, businessId: requestedBusinessId } = validation.data;
+    const {
+      message,
+      stream,
+      businessId: requestedBusinessId,
+    } = validation.data;
 
     // Resolve business ID (fallback to first available or Demo Co)
     let businessId: string = requestedBusinessId || "";
@@ -63,7 +71,10 @@ export async function POST(req: Request) {
 
     // If stream is requested via query param or header
     const acceptHeader = req.headers.get("accept") || "";
-    const isEventStream = stream && (acceptHeader.includes("text/event-stream") || acceptHeader.includes("*/*"));
+    const isEventStream =
+      stream &&
+      (acceptHeader.includes("text/event-stream") ||
+        acceptHeader.includes("*/*"));
 
     if (isEventStream) {
       const encoder = new TextEncoder();
@@ -78,7 +89,9 @@ export async function POST(req: Request) {
               if (i % 3 === 0 || i === words.length - 1) {
                 const chunkPayload = JSON.stringify({
                   type: "chunk",
-                  chunk: (i > 0 ? " " : "") + words.slice(Math.max(0, i - 2), i + 1).join(" "),
+                  chunk:
+                    (i > 0 ? " " : "") +
+                    words.slice(Math.max(0, i - 2), i + 1).join(" "),
                   fullText: current,
                 });
                 controller.enqueue(encoder.encode(`data: ${chunkPayload}\n\n`));

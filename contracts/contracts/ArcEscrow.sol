@@ -10,7 +10,8 @@ interface IERC20 {
 /**
  * @title ArcEscrow
  * @notice Autonomous procurement escrow with deterministic on-chain spending limits,
- * category budgets, multi-role authority separation (Owner, Agent, Verifier), and deadline refunds.
+ * category budgets, multi-role authority separation (Owner, Agent, Verifier), deadline refunds,
+ * and on-chain protocol success fees calculated strictly on realized savings.
  */
 contract ArcEscrow {
     enum Status {
@@ -27,6 +28,9 @@ contract ArcEscrow {
         address depositor;
         address vendor;
         uint256 amount;
+        uint256 baselinePrice;
+        uint256 savings;
+        uint256 feeAmount;
         string category;
         uint256 deadline;
         Status status;
@@ -39,12 +43,18 @@ contract ArcEscrow {
     address public agent;
     address public verifier;
 
+    // Protocol success fee config (basis points: 1000 = 10%, max 2000 = 20%)
+    uint256 public constant MAX_FEE_BPS = 2000;
+    uint256 public feeBps;
+    address public feeRecipient;
+
     uint256 public maxPerAgreement; // In USDC units (6 decimals)
     mapping(string => uint256) public categoryBudgets;
     mapping(string => uint256) public categorySpent;
 
     uint256 public nextAgreementId = 1;
     mapping(uint256 => Agreement) public agreements;
+    mapping(bytes32 => uint256) public agreementByIdempotencyKey;
 
     bool private _locked;
 
@@ -61,10 +71,12 @@ contract ArcEscrow {
     event MilestoneSubmitted(uint256 indexed agreementId, string description);
     event MilestoneApproved(uint256 indexed agreementId, address indexed verifier);
     event FundsReleased(uint256 indexed agreementId, address indexed vendor, uint256 amount);
+    event FeeCollected(uint256 indexed agreementId, address indexed recipient, uint256 feeAmount);
     event FundsRefunded(uint256 indexed agreementId, address indexed depositor, uint256 amount);
     event PolicyUpdated(uint256 maxPerAgreement);
     event CategoryBudgetUpdated(string category, uint256 budget);
     event RolesUpdated(address owner, address agent, address verifier);
+    event FeeConfigUpdated(uint256 feeBps, address feeRecipient);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "ArcEscrow: Only owner authorized");
@@ -103,6 +115,8 @@ contract ArcEscrow {
         agent = _agent;
         verifier = _verifier;
         maxPerAgreement = _maxPerAgreement;
+        feeRecipient = msg.sender;
+        feeBps = 0; // Default 0% until owner configures
     }
 
     function setRoles(address _owner, address _agent, address _verifier) external onlyOwner {
@@ -110,6 +124,15 @@ contract ArcEscrow {
         if (_agent != address(0)) agent = _agent;
         if (_verifier != address(0)) verifier = _verifier;
         emit RolesUpdated(owner, agent, verifier);
+    }
+
+    function setFeeConfig(uint256 _feeBps, address _feeRecipient) external onlyOwner {
+        require(_feeBps <= MAX_FEE_BPS, "ArcEscrow: feeBps exceeds MAX_FEE_BPS");
+        feeBps = _feeBps;
+        if (_feeRecipient != address(0)) {
+            feeRecipient = _feeRecipient;
+        }
+        emit FeeConfigUpdated(_feeBps, feeRecipient);
     }
 
     function setMaxPerAgreement(uint256 _max) external onlyOwner {
@@ -122,22 +145,37 @@ contract ArcEscrow {
         emit CategoryBudgetUpdated(category, budget);
     }
 
-    function createAgreement(
+    function _createAgreementInternal(
         address vendor,
         uint256 amount,
+        uint256 baselinePrice,
         string calldata category,
-        uint256 durationSeconds
-    ) external onlyAgentOrOwner returns (uint256) {
+        uint256 durationSeconds,
+        bytes32 idempotencyKey
+    ) internal returns (uint256) {
         require(vendor != address(0), "Invalid vendor address");
         require(amount > 0, "Amount must be positive");
         require(durationSeconds > 0, "Duration must be positive");
 
-        // Policy rule: If initiated by agent, amount cannot exceed maxPerAgreement
+        if (idempotencyKey != bytes32(0)) {
+            require(
+                agreementByIdempotencyKey[idempotencyKey] == 0,
+                "ArcEscrow: Idempotent agreement already exists"
+            );
+        }
+
+        uint256 savings = baselinePrice > amount ? (baselinePrice - amount) : 0;
+        uint256 feeAmount = (savings > 0 && feeBps > 0 && feeRecipient != address(0))
+            ? (savings * feeBps) / 10000
+            : 0;
+        uint256 totalDeposit = amount + feeAmount;
+
+        // Policy rule: If initiated by agent, total deposit cannot exceed maxPerAgreement
         if (msg.sender == agent) {
-            require(amount <= maxPerAgreement, "ArcEscrow: Amount exceeds agent policy cap");
+            require(totalDeposit <= maxPerAgreement, "ArcEscrow: Amount exceeds agent policy cap");
             if (categoryBudgets[category] > 0) {
                 require(
-                    categorySpent[category] + amount <= categoryBudgets[category],
+                    categorySpent[category] + totalDeposit <= categoryBudgets[category],
                     "ArcEscrow: Exceeds category budget"
                 );
             }
@@ -151,6 +189,9 @@ contract ArcEscrow {
             depositor: msg.sender,
             vendor: vendor,
             amount: amount,
+            baselinePrice: baselinePrice,
+            savings: savings,
+            feeAmount: feeAmount,
             category: category,
             deadline: deadline,
             status: Status.Created,
@@ -158,10 +199,44 @@ contract ArcEscrow {
             createdAt: block.timestamp
         });
 
-        categorySpent[category] += amount;
+        if (idempotencyKey != bytes32(0)) {
+            agreementByIdempotencyKey[idempotencyKey] = agreementId;
+        }
+
+        categorySpent[category] += totalDeposit;
 
         emit AgreementCreated(agreementId, msg.sender, vendor, amount, category, deadline);
         return agreementId;
+    }
+
+    function createAgreement(
+        address vendor,
+        uint256 amount,
+        string calldata category,
+        uint256 durationSeconds
+    ) external onlyAgentOrOwner returns (uint256) {
+        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, bytes32(0));
+    }
+
+    function createAgreementWithIdempotency(
+        address vendor,
+        uint256 amount,
+        string calldata category,
+        uint256 durationSeconds,
+        bytes32 idempotencyKey
+    ) external onlyAgentOrOwner returns (uint256) {
+        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, idempotencyKey);
+    }
+
+    function createAgreementWithSavings(
+        address vendor,
+        uint256 amount,
+        uint256 baselinePrice,
+        string calldata category,
+        uint256 durationSeconds,
+        bytes32 idempotencyKey
+    ) external onlyAgentOrOwner returns (uint256) {
+        return _createAgreementInternal(vendor, amount, baselinePrice, category, durationSeconds, idempotencyKey);
     }
 
     function fundAgreement(uint256 agreementId) external nonReentrant {
@@ -173,11 +248,12 @@ contract ArcEscrow {
         );
 
         ag.status = Status.Funded;
+        uint256 totalDeposit = ag.amount + ag.feeAmount;
 
-        bool success = usdcToken.transferFrom(msg.sender, address(this), ag.amount);
+        bool success = usdcToken.transferFrom(msg.sender, address(this), totalDeposit);
         require(success, "ArcEscrow: USDC transferFrom failed");
 
-        emit AgreementFunded(agreementId, ag.amount);
+        emit AgreementFunded(agreementId, totalDeposit);
     }
 
     function submitMilestone(uint256 agreementId, string calldata description) external {
@@ -210,10 +286,18 @@ contract ArcEscrow {
 
         ag.status = Status.Released;
 
+        // 1. Release vendor payment
         bool success = usdcToken.transfer(ag.vendor, ag.amount);
         require(success, "ArcEscrow: USDC transfer to vendor failed");
 
         emit FundsReleased(agreementId, ag.vendor, ag.amount);
+
+        // 2. Release protocol success fee to feeRecipient if applicable
+        if (ag.feeAmount > 0 && feeRecipient != address(0)) {
+            bool feeSuccess = usdcToken.transfer(feeRecipient, ag.feeAmount);
+            require(feeSuccess, "ArcEscrow: USDC transfer of fee failed");
+            emit FeeCollected(agreementId, feeRecipient, ag.feeAmount);
+        }
     }
 
     function refund(uint256 agreementId) external nonReentrant {
@@ -225,15 +309,16 @@ contract ArcEscrow {
         require(block.timestamp > ag.deadline, "ArcEscrow: Deadline has not passed");
 
         ag.status = Status.Refunded;
+        uint256 totalToRefund = ag.amount + ag.feeAmount;
 
-        if (categorySpent[ag.category] >= ag.amount) {
-            categorySpent[ag.category] -= ag.amount;
+        if (categorySpent[ag.category] >= totalToRefund) {
+            categorySpent[ag.category] -= totalToRefund;
         }
 
-        bool success = usdcToken.transfer(ag.depositor, ag.amount);
+        bool success = usdcToken.transfer(ag.depositor, totalToRefund);
         require(success, "ArcEscrow: USDC refund failed");
 
-        emit FundsRefunded(agreementId, ag.depositor, ag.amount);
+        emit FundsRefunded(agreementId, ag.depositor, totalToRefund);
     }
 
     function getAgreement(uint256 agreementId) external view returns (Agreement memory) {
