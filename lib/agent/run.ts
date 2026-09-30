@@ -1,7 +1,9 @@
-import { z } from "zod";
 import { generateText, isStepCount } from "ai";
+import { z } from "zod";
+
 import { getServiceSupabase } from "@/lib/supabase";
 import { createAgentTools } from "@/lib/tools";
+
 import { getAgentLanguageModel } from "./provider";
 
 /**
@@ -12,7 +14,9 @@ export const AgentDecisionSchema = z.object({
   contract_id: z.string().describe("UUID of the evaluated contract"),
   recommendation: z
     .string()
-    .describe("Primary recommendation, e.g. 'downsize_seats', 'negotiate', 'renew_as_is'"),
+    .describe(
+      "Primary recommendation, e.g. 'downsize_seats', 'negotiate', 'renew_as_is'",
+    ),
   target_price: z.coerce
     .number()
     .nonnegative()
@@ -24,7 +28,9 @@ export const AgentDecisionSchema = z.object({
     .describe("Confidence score between 0 and 1"),
   reasoning: z
     .string()
-    .describe("Executive justification explaining the financial and operational rationale"),
+    .describe(
+      "Executive justification explaining the financial and operational rationale",
+    ),
 });
 
 export type AgentDecision = z.infer<typeof AgentDecisionSchema>;
@@ -113,7 +119,9 @@ function extractJsonDecision(text: string, contractId: string): AgentDecision {
  * Executes the autonomous agent analysis loop for a specific contract.
  * Strictly adheres to architectural rules: deterministic tools, max 8 steps, append-only logging.
  */
-export async function runAgentAnalysis(contractId: string): Promise<AgentAnalysisResult> {
+export async function runAgentAnalysis(
+  contractId: string,
+): Promise<AgentAnalysisResult> {
   const supabase = getServiceSupabase();
 
   // 1. Verify contract exists and retrieve business ID
@@ -124,7 +132,9 @@ export async function runAgentAnalysis(contractId: string): Promise<AgentAnalysi
     .single();
 
   if (error || !contract) {
-    throw new Error(`Contract ${contractId} not found in database: ${error?.message}`);
+    throw new Error(
+      `Contract ${contractId} not found in database: ${error?.message}`,
+    );
   }
 
   // 2. Instantiate context-bound deterministic tools
@@ -160,7 +170,7 @@ export async function runAgentAnalysis(contractId: string): Promise<AgentAnalysi
     for (const tc of step.toolCalls) {
       // Find corresponding tool result if available
       const matchingResult = step.toolResults?.find(
-        (tr) => tr.toolCallId === tc.toolCallId
+        (tr) => tr.toolCallId === tc.toolCallId,
       );
 
       toolCalls.push({

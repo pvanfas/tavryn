@@ -1,7 +1,9 @@
 import crypto from "crypto";
+
 import { getServiceSupabase } from "@/lib/supabase";
 
-export const GENESIS_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+export const GENESIS_HASH =
+  "0000000000000000000000000000000000000000000000000000000000000000";
 
 export interface LogActionParams {
   businessId: string;
@@ -56,7 +58,9 @@ export function computeActionHash(params: {
  * Append-only audit logger for deterministic tools with SHA-256 hash chaining.
  * In accordance with architecture rules: agent_actions is append-only (never updated or deleted).
  */
-export async function logAgentAction(params: LogActionParams): Promise<string | null> {
+export async function logAgentAction(
+  params: LogActionParams,
+): Promise<string | null> {
   try {
     const supabase = getServiceSupabase();
     const createdAt = new Date().toISOString();
@@ -98,7 +102,9 @@ export async function logAgentAction(params: LogActionParams): Promise<string | 
         reason: params.reason || null,
         confidence: params.confidence ?? 1.0,
         input: params.input ? JSON.parse(JSON.stringify(params.input)) : null,
-        result: params.result ? JSON.parse(JSON.stringify(params.result)) : null,
+        result: params.result
+          ? JSON.parse(JSON.stringify(params.result))
+          : null,
         prev_hash: prevHash,
         hash: blockHash,
         created_at: createdAt,
@@ -107,12 +113,18 @@ export async function logAgentAction(params: LogActionParams): Promise<string | 
       .single();
 
     if (error) {
-      console.warn(`[agent_actions] Failed to append log for action '${params.action}':`, error.message);
+      console.warn(
+        `[agent_actions] Failed to append log for action '${params.action}':`,
+        error.message,
+      );
       return null;
     }
     return data?.id || null;
   } catch (err) {
-    console.warn(`[agent_actions] Unexpected error logging action '${params.action}':`, (err as Error).message);
+    console.warn(
+      `[agent_actions] Unexpected error logging action '${params.action}':`,
+      (err as Error).message,
+    );
     return null;
   }
 }
@@ -123,7 +135,7 @@ export async function logAgentAction(params: LogActionParams): Promise<string | 
  */
 export async function verifyAuditChain(
   businessId?: string,
-  limit = 200
+  limit = 200,
 ): Promise<AuditVerificationResult> {
   const supabase = getServiceSupabase();
 

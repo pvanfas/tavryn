@@ -1,7 +1,9 @@
 import React from "react";
-import { getServiceSupabase } from "@/lib/supabase";
-import { getTractionMetrics } from "@/lib/metrics";
+
 import { AppShell } from "@/components/AppShell";
+import { getTractionMetrics } from "@/lib/metrics";
+import { getServiceSupabase } from "@/lib/supabase";
+
 import { TractionMetricsClient } from "./TractionMetricsClient";
 
 export const revalidate = 0; // Fresh metrics on every load
@@ -17,7 +19,9 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
   // 1. Fetch businesses for AppShell header and user context
   const { data: bList } = await supabase
     .from("businesses")
-    .select("id, name, is_real, treasury_balance, default_currency, wallet_address")
+    .select(
+      "id, name, is_real, treasury_balance, default_currency, wallet_address",
+    )
     .order("created_at", { ascending: false });
 
   const businesses = bList || [];
@@ -26,11 +30,8 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
     business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
   }
 
-  // 2. Fetch both comprehensive and real-only metrics
-  const [metricsAll, metricsReal] = await Promise.all([
-    getTractionMetrics({ realOnly: false }),
-    getTractionMetrics({ realOnly: true }),
-  ]);
+  // 2. Fetch comprehensive protocol metrics
+  const metricsAll = await getTractionMetrics({ realOnly: false });
 
   return (
     <AppShell
@@ -45,10 +46,7 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
       treasuryBalance={Number(business?.treasury_balance ?? 0)}
       currency={business?.default_currency || "USDC"}
     >
-      <TractionMetricsClient
-        initialMetricsAll={metricsAll}
-        initialMetricsReal={metricsReal}
-      />
+      <TractionMetricsClient initialMetricsAll={metricsAll} />
     </AppShell>
   );
 }

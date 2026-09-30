@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = [
   "/auth/login",
@@ -29,7 +29,7 @@ export function proxy(request: NextRequest) {
   // Check for Supabase auth cookie (any sb-*-auth-token cookie)
   const cookies = request.cookies.getAll();
   const hasAuthCookie = cookies.some(
-    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
   );
 
   if (!hasAuthCookie) {

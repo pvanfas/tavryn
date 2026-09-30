@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getTractionMetrics, generateMetricsCsv } from "@/lib/metrics";
+
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { generateMetricsCsv, getTractionMetrics } from "@/lib/metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,11 @@ export async function GET(req: NextRequest) {
     });
 
     if (!parseResult.success) {
-      return apiError("Invalid query parameters", 400, parseResult.error.issues);
+      return apiError(
+        "Invalid query parameters",
+        400,
+        parseResult.error.issues,
+      );
     }
 
     const { realOnly, format } = parseResult.data;

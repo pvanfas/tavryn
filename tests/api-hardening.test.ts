@@ -1,7 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { checkRateLimit } from "../lib/rate-limit";
+import { describe, it } from "node:test";
+
 import { logger } from "../lib/logger";
+import { checkRateLimit } from "../lib/rate-limit";
 
 describe("API Hardening, Rate Limiting & Sensitive Data Masking", () => {
   it("1. Rate limiter enforces sliding-window thresholds and returns 429 semantics", () => {
@@ -34,27 +35,41 @@ describe("API Hardening, Rate Limiting & Sensitive Data Masking", () => {
       console.warn = (...args: any[]) => interceptedLogs.push(args.join(" "));
       console.error = (...args: any[]) => interceptedLogs.push(args.join(" "));
 
-      const fakeApiKey = "TEST_API_KEY:e6a4a41a5770ece4c3b1597b9ab266d8:21cc791e640c6c3ded2103833fb1d433";
-      const fakeEntitySecret = "edecc0ae558cf8a377b4809ba4c45a4482d16e5cc2e8a54e043f82d0d6fa7376";
-      const fakeJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUifQ.signaturePart12345678901234567890";
+      const fakeApiKey =
+        "TEST_API_KEY:e6a4a41a5770ece4c3b1597b9ab266d8:21cc791e640c6c3ded2103833fb1d433";
+      const fakeEntitySecret =
+        "edecc0ae558cf8a377b4809ba4c45a4482d16e5cc2e8a54e043f82d0d6fa7376";
+      const fakeJwt =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUifQ.signaturePart12345678901234567890";
 
-      logger.info(`Starting transaction with ${fakeApiKey} and secret ${fakeEntitySecret}`, {
-        apiKey: fakeApiKey,
-        entitySecret: fakeEntitySecret,
-        token: fakeJwt,
-        safeField: "payment_for_slack",
-      });
+      logger.info(
+        `Starting transaction with ${fakeApiKey} and secret ${fakeEntitySecret}`,
+        {
+          apiKey: fakeApiKey,
+          entitySecret: fakeEntitySecret,
+          token: fakeJwt,
+          safeField: "payment_for_slack",
+        },
+      );
 
       assert.equal(interceptedLogs.length, 1);
       const output = interceptedLogs[0];
 
       // Plaintext secrets must not appear
-      assert.ok(!output.includes(fakeApiKey), "API key must not appear in plaintext");
-      assert.ok(!output.includes(fakeEntitySecret), "Entity secret must not appear in plaintext");
+      assert.ok(
+        !output.includes(fakeApiKey),
+        "API key must not appear in plaintext",
+      );
+      assert.ok(
+        !output.includes(fakeEntitySecret),
+        "Entity secret must not appear in plaintext",
+      );
       assert.ok(!output.includes(fakeJwt), "JWT must not appear in plaintext");
 
       // Redaction placeholders must appear
-      assert.ok(output.includes("[REDACTED_SECRET]") || output.includes("[REDACTED]"));
+      assert.ok(
+        output.includes("[REDACTED_SECRET]") || output.includes("[REDACTED]"),
+      );
       assert.ok(output.includes("payment_for_slack"));
     } finally {
       console.log = originalConsoleLog;
@@ -64,7 +79,8 @@ describe("API Hardening, Rate Limiting & Sensitive Data Masking", () => {
   });
 
   it("3. Zod validates route inputs and rejects malformed UUIDs and negative values", async () => {
-    const { POST: runNowHandler } = await import("../app/api/agent/run-now/route");
+    const { POST: runNowHandler } =
+      await import("../app/api/agent/run-now/route");
 
     // Invalid UUID for businessId
     const req = new Request("http://localhost:3000/api/agent/run-now", {

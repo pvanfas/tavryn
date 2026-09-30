@@ -1,18 +1,17 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import crypto from 'crypto';
-import {
-  computeEscrowIdempotencyKey,
-  createAgentTools,
-} from '../lib/tools';
-import { screenAddress } from '../lib/screening';
-import { getServiceSupabase } from '../lib/supabase';
+import assert from "node:assert/strict";
+import { test } from "node:test";
 
-test('1. computeEscrowIdempotencyKey produces deterministic SHA-256 hash', () => {
+import crypto from "crypto";
+
+import { screenAddress } from "../lib/screening";
+import { getServiceSupabase } from "../lib/supabase";
+import { computeEscrowIdempotencyKey, createAgentTools } from "../lib/tools";
+
+test("1. computeEscrowIdempotencyKey produces deterministic SHA-256 hash", () => {
   const params = {
-    businessId: '11111111-1111-1111-1111-111111111111',
-    contractId: '22222222-2222-2222-2222-222222222222',
-    negotiationId: '33333333-3333-3333-3333-333333333333',
+    businessId: "11111111-1111-1111-1111-111111111111",
+    contractId: "22222222-2222-2222-2222-222222222222",
+    negotiationId: "33333333-3333-3333-3333-333333333333",
     amount: 7200,
   };
 
@@ -24,56 +23,64 @@ test('1. computeEscrowIdempotencyKey produces deterministic SHA-256 hash', () =>
 
   // Manual SHA-256 verification
   const manualHash = crypto
-    .createHash('sha256')
-    .update(`${params.businessId}|${params.contractId}|${params.negotiationId}|${params.amount}`)
-    .digest('hex');
+    .createHash("sha256")
+    .update(
+      `${params.businessId}|${params.contractId}|${params.negotiationId}|${params.amount}`,
+    )
+    .digest("hex");
   assert.equal(key1, manualHash);
 });
 
-test('2. screenAddress validates EVM format and detects sanctions vectors', async () => {
+test("2. screenAddress validates EVM format and detects sanctions vectors", async () => {
   // Invalid format
-  const invalidRes = await screenAddress('not-an-evm-address');
+  const invalidRes = await screenAddress("not-an-evm-address");
   assert.equal(invalidRes.passed, false);
-  assert.equal(invalidRes.riskScore, 'severe');
+  assert.equal(invalidRes.riskScore, "severe");
 
   // Known OFAC sanctions vector (Tornado Cash router)
-  const sanctionedRes = await screenAddress('0xd90e2f925da726b50c4ed8d0fb90ad053324f31b');
+  const sanctionedRes = await screenAddress(
+    "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+  );
   assert.equal(sanctionedRes.passed, false);
-  assert.equal(sanctionedRes.riskScore, 'severe');
-  assert.match(sanctionedRes.reason || '', /sanctions/i);
+  assert.equal(sanctionedRes.riskScore, "severe");
+  assert.match(sanctionedRes.reason || "", /sanctions/i);
 
   // Valid legitimate address
-  const cleanRes = await screenAddress('0x71C8fb8663E35505e3ec188506198fA08D1E67D1');
+  const cleanRes = await screenAddress(
+    "0x71C8fb8663E35505e3ec188506198fA08D1E67D1",
+  );
   assert.equal(cleanRes.passed, true);
-  assert.equal(cleanRes.riskScore, 'low');
+  assert.equal(cleanRes.riskScore, "low");
   assert.equal(cleanRes.isStub, true);
 });
 
-test('3. create_escrow double-call test proves idempotency and prevents duplicate on-chain tx', async () => {
+test("3. create_escrow double-call test proves idempotency and prevents duplicate on-chain tx", async () => {
   const supabase = getServiceSupabase();
   const { data: slackContract } = await supabase
-    .from('contracts')
-    .select('id, business_id, current_price, vendors ( id, wallet_address )')
-    .eq('service', 'Slack')
+    .from("contracts")
+    .select("id, business_id, current_price, vendors ( id, wallet_address )")
+    .eq("service", "Slack")
     .single();
 
-  assert.ok(slackContract, 'Seeded Slack contract must exist');
+  assert.ok(slackContract, "Seeded Slack contract must exist");
 
   const tools = createAgentTools({ businessId: slackContract.business_id });
   const uniqueKey = `idemp-test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  const validVendorWallet = (slackContract.vendors as any)?.wallet_address || '0x4444444444444444444444444444444444444444';
+  const validVendorWallet =
+    (slackContract.vendors as any)?.wallet_address ||
+    "0x4444444444444444444444444444444444444444";
 
   const { data: freshNeg } = await supabase
-    .from('negotiations')
+    .from("negotiations")
     .insert({
       contract_id: slackContract.id,
       original_price: 9600,
       current_offer: 6000,
       final_price: 6000,
       savings: 3600,
-      status: 'agreed',
+      status: "agreed",
     })
-    .select('id')
+    .select("id")
     .single();
 
   const freshNegId = freshNeg?.id;
@@ -84,16 +91,16 @@ test('3. create_escrow double-call test proves idempotency and prevents duplicat
     negotiationId: freshNegId,
     amount: 6000,
     savings: 3600,
-    category: 'software',
+    category: "software",
     vendorWallet: validVendorWallet,
     idempotencyKey: uniqueKey,
   });
 
   assert.equal(firstCall.success, true);
-  assert.equal(firstCall.status, 'funded');
+  assert.equal(firstCall.status, "funded");
   assert.equal(firstCall.idempotentHit, false);
-  assert.ok(firstCall.txHash.startsWith('0x'));
-  assert.ok(firstCall.explorerUrl.includes('testnet.arcscan.app/tx/'));
+  assert.ok(firstCall.txHash.startsWith("0x"));
+  assert.ok(firstCall.explorerUrl.includes("testnet.arcscan.app/tx/"));
 
   // Second call with same idempotencyKey -> must hit cache and NOT create a new tx
   const secondCall = await (tools.create_escrow as any).execute({
@@ -101,7 +108,7 @@ test('3. create_escrow double-call test proves idempotency and prevents duplicat
     negotiationId: freshNegId,
     amount: 6000,
     savings: 3600,
-    category: 'software',
+    category: "software",
     vendorWallet: validVendorWallet,
     idempotencyKey: uniqueKey,
   });
@@ -113,202 +120,193 @@ test('3. create_escrow double-call test proves idempotency and prevents duplicat
 
   // Database verification: strictly ONE record with this key
   const { data: matches, count } = await supabase
-    .from('transactions')
-    .select('id', { count: 'exact' })
-    .eq('idempotency_key', uniqueKey);
+    .from("transactions")
+    .select("id", { count: "exact" })
+    .eq("idempotency_key", uniqueKey);
 
   assert.equal(matches?.length, 1);
   assert.equal(count, 1);
 });
 
-test('4. create_escrow re-runs checkPolicy and refuses unauthorized transactions', async () => {
+test("4. create_escrow re-runs checkPolicy and refuses unauthorized transactions", async () => {
   const supabase = getServiceSupabase();
   const { data: slackContract } = await supabase
-    .from('contracts')
-    .select('id, business_id')
-    .eq('service', 'Slack')
+    .from("contracts")
+    .select("id, business_id")
+    .eq("service", "Slack")
     .single();
 
   assert.ok(slackContract);
   const tools = createAgentTools({ businessId: slackContract.business_id });
 
   // Disallowed category
-  await assert.rejects(
-    async () => {
-      await (tools.create_escrow as any).execute({
-        contractId: slackContract.id,
-        amount: 2000,
-        category: 'cryptocurrency_speculation',
-        vendorWallet: '0x2222222222222222222222222222222222222222',
-        idempotencyKey: `refuse-cat-${Date.now()}`,
-      });
-    },
-    /Policy refusal/
-  );
+  await assert.rejects(async () => {
+    await (tools.create_escrow as any).execute({
+      contractId: slackContract.id,
+      amount: 2000,
+      category: "cryptocurrency_speculation",
+      vendorWallet: "0x2222222222222222222222222222222222222222",
+      idempotencyKey: `refuse-cat-${Date.now()}`,
+    });
+  }, /Policy refusal/);
 });
 
-test('5. create_escrow rejects missing or malformed vendor wallet addresses', async () => {
+test("5. create_escrow rejects missing or malformed vendor wallet addresses", async () => {
   const supabase = getServiceSupabase();
   const { data: slackContract } = await supabase
-    .from('contracts')
-    .select('id, business_id')
-    .eq('service', 'Slack')
+    .from("contracts")
+    .select("id, business_id")
+    .eq("service", "Slack")
     .single();
 
   assert.ok(slackContract);
   const tools = createAgentTools({ businessId: slackContract.business_id });
 
   // Missing wallet address
-  await assert.rejects(
-    async () => {
-      await (tools.create_escrow as any).execute({
-        contractId: slackContract.id,
-        amount: 2000,
-        savings: 1000,
-        category: 'software',
-        vendorWallet: '',
-        idempotencyKey: `missing-wallet-${Date.now()}`,
-      });
-    },
-    /Vendor wallet address is required/
-  );
+  await assert.rejects(async () => {
+    await (tools.create_escrow as any).execute({
+      contractId: slackContract.id,
+      amount: 2000,
+      savings: 1000,
+      category: "software",
+      vendorWallet: "",
+      idempotencyKey: `missing-wallet-${Date.now()}`,
+    });
+  }, /Vendor wallet address is required/);
 
   // Malformed EVM address
-  await assert.rejects(
-    async () => {
-      await (tools.create_escrow as any).execute({
-        contractId: slackContract.id,
-        amount: 2000,
-        savings: 1000,
-        category: 'software',
-        vendorWallet: '0xinvalid-hex-address',
-        idempotencyKey: `malformed-wallet-${Date.now()}`,
-      });
-    },
-    /Invalid vendor wallet EVM address/
-  );
+  await assert.rejects(async () => {
+    await (tools.create_escrow as any).execute({
+      contractId: slackContract.id,
+      amount: 2000,
+      savings: 1000,
+      category: "software",
+      vendorWallet: "0xinvalid-hex-address",
+      idempotencyKey: `malformed-wallet-${Date.now()}`,
+    });
+  }, /Invalid vendor wallet EVM address/);
 });
 
-test('6. create_escrow escalates to human approval when vendor wallet address mutates', async () => {
+test("6. create_escrow escalates to human approval when vendor wallet address mutates", async () => {
   const supabase = getServiceSupabase();
 
   // Create a temporary vendor to test mutation
   const { data: tempVendor } = await supabase
-    .from('vendors')
+    .from("vendors")
     .insert({
       name: `Test Vendor ${Date.now()}`,
-      category: 'software',
+      category: "software",
       is_simulated: true,
-      wallet_address: '0x3333333333333333333333333333333333333333',
+      wallet_address: "0x3333333333333333333333333333333333333333",
     })
     .select()
     .single();
 
   assert.ok(tempVendor);
 
-  const { data: firstBiz } = await supabase.from('businesses').select('id').limit(1).single();
+  const { data: firstBiz } = await supabase
+    .from("businesses")
+    .select("id")
+    .limit(1)
+    .single();
   assert.ok(firstBiz);
 
   // Seed an initial completed transaction with original address
-  await supabase.from('transactions').insert({
+  await supabase.from("transactions").insert({
     business_id: firstBiz.id,
     vendor_id: tempVendor.id,
     amount: 1000,
-    currency: 'USDC',
-    escrow_address: '0x3333333333333333333333333333333333333333',
-    status: 'funded',
+    currency: "USDC",
+    escrow_address: "0x3333333333333333333333333333333333333333",
+    status: "funded",
     idempotency_key: `history-seed-${Date.now()}`,
   });
 
   const tools = createAgentTools({ businessId: firstBiz.id });
 
   // Attempt to escrow to mutated address
-  const mutatedAddress = '0x4444444444444444444444444444444444444444';
-  await assert.rejects(
-    async () => {
-      await (tools.create_escrow as any).execute({
-        vendor: tempVendor.id,
-        amount: 1000,
-        category: 'software',
-        vendorWallet: mutatedAddress,
-        idempotencyKey: `mutated-${Date.now()}`,
-      });
-    },
-    /Vendor wallet address changed from/
-  );
+  const mutatedAddress = "0x4444444444444444444444444444444444444444";
+  await assert.rejects(async () => {
+    await (tools.create_escrow as any).execute({
+      vendor: tempVendor.id,
+      amount: 1000,
+      category: "software",
+      vendorWallet: mutatedAddress,
+      idempotencyKey: `mutated-${Date.now()}`,
+    });
+  }, /Vendor wallet address changed from/);
 
   // Confirm a pending approval was registered for human inspection
   const { data: approval } = await supabase
-    .from('approvals')
-    .select('*')
-    .eq('business_id', firstBiz.id)
-    .order('created_at', { ascending: false })
+    .from("approvals")
+    .select("*")
+    .eq("business_id", firstBiz.id)
+    .order("created_at", { ascending: false })
     .limit(1)
     .single();
 
   assert.ok(approval);
-  assert.match(approval.reason || '', /mutated|changed/i);
+  assert.match(approval.reason || "", /mutated|changed/i);
 });
 
-test('7. create_escrow handles on-chain funding failure and transitions status to failed', async () => {
+test("7. create_escrow handles on-chain funding failure and transitions status to failed", async () => {
   const supabase = getServiceSupabase();
   const { data: slackContract } = await supabase
-    .from('contracts')
-    .select('id, business_id, vendors ( wallet_address )')
-    .eq('service', 'Slack')
+    .from("contracts")
+    .select("id, business_id, vendors ( wallet_address )")
+    .eq("service", "Slack")
     .single();
 
   assert.ok(slackContract);
   const tools = createAgentTools({ businessId: slackContract.business_id });
   const failKey = `fail-sim-${Date.now()}`;
-  const validWallet = (slackContract.vendors as any)?.wallet_address || '0x4444444444444444444444444444444444444444';
+  const validWallet =
+    (slackContract.vendors as any)?.wallet_address ||
+    "0x4444444444444444444444444444444444444444";
 
   const { data: failNeg } = await supabase
-    .from('negotiations')
+    .from("negotiations")
     .insert({
       contract_id: slackContract.id,
       original_price: 9600,
       current_offer: 1000,
       final_price: 1000,
       savings: 1000,
-      status: 'agreed',
+      status: "agreed",
     })
-    .select('id')
+    .select("id")
     .single();
 
-  await assert.rejects(
-    async () => {
-      await (tools.create_escrow as any).execute({
-        contractId: slackContract.id,
-        negotiationId: failNeg?.id,
-        amount: 1000,
-        savings: 1000,
-        category: 'software',
-        vendorWallet: validWallet,
-        idempotencyKey: failKey,
-        forceFailSimulation: true,
-      });
-    },
-    /Escrow funding failed on Arc testnet/
-  );
+  await assert.rejects(async () => {
+    await (tools.create_escrow as any).execute({
+      contractId: slackContract.id,
+      negotiationId: failNeg?.id,
+      amount: 1000,
+      savings: 1000,
+      category: "software",
+      vendorWallet: validWallet,
+      idempotencyKey: failKey,
+      forceFailSimulation: true,
+    });
+  }, /Escrow funding failed on Arc testnet/);
 
   // Check that the transaction was left in 'failed' status and not dangling 'pending'
   const { data: failedTx } = await supabase
-    .from('transactions')
-    .select('status')
-    .eq('idempotency_key', failKey)
+    .from("transactions")
+    .select("status")
+    .eq("idempotency_key", failKey)
     .single();
 
   assert.ok(failedTx);
-  assert.equal(failedTx.status, 'failed');
+  assert.equal(failedTx.status, "failed");
 });
 
-test('8. release_escrow updates state to released, logs to agent_actions, and provides explorer link', async () => {
+test("8. release_escrow updates state to released, logs to agent_actions, and provides explorer link", async () => {
   const supabase = getServiceSupabase();
   const { data: slackContract } = await supabase
-    .from('contracts')
-    .select('id, business_id')
-    .eq('service', 'Slack')
+    .from("contracts")
+    .select("id, business_id")
+    .eq("service", "Slack")
     .single();
 
   assert.ok(slackContract);
@@ -321,7 +319,7 @@ test('8. release_escrow updates state to released, logs to agent_actions, and pr
   });
 
   assert.equal(releaseResult.success, true);
-  assert.equal(releaseResult.status, 'released');
-  assert.ok(releaseResult.txHash.startsWith('0x'));
-  assert.ok(releaseResult.explorerUrl.includes('testnet.arcscan.app/tx/'));
+  assert.equal(releaseResult.status, "released");
+  assert.ok(releaseResult.txHash.startsWith("0x"));
+  assert.ok(releaseResult.explorerUrl.includes("testnet.arcscan.app/tx/"));
 });

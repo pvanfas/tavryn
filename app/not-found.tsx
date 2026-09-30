@@ -1,6 +1,6 @@
-import React from "react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 export default function NotFound() {
   return (
@@ -13,7 +13,14 @@ export default function NotFound() {
 
       <div className="relative z-10 w-full max-w-md bg-white dark:bg-[#121915] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-8 shadow-xl text-center space-y-6">
         <div className="mx-auto h-14 w-14 rounded-2xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm overflow-hidden p-2">
-          <Image src="/logo.png" alt="Tavryn" width={32} height={32} className="object-contain" priority />
+          <Image
+            src="/logo.png"
+            alt="Tavryn"
+            width={32}
+            height={32}
+            className="object-contain"
+            priority
+          />
         </div>
 
         <div className="space-y-2">
@@ -24,16 +31,17 @@ export default function NotFound() {
             Resource Not Found
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-            The contract, negotiation, or page you are looking for does not exist or has been relocated.
+            The contract, negotiation, or page you are looking for does not
+            exist or has been relocated.
           </p>
         </div>
 
         <div className="pt-2 flex flex-col gap-2.5">
           <Link
-            href="/dashboard"
+            href="/"
             className="w-full inline-flex items-center justify-center h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-sm"
           >
-            Return to Dashboard
+            Return to Overview
           </Link>
           <Link
             href="/onboard"

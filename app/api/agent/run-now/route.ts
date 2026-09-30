@@ -1,8 +1,9 @@
 import { z } from "zod";
+
 import { runDailyProcurementCron } from "@/lib/agent/cron";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,13 @@ export async function POST(req: Request) {
   // Rate limiting: 10 requests per minute max on run-now
   const rate = checkRateLimit("agent_run_now", 10, 60_000);
   if (!rate.success) {
-    return apiError("Agent run rate limit exceeded. Please wait before triggering another scan.", 429, {
-      resetMs: rate.resetMs,
-    });
+    return apiError(
+      "Agent run rate limit exceeded. Please wait before triggering another scan.",
+      429,
+      {
+        resetMs: rate.resetMs,
+      },
+    );
   }
 
   try {

@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import {
-  X,
-  ShieldCheck,
-  MessageSquare,
-  Wallet,
-  TrendingDown,
-  ExternalLink,
   CalendarSync,
+  ExternalLink,
+  MessageSquare,
+  ShieldCheck,
+  TrendingDown,
+  Wallet,
+  X,
 } from "lucide-react";
+import Link from "next/link";
+import React, { useCallback, useEffect, useState } from "react";
 
 export interface NotificationItem {
   id: string;
@@ -28,7 +28,8 @@ const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
     id: "notif-1",
     category: "renewal",
     title: "Slack Renewal Detected",
-    message: "Slack renewal detected. 18 of 25 seats active. I have contacted the vendor and requested a revised quote. Status: negotiation in progress.",
+    message:
+      "Slack renewal detected. 18 of 25 seats active. I have contacted the vendor and requested a revised quote. Status: negotiation in progress.",
     timestamp: "10m ago",
     read: false,
     link: "/negotiate",
@@ -38,7 +39,8 @@ const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
     id: "notif-2",
     category: "policy",
     title: "Supervisor Approval Required",
-    message: "Datadog contract renewal proposal ($24,000) exceeds autonomous ceiling of $2,500.",
+    message:
+      "Datadog contract renewal proposal ($24,000) exceeds autonomous ceiling of $2,500.",
     timestamp: "1h ago",
     read: false,
     link: "/decision",
@@ -48,7 +50,8 @@ const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
     id: "notif-3",
     category: "treasury",
     title: "Arc Testnet Synced",
-    message: "Circle developer wallet connected. On-chain treasury balance confirmed.",
+    message:
+      "Circle developer wallet connected. On-chain treasury balance confirmed.",
     timestamp: "5h ago",
     read: true,
   },
@@ -84,7 +87,9 @@ export function NotificationPanel({
   businessId,
   onUnreadChange,
 }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(FALLBACK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(
+    FALLBACK_NOTIFICATIONS,
+  );
   const [loading, setLoading] = useState(false);
 
   // Fetch real notifications from database
@@ -92,20 +97,27 @@ export function NotificationPanel({
     if (!businessId) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/notifications?businessId=${encodeURIComponent(businessId)}`);
+      const res = await fetch(
+        `/api/notifications?businessId=${encodeURIComponent(businessId)}`,
+      );
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.notifications) && data.notifications.length > 0) {
-          const mapped: NotificationItem[] = data.notifications.map((n: any) => ({
-            id: n.id,
-            category: n.category || "renewal",
-            title: n.title,
-            message: n.message,
-            timestamp: formatRelativeTime(n.created_at),
-            read: Boolean(n.read),
-            link: n.link,
-            linkLabel: n.link_label || "View Details",
-          }));
+        if (
+          Array.isArray(data.notifications) &&
+          data.notifications.length > 0
+        ) {
+          const mapped: NotificationItem[] = data.notifications.map(
+            (n: any) => ({
+              id: n.id,
+              category: n.category || "renewal",
+              title: n.title,
+              message: n.message,
+              timestamp: formatRelativeTime(n.created_at),
+              read: Boolean(n.read),
+              link: n.link,
+              linkLabel: n.link_label || "View Details",
+            }),
+          );
           setNotifications(mapped);
           const unread = mapped.filter((n) => !n.read).length;
           onUnreadChange?.(unread);
@@ -173,15 +185,23 @@ export function NotificationPanel({
   const getCategoryIcon = (category: NotificationItem["category"]) => {
     switch (category) {
       case "renewal":
-        return <CalendarSync className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+        return (
+          <CalendarSync className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        );
       case "policy":
-        return <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
+        return (
+          <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+        );
       case "negotiation":
-        return <MessageSquare className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />;
+        return (
+          <MessageSquare className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
+        );
       case "treasury":
         return <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
       case "audit":
-        return <TrendingDown className="h-4 w-4 text-slate-600 dark:text-slate-400" />;
+        return (
+          <TrendingDown className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+        );
     }
   };
 
@@ -279,7 +299,10 @@ export function NotificationPanel({
                       {item.timestamp}
                     </span>
                     {!item.read && (
-                      <span className="h-2 w-2 rounded-full bg-[#107e65]" title="Unread" />
+                      <span
+                        className="h-2 w-2 rounded-full bg-[#107e65]"
+                        title="Unread"
+                      />
                     )}
                   </div>
                 </div>

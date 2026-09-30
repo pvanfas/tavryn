@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+
 import { processVendorReply } from "@/lib/agent/real-vendor";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -22,7 +23,11 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;

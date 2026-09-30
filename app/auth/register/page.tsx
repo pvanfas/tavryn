@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
-import { getBrowserSupabase } from "@/lib/auth";
+import React, { Suspense, useState } from "react";
+
 import { OAuthButtons } from "@/components/OAuthButtons";
-import { Eye, EyeOff, UserPlus, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { getBrowserSupabase } from "@/lib/auth";
 
 function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -61,11 +69,15 @@ function RegisterForm() {
               <CheckCircle2 className="h-7 w-7 text-[#107e65] dark:text-[#34d399]" />
             </div>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Check your email</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Check your email
+          </h2>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
             We&apos;ve sent a confirmation link to{" "}
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">{email}</span>.
-            Click it to activate your account.
+            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+              {email}
+            </span>
+            . Click it to activate your account.
           </p>
           <Link
             href="/auth/login"
@@ -99,7 +111,10 @@ function RegisterForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+            <label
+              htmlFor="reg-email"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
               Email
             </label>
             <input
@@ -115,7 +130,10 @@ function RegisterForm() {
           </div>
 
           <div>
-            <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+            <label
+              htmlFor="reg-password"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
               Password
             </label>
             <div className="relative">
@@ -136,13 +154,20 @@ function RegisterForm() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           <div>
-            <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+            <label
+              htmlFor="reg-confirm-password"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
               Confirm Password
             </label>
             <input
@@ -163,18 +188,30 @@ function RegisterForm() {
             disabled={loading}
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] active:bg-[#0a5944] text-white text-sm font-bold transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <UserPlus className="h-4 w-4" />
+            )}
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
         {/* "Or" then two buttons in one row "Login with <icon>." */}
-        <OAuthButtons next="/" onError={(err) => setError(err)} showDivider={true} mode="register" />
+        <OAuthButtons
+          next="/"
+          onError={(err) => setError(err)}
+          showDivider={true}
+          mode="register"
+        />
 
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/60 text-center">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-[#107e65] dark:text-[#34d399] font-bold hover:underline">
+            <Link
+              href="/auth/login"
+              className="text-[#107e65] dark:text-[#34d399] font-bold hover:underline"
+            >
               Sign in
             </Link>
           </p>

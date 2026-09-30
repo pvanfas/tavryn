@@ -1,5 +1,5 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 import { MockLanguageModelV4 } from "ai/test";
 
 /**
@@ -32,7 +32,8 @@ export function getAgentLanguageModel(contractIdHint?: string) {
   let targetPrice = 7500;
   let savings = 2500;
   let recommendation = "negotiate";
-  let rationale = "Identified idle capacity and benchmarked competitor pricing.";
+  let rationale =
+    "Identified idle capacity and benchmarked competitor pricing.";
 
   const defaultUsage = {
     inputTokens: { total: 50, noCache: 50, cacheRead: 0, cacheWrite: 0 },
@@ -48,7 +49,9 @@ export function getAgentLanguageModel(contractIdHint?: string) {
       // Extract contract ID from prompt or messages if not provided
       if (!targetContractId) {
         const text = JSON.stringify(options.prompt || "");
-        const uuidMatch = text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        const uuidMatch = text.match(
+          /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+        );
         if (uuidMatch) {
           targetContractId = uuidMatch[0];
         }
@@ -81,21 +84,24 @@ export function getAgentLanguageModel(contractIdHint?: string) {
         targetPrice = 6912;
         savings = 2688;
         recommendation = "downsize_seats";
-        rationale = "Audit detected 7 idle licenses (28% waste). Recommend reducing seats from 25 to 18 to save $2,688/yr.";
+        rationale =
+          "Audit detected 7 idle licenses (28% waste). Recommend reducing seats from 25 to 18 to save $2,688/yr.";
       } else if (allText.includes("Datadog")) {
         serviceName = "Datadog";
         currentPrice = 37200;
         targetPrice = 29127.6;
         savings = 8072.4;
         recommendation = "negotiate";
-        rationale = "Telemetry indicates a 31% volume decline in active workloads. Recommend renegotiating lower tier to save $8,072.40/yr.";
+        rationale =
+          "Telemetry indicates a 31% volume decline in active workloads. Recommend renegotiating lower tier to save $8,072.40/yr.";
       } else if (allText.includes("AWS")) {
         serviceName = "AWS";
         currentPrice = 24000;
         targetPrice = 21984;
         savings = 2016;
         recommendation = "negotiate";
-        rationale = "Workload telemetry indicates a 12% decline. Target revised reserved commitment to recapture $2,016/yr.";
+        rationale =
+          "Workload telemetry indicates a 12% decline. Target revised reserved commitment to recapture $2,016/yr.";
       }
 
       // Step 2: Call get_usage
@@ -130,7 +136,9 @@ export function getAgentLanguageModel(contractIdHint?: string) {
               type: "tool-call" as const,
               toolCallId: `call-vendors-${Date.now()}`,
               toolName: "find_vendor_options",
-              input: JSON.stringify({ requirement: `Alternative options for ${serviceName}` }),
+              input: JSON.stringify({
+                requirement: `Alternative options for ${serviceName}`,
+              }),
             },
           ],
         };
@@ -149,7 +157,11 @@ export function getAgentLanguageModel(contractIdHint?: string) {
               type: "tool-call" as const,
               toolCallId: `call-savings-${Date.now()}`,
               toolName: "calculate_savings",
-              input: JSON.stringify({ oldPrice: currentPrice, newPrice: targetPrice, months: 12 }),
+              input: JSON.stringify({
+                oldPrice: currentPrice,
+                newPrice: targetPrice,
+                months: 12,
+              }),
             },
           ],
         };

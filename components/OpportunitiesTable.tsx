@@ -1,18 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { AgentIcon } from "@/components/AgentIcon";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Loader2,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
+
+import { AgentIcon } from "@/components/AgentIcon";
+import { Caption, H3 } from "@/components/ui/text";
+
 import { AnalysisModal } from "./AnalysisModal";
-import { H3, Caption } from "@/components/ui/text";
 
 export interface OpportunityItem {
   id: string;
@@ -39,7 +35,10 @@ interface OpportunitiesTableProps {
   businessId?: string;
 }
 
-export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesTableProps) {
+export function OpportunitiesTable({
+  opportunities,
+  businessId,
+}: OpportunitiesTableProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -71,7 +70,7 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
       const started = data.result?.totalNegotiationsStarted ?? 0;
       const notifs = data.result?.totalNotificationsCreated ?? 0;
       setAgentNotice(
-        `Autonomous agent completed: ${started} negotiation(s) initiated, ${notifs} notification(s) created.`
+        `Autonomous agent completed: ${started} negotiation(s) initiated, ${notifs} notification(s) created.`,
       );
       router.refresh();
     } catch (err) {
@@ -87,11 +86,14 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
       const matchesSearch =
         searchQuery === "" ||
         item.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.vendors?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.vendors?.name || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
         item.category.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory =
-        categoryFilter === "all" || item.category.toLowerCase() === categoryFilter.toLowerCase();
+        categoryFilter === "all" ||
+        item.category.toLowerCase() === categoryFilter.toLowerCase();
 
       return matchesSearch && matchesCategory;
     });
@@ -138,23 +140,25 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
 
             {/* Segmented Category Filter Pills */}
             <div className="flex items-center p-0.5 rounded-xl bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/60 dark:border-slate-800/60">
-              {(["all", "software", "cloud", "contractors"] as const).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    setCategoryFilter(cat);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-2.5 py-1 rounded-xl text-xs capitalize transition-all ${
-                    categoryFilter === cat
-                      ? "bg-white dark:bg-[#1c2622] text-slate-900 dark:text-white shadow-2xs font-bold"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+              {(["all", "software", "cloud", "contractors"] as const).map(
+                (cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter(cat);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs capitalize transition-all ${
+                      categoryFilter === cat
+                        ? "bg-white dark:bg-[#1c2622] text-slate-900 dark:text-white shadow-2xs font-bold"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ),
+              )}
             </div>
 
             {/* Run Agent Now Button */}
@@ -212,21 +216,78 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
           <table className="w-full text-left text-xs font-sans border-collapse">
             <thead>
               <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 w-12 text-center">#</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[200px]">Service &amp; Vendor</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[110px]">Category</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[130px]">Contract Ref</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 text-right min-w-[120px]">Annual Spend</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[140px]">Renewal Date</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 text-right min-w-[130px]">Savings Target</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 text-center min-w-[110px]">Status</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 text-center min-w-[220px]">Actions</Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 w-12 text-center"
+                >
+                  #
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 min-w-[200px]"
+                >
+                  Service &amp; Vendor
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 min-w-[110px]"
+                >
+                  Category
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 min-w-[130px]"
+                >
+                  Contract Ref
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 text-right min-w-[120px]"
+                >
+                  Annual Spend
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 min-w-[140px]"
+                >
+                  Renewal Date
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 text-right min-w-[130px]"
+                >
+                  Savings Target
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 text-center min-w-[110px]"
+                >
+                  Status
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 text-center min-w-[220px]"
+                >
+                  Actions
+                </Caption>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-slate-400 dark:text-slate-500 font-medium">
+                  <td
+                    colSpan={9}
+                    className="text-center py-12 text-slate-400 dark:text-slate-500 font-medium"
+                  >
                     No matching subscription records found.
                   </td>
                 </tr>
@@ -257,8 +318,11 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
                               {opp.service}
                             </div>
                             {opp.vendors?.name &&
-                              opp.vendors.name.toLowerCase() !== opp.service.toLowerCase() &&
-                              !opp.service.toLowerCase().startsWith(opp.vendors.name.toLowerCase()) && (
+                              opp.vendors.name.toLowerCase() !==
+                                opp.service.toLowerCase() &&
+                              !opp.service
+                                .toLowerCase()
+                                .startsWith(opp.vendors.name.toLowerCase()) && (
                                 <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                   {opp.vendors.name}
                                 </div>
@@ -283,17 +347,24 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
 
                       {/* Annual Spend */}
                       <td className="py-4 px-4 text-right font-mono font-bold text-xs text-slate-900 dark:text-white">
-                        ${Number(opp.current_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {Number(opp.current_price).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
 
                       {/* Renewal Date */}
                       <td className="py-4 px-3.5">
                         <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                          {new Date(opp.renewal_date).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                          {new Date(opp.renewal_date).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
                         </div>
                         <div className="mt-0.5">
                           {isExpiringSoon ? (
@@ -311,7 +382,11 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
                       {/* Savings Target */}
                       <td className="py-4 px-4 text-right">
                         <span className="font-mono font-bold text-xs text-[#107e65] dark:text-[#34d399] bg-emerald-500/10 dark:bg-emerald-500/15 px-2.5 py-1 rounded-xl border border-emerald-500/20 inline-block">
-                          ${opp.savings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          $
+                          {opp.savings.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </span>
                       </td>
 
@@ -322,8 +397,8 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
                             opp.status === "active"
                               ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                               : opp.status === "negotiating"
-                              ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
-                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                           }`}
                         >
                           <span
@@ -331,8 +406,8 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
                               opp.status === "active"
                                 ? "bg-[#107e65]"
                                 : opp.status === "negotiating"
-                                ? "bg-blue-500 animate-pulse"
-                                : "bg-slate-400"
+                                  ? "bg-blue-500 animate-pulse"
+                                  : "bg-slate-400"
                             }`}
                           />
                           <span>{opp.status}</span>
@@ -380,8 +455,19 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
         {/* Ledger Footer (Pagination & Record Counts) */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs font-medium text-slate-600 dark:text-slate-400">
           <div>
-            Showing <span className="font-bold text-slate-900 dark:text-white">{totalRecords > 0 ? startIndex + 1 : 0}</span> to{" "}
-            <span className="font-bold text-slate-900 dark:text-white">{Math.min(startIndex + rowsPerPage, totalRecords)}</span> of <span className="font-bold text-slate-900 dark:text-white">{totalRecords}</span> records
+            Showing{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {totalRecords > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            to{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {Math.min(startIndex + rowsPerPage, totalRecords)}
+            </span>{" "}
+            of{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {totalRecords}
+            </span>{" "}
+            records
           </div>
 
           <div className="flex items-center gap-4">
@@ -416,7 +502,9 @@ export function OpportunitiesTable({ opportunities, businessId }: OpportunitiesT
               </span>
               <button
                 type="button"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage >= totalPages}
                 className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 transition-colors"
                 title="Next page"

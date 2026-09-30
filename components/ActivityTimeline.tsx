@@ -1,23 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
+  Brain,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  ShieldCheck,
-  Search,
-  MessageSquare,
-  Lock,
   FileCheck,
-  Send,
-  Brain,
   Loader2,
+  Lock,
+  MessageSquare,
   RefreshCw,
+  Search,
+  Send,
+  ShieldCheck,
 } from "lucide-react";
-import { H3 } from "@/components/ui/text";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+
 import { AgentIcon } from "@/components/AgentIcon";
+import { H3 } from "@/components/ui/text";
 import { ARC_CONFIG } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 
@@ -37,8 +38,14 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "detect",
     title: "1. Detect Waste",
     status: "completed",
-    summary: "Scanned seat allocation & usage logs: 7 unused Slack seats identified ($2,688 potential waste).",
-    details: { service: "Slack", idleSeats: 7, wasteRate: "28%", originalPrice: 9600 },
+    summary:
+      "Scanned seat allocation & usage logs: 7 unused Slack seats identified ($2,688 potential waste).",
+    details: {
+      service: "Slack",
+      idleSeats: 7,
+      wasteRate: "28%",
+      originalPrice: 9600,
+    },
     timestamp: "Ready",
   },
   {
@@ -46,8 +53,15 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "negotiate",
     title: "2. Autonomous Negotiation",
     status: "completed",
-    summary: "Executed 3-round concession loop against vendor simulator; negotiated price down to $6,912.",
-    details: { rounds: 3, opening: 6500, counter: 7600, agreed: 6912, savings: 2688 },
+    summary:
+      "Executed 3-round concession loop against vendor simulator; negotiated price down to $6,912.",
+    details: {
+      rounds: 3,
+      opening: 6500,
+      counter: 7600,
+      agreed: 6912,
+      savings: 2688,
+    },
     timestamp: "Ready",
   },
   {
@@ -55,8 +69,13 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "policy",
     title: "3. Deterministic Policy",
     status: "completed",
-    summary: "Deterministic engine approved $6,912 commitment within $10k auto-limit and >$500 savings rule.",
-    details: { rule: "max_auto_transaction <= $10,000", result: "AUTONOMOUS_APPROVAL", minSavingsMet: true },
+    summary:
+      "Deterministic engine approved $6,912 commitment within $10k auto-limit and >$500 savings rule.",
+    details: {
+      rule: "max_auto_transaction <= $10,000",
+      result: "AUTONOMOUS_APPROVAL",
+      minSavingsMet: true,
+    },
     timestamp: "Ready",
   },
   {
@@ -64,8 +83,13 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "escrow",
     title: "4. Arc Escrow Lock",
     status: "completed",
-    summary: "Locked 6,912 USDC into Arc EVM smart contract using Circle developer-controlled wallet.",
-    details: { chain: "Arc Testnet", token: "USDC", contract: ARC_CONFIG.escrowContractAddress },
+    summary:
+      "Locked 6,912 USDC into Arc EVM smart contract using Circle developer-controlled wallet.",
+    details: {
+      chain: "Arc Testnet",
+      token: "USDC",
+      contract: ARC_CONFIG.escrowContractAddress,
+    },
     timestamp: "Ready",
   },
   {
@@ -73,8 +97,14 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "verify",
     title: "5. Document Verification",
     status: "completed",
-    summary: "Parsed vendor renewal order confirmation: verified price, 18 seats, term length, and effective date.",
-    details: { priceMatched: true, seatsMatched: true, termMatched: true, passedChecks: "4/4" },
+    summary:
+      "Parsed vendor renewal order confirmation: verified price, 18 seats, term length, and effective date.",
+    details: {
+      priceMatched: true,
+      seatsMatched: true,
+      termMatched: true,
+      passedChecks: "4/4",
+    },
     timestamp: "Ready",
   },
   {
@@ -82,7 +112,8 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "release",
     title: "6. Payment Settlement",
     status: "completed",
-    summary: "Released 6,912 USDC from Arc escrow to Slack vendor wallet. Settlement completed on-chain.",
+    summary:
+      "Released 6,912 USDC from Arc escrow to Slack vendor wallet. Settlement completed on-chain.",
     details: { status: "released", vendorWallet: DEV_TREASURY_ADDRESS },
     timestamp: "Ready",
   },
@@ -91,8 +122,13 @@ const DEFAULT_STEPS: StepItem[] = [
     name: "memory",
     title: "7. Business Memory",
     status: "completed",
-    summary: "Saved concession benchmark to business memory: Slack reputation score increased to 88.",
-    details: { vendor: "Slack", reputationDelta: "+8 pts", acceptedDiscount: "28%" },
+    summary:
+      "Saved concession benchmark to business memory: Slack reputation score increased to 88.",
+    details: {
+      vendor: "Slack",
+      reputationDelta: "+8 pts",
+      acceptedDiscount: "28%",
+    },
     timestamp: "Ready",
   },
 ];
@@ -112,7 +148,10 @@ interface ActivityTimelineProps {
   businessName?: string;
 }
 
-export function ActivityTimeline({ businessId, businessName = "Demo Co" }: ActivityTimelineProps) {
+export function ActivityTimeline({
+  businessId,
+  businessName = "Demo Co",
+}: ActivityTimelineProps) {
   const router = useRouter();
   const [steps, setSteps] = useState<StepItem[]>(DEFAULT_STEPS);
   const [isRunning, setIsRunning] = useState(false);
@@ -129,7 +168,7 @@ export function ActivityTimeline({ businessId, businessName = "Demo Co" }: Activ
         ...s,
         status: idx === 0 ? "running" : "idle",
         timestamp: "Executing...",
-      }))
+      })),
     );
 
     try {
@@ -151,7 +190,7 @@ export function ActivityTimeline({ businessId, businessName = "Demo Co" }: Activ
       }
 
       setLastRunNotice(
-        `Full loop executed: $${(data.result?.savingsRealized || 2688).toLocaleString()} annual savings secured, escrowed & settled on Arc!`
+        `Full loop executed: $${(data.result?.savingsRealized || 2688).toLocaleString()} annual savings secured, escrowed & settled on Arc!`,
       );
 
       router.refresh();
@@ -170,13 +209,18 @@ export function ActivityTimeline({ businessId, businessName = "Demo Co" }: Activ
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-[#107e65] animate-ping" />
-            <H3 className="text-slate-900 dark:text-white font-bold">Autonomous Agent Timeline</H3>
+            <H3 className="text-slate-900 dark:text-white font-bold">
+              Autonomous Agent Timeline
+            </H3>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
               Live Loop
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Observe → Analyze → Negotiate → Decide → Execute → Learn for <strong className="text-slate-700 dark:text-slate-200">{businessName}</strong>
+            Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
+            <strong className="text-slate-700 dark:text-slate-200">
+              {businessName}
+            </strong>
           </p>
         </div>
 
@@ -273,7 +317,11 @@ export function ActivityTimeline({ businessId, businessName = "Demo Co" }: Activ
                     aria-label="Toggle step details"
                     className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   >
-                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>

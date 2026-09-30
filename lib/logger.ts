@@ -77,7 +77,10 @@ export const logger = {
   error: (message: string, meta?: any) => {
     const cleanMsg = sanitizeString(message);
     if (meta !== undefined) {
-      console.error(`[ERROR] ${cleanMsg}`, JSON.stringify(sanitizeObject(meta)));
+      console.error(
+        `[ERROR] ${cleanMsg}`,
+        JSON.stringify(sanitizeObject(meta)),
+      );
     } else {
       console.error(`[ERROR] ${cleanMsg}`);
     }

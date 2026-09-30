@@ -1,9 +1,9 @@
-import crypto from "crypto";
-import { 
-  initiateDeveloperControlledWalletsClient,
+import {
   Blockchain,
   type CircleDeveloperControlledWalletsClient,
+  initiateDeveloperControlledWalletsClient,
 } from "@circle-fin/developer-controlled-wallets";
+import crypto from "crypto";
 
 /**
  * Circle & Arc Network Configuration
@@ -11,14 +11,19 @@ import {
  */
 export const ARC_CONFIG = {
   blockchain: (process.env.CIRCLE_BLOCKCHAIN || "ARC-TESTNET") as Blockchain,
-  rpcUrl: process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network",
+  rpcUrl:
+    process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network",
   chainId: Number(process.env.NEXT_PUBLIC_ARC_CHAIN_ID || 5042002),
-  usdcContractAddress: 
-    process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS || "0x3600000000000000000000000000000000000000",
+  usdcContractAddress:
+    process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS ||
+    "0x3600000000000000000000000000000000000000",
   escrowContractAddress:
-    process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS || "0x880eF868be5484852086eA9d424b94D673752e50",
-  faucetUrl: process.env.NEXT_PUBLIC_ARC_FAUCET_URL || "https://faucet.circle.com",
-  explorerUrl: process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app",
+    process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS ||
+    "0x880eF868be5484852086eA9d424b94D673752e50",
+  faucetUrl:
+    process.env.NEXT_PUBLIC_ARC_FAUCET_URL || "https://faucet.circle.com",
+  explorerUrl:
+    process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app",
 };
 
 let cachedClient: CircleDeveloperControlledWalletsClient | null = null;
@@ -37,7 +42,7 @@ export function getCircleClient(): CircleDeveloperControlledWalletsClient {
 
   if (!apiKey || !entitySecret) {
     throw new Error(
-      "Missing required Circle credentials. Please set CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET in .env.local."
+      "Missing required Circle credentials. Please set CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET in .env.local.",
     );
   }
 
@@ -53,12 +58,14 @@ export function getCircleClient(): CircleDeveloperControlledWalletsClient {
  * Returns whether Circle credentials are configured in the current environment.
  */
 export function isCircleConfigured(): boolean {
-  return Boolean(process.env.CIRCLE_API_KEY && process.env.CIRCLE_ENTITY_SECRET);
+  return Boolean(
+    process.env.CIRCLE_API_KEY && process.env.CIRCLE_ENTITY_SECRET,
+  );
 }
 
 /**
  * Creates a developer-controlled Smart Contract Account (SCA) treasury wallet on Arc Testnet.
- * 
+ *
  * If CIRCLE_WALLET_SET_ID is not provided in env, it dynamically resolves or creates
  * a wallet set named "Tavryn Treasury Wallets".
  */
@@ -72,7 +79,10 @@ export async function createTreasuryWallet(params: {
   walletSetId: string;
 }> {
   if (!isCircleConfigured()) {
-    const deterministicHash = crypto.createHash("sha256").update(`tavryn-treasury-${params.businessId}`).digest("hex");
+    const deterministicHash = crypto
+      .createHash("sha256")
+      .update(`tavryn-treasury-${params.businessId}`)
+      .digest("hex");
     const fallbackAddress = `0x${deterministicHash.slice(0, 40)}`;
     return {
       walletId: `sim-wallet-${params.businessId}`,
@@ -90,9 +100,12 @@ export async function createTreasuryWallet(params: {
     try {
       // Check existing wallet sets first
       const existingSets = await client.listWalletSets({});
-      const found = existingSets.data?.walletSets?.find(
-        (ws) => "name" in ws && (ws as { name?: string }).name === "Tavryn Treasury Wallets"
-      ) || existingSets.data?.walletSets?.[0];
+      const found =
+        existingSets.data?.walletSets?.find(
+          (ws) =>
+            "name" in ws &&
+            (ws as { name?: string }).name === "Tavryn Treasury Wallets",
+        ) || existingSets.data?.walletSets?.[0];
       if (found?.id) {
         walletSetId = found.id;
       }
@@ -127,7 +140,9 @@ export async function createTreasuryWallet(params: {
 
   const wallet = response.data?.wallets?.[0];
   if (!wallet?.id || !wallet?.address) {
-    throw new Error("Failed to create Circle Developer-Controlled Wallet on Arc Testnet");
+    throw new Error(
+      "Failed to create Circle Developer-Controlled Wallet on Arc Testnet",
+    );
   }
 
   return {
@@ -143,13 +158,18 @@ export async function createTreasuryWallet(params: {
  * precompile interface at 0x3600000000000000000000000000000000000000.
  * Decimals on Arc USDC = 6.
  */
-export async function getOnChainUSDCBalance(walletAddress: string): Promise<number> {
+export async function getOnChainUSDCBalance(
+  walletAddress: string,
+): Promise<number> {
   if (!walletAddress || !walletAddress.startsWith("0x")) {
     throw new Error(`Invalid EVM wallet address: ${walletAddress}`);
   }
 
   // ERC-20 balanceOf(address) function selector: 0x70a08231
-  const cleanAddress = walletAddress.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+  const cleanAddress = walletAddress
+    .toLowerCase()
+    .replace(/^0x/, "")
+    .padStart(64, "0");
   const callData = `0x70a08231${cleanAddress}`;
 
   const rpcUrl = process.env.ARC_RPC_URL || ARC_CONFIG.rpcUrl;
@@ -172,12 +192,16 @@ export async function getOnChainUSDCBalance(walletAddress: string): Promise<numb
   });
 
   if (!response.ok) {
-    throw new Error(`Arc RPC returned HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(
+      `Arc RPC returned HTTP ${response.status}: ${response.statusText}`,
+    );
   }
 
   const json = await response.json();
   if (json.error) {
-    throw new Error(`Arc RPC error: ${json.error.message || JSON.stringify(json.error)}`);
+    throw new Error(
+      `Arc RPC error: ${json.error.message || JSON.stringify(json.error)}`,
+    );
   }
 
   if (!json.result || json.result === "0x") {
@@ -192,7 +216,9 @@ export async function getOnChainUSDCBalance(walletAddress: string): Promise<numb
 /**
  * Reads token balance for a Circle Developer-Controlled wallet using Circle's API.
  */
-export async function getCircleWalletBalance(walletId: string): Promise<number> {
+export async function getCircleWalletBalance(
+  walletId: string,
+): Promise<number> {
   const client = getCircleClient();
   const response = await client.getWalletTokenBalance({
     id: walletId,
@@ -200,10 +226,14 @@ export async function getCircleWalletBalance(walletId: string): Promise<number> 
   });
 
   const usdcToken = response.data?.tokenBalances?.find(
-    (tb) => tb.token.symbol?.toUpperCase() === "USDC"
+    (tb) => tb.token.symbol?.toUpperCase() === "USDC",
   );
 
-  if (!usdcToken || usdcToken.amount === undefined || usdcToken.amount === null) {
+  if (
+    !usdcToken ||
+    usdcToken.amount === undefined ||
+    usdcToken.amount === null
+  ) {
     return 0;
   }
 
@@ -233,7 +263,10 @@ export async function getTreasuryUSDCBalance(params: {
         address: params.walletAddress,
       };
     } catch (rpcErr) {
-      console.warn("Direct Arc RPC balance check failed, trying Circle API:", (rpcErr as Error).message);
+      console.warn(
+        "Direct Arc RPC balance check failed, trying Circle API:",
+        (rpcErr as Error).message,
+      );
     }
   }
 
@@ -247,11 +280,16 @@ export async function getTreasuryUSDCBalance(params: {
         address: params.walletAddress || null,
       };
     } catch (circleErr) {
-      console.warn("Circle API balance check failed:", (circleErr as Error).message);
+      console.warn(
+        "Circle API balance check failed:",
+        (circleErr as Error).message,
+      );
     }
   }
 
-  throw new Error("Unable to fetch balance: neither Arc RPC nor Circle API succeeded");
+  throw new Error(
+    "Unable to fetch balance: neither Arc RPC nor Circle API succeeded",
+  );
 }
 
 /**
@@ -275,8 +313,13 @@ export async function sendUSDC(params: {
     throw new Error(`Invalid transfer amount: ${params.amount}`);
   }
 
-  if (!params.destinationAddress || !params.destinationAddress.startsWith("0x")) {
-    throw new Error(`Invalid destination EVM address: ${params.destinationAddress}`);
+  if (
+    !params.destinationAddress ||
+    !params.destinationAddress.startsWith("0x")
+  ) {
+    throw new Error(
+      `Invalid destination EVM address: ${params.destinationAddress}`,
+    );
   }
 
   const amountStr = numAmount.toFixed(6);
@@ -297,7 +340,9 @@ export async function sendUSDC(params: {
   });
 
   if (!response.data?.id) {
-    throw new Error("Circle did not return a transaction ID for the USDC transfer");
+    throw new Error(
+      "Circle did not return a transaction ID for the USDC transfer",
+    );
   }
 
   return {

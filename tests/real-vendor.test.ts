@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { getServiceSupabase } from "../lib/supabase";
+import { describe, it } from "node:test";
+
 import {
   draftVendorOutreachEmail,
   extractTermsFromVendorReply,
@@ -9,6 +9,7 @@ import {
   VendorReplyExtractionSchema,
 } from "../lib/agent/real-vendor";
 import { calculateTractionMetrics } from "../lib/metrics";
+import { getServiceSupabase } from "../lib/supabase";
 
 describe("Stage 0018: Real-Vendor Mode with Human in the Loop", () => {
   it("drafts outreach email citing usage telemetry and target price without auto-sending", async () => {
@@ -25,16 +26,28 @@ describe("Stage 0018: Real-Vendor Mode with Human in the Loop", () => {
     const draft = await draftVendorOutreachEmail(contract.id);
 
     // 1. Verify recipient, subject, and body exist
-    assert.ok(draft.to && draft.to.length > 3, "Email recipient should be specified");
-    assert.ok(draft.subject.includes(contract.service), "Subject should mention the service");
-    assert.ok(draft.body.includes(contract.service), "Body should mention the service");
+    assert.ok(
+      draft.to && draft.to.length > 3,
+      "Email recipient should be specified",
+    );
+    assert.ok(
+      draft.subject.includes(contract.service),
+      "Subject should mention the service",
+    );
+    assert.ok(
+      draft.body.includes(contract.service),
+      "Body should mention the service",
+    );
 
     // 2. Verify usage data and target pricing are cited
-    assert.ok(draft.target_price < draft.baseline_price, "Target price should represent a discount");
+    assert.ok(
+      draft.target_price < draft.baseline_price,
+      "Target price should represent a discount",
+    );
     assert.ok(
       draft.body.includes(draft.target_price.toLocaleString()) ||
         draft.body.includes(String(draft.target_price)),
-      "Email body must cite target pricing"
+      "Email body must cite target pricing",
     );
 
     // 3. Verify logging in agent_actions
@@ -45,7 +58,9 @@ describe("Stage 0018: Real-Vendor Mode with Human in the Loop", () => {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    const relevantAction = actions?.find((a: any) => a.input?.contractId === contract.id);
+    const relevantAction = actions?.find(
+      (a: any) => a.input?.contractId === contract.id,
+    );
     assert.ok(relevantAction, "Action must be logged in agent_actions");
     assert.equal(relevantAction.input.contractId, contract.id);
     assert.equal(relevantAction.input.service, contract.service);
@@ -61,7 +76,10 @@ Sarah Chen`;
 
     const extracted1 = await extractTermsFromVendorReply(sampleReply1, 10000);
     const parsed1 = VendorReplyExtractionSchema.safeParse(extracted1);
-    assert.ok(parsed1.success, "Extraction must conform to VendorReplyExtractionSchema");
+    assert.ok(
+      parsed1.success,
+      "Extraction must conform to VendorReplyExtractionSchema",
+    );
     assert.equal(extracted1.counter_offer, 8160);
     assert.equal(extracted1.seats, 45);
     assert.equal(extracted1.commitment_months, 12);
@@ -119,10 +137,22 @@ Vendor Team`;
       .order("created_at", { ascending: false })
       .limit(10);
 
-    const relevantAction = actions?.find((a: any) => a.input?.contractId === contract.id);
-    assert.ok(relevantAction, "agent_actions must have logged real_vendor_reply_processed");
-    assert.equal(relevantAction.input.raw_reply, rawReply, "agent_actions must attach the raw vendor reply");
-    assert.ok(relevantAction.result.extraction, "agent_actions result must include schema extraction");
+    const relevantAction = actions?.find(
+      (a: any) => a.input?.contractId === contract.id,
+    );
+    assert.ok(
+      relevantAction,
+      "agent_actions must have logged real_vendor_reply_processed",
+    );
+    assert.equal(
+      relevantAction.input.raw_reply,
+      rawReply,
+      "agent_actions must attach the raw vendor reply",
+    );
+    assert.ok(
+      relevantAction.result.extraction,
+      "agent_actions result must include schema extraction",
+    );
 
     // 3. Verify conversation transcript in negotiations table
     const { data: neg } = await supabase
@@ -132,11 +162,17 @@ Vendor Team`;
       .single();
 
     assert.ok(neg, "Negotiation record must exist");
-    assert.ok(Array.isArray(neg.conversation), "Conversation must be an array of turns");
+    assert.ok(
+      Array.isArray(neg.conversation),
+      "Conversation must be an array of turns",
+    );
     const lastTurn = neg.conversation[neg.conversation.length - 1];
     assert.ok(lastTurn, "Last conversation turn must exist");
     assert.equal(lastTurn.role, "vendor");
-    assert.ok(lastTurn.message.includes("revised rate of $7,450") || lastTurn.amount === 7450);
+    assert.ok(
+      lastTurn.message.includes("revised rate of $7,450") ||
+        lastTurn.amount === 7450,
+    );
   });
 
   it("records savings without payment when vendor does not accept USDC and reflects in traction metrics", async () => {
@@ -171,12 +207,20 @@ Vendor Team`;
       .order("created_at", { ascending: false })
       .limit(10);
 
-    const relevantAction = actions?.find((a: any) => a.input?.contractId === contract.id);
-    assert.ok(relevantAction, "agent_actions must have logged savings_recorded_without_payment");
+    const relevantAction = actions?.find(
+      (a: any) => a.input?.contractId === contract.id,
+    );
+    assert.ok(
+      relevantAction,
+      "agent_actions must have logged savings_recorded_without_payment",
+    );
     assert.equal(relevantAction.result.savings, expectedSavings);
 
     // 2. Verify metrics calculation includes off-chain savings
     const metrics = await calculateTractionMetrics(false);
-    assert.ok(metrics.savings.realized >= metrics.savings.offChainSavings, "realized must include off-chain savings");
+    assert.ok(
+      metrics.savings.realized >= metrics.savings.offChainSavings,
+      "realized must include off-chain savings",
+    );
   });
 });

@@ -1,43 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
 import {
-  TrendingDown,
+  Activity,
   Building2,
-  Wallet,
-  ShieldCheck,
+  Check,
   Clock,
   Copy,
-  Check,
   ExternalLink,
   Layers,
-  Activity,
-  AlertTriangle,
+  ShieldCheck,
+  TrendingDown,
+  Wallet,
 } from "lucide-react";
-import {
-  Display,
-  H1,
-  H2,
-} from "@/components/ui/text";
-import {
-  TractionMetricsResult,
-} from "@/lib/metrics";
+import React, { useState } from "react";
+
+import { PageHeader } from "@/components/PageHeader";
+import { Display, H2 } from "@/components/ui/text";
 import { ARC_CONFIG } from "@/lib/circle";
+import { TractionMetricsResult } from "@/lib/metrics";
 
 interface TractionMetricsClientProps {
   initialMetricsAll: TractionMetricsResult;
-  initialMetricsReal: TractionMetricsResult;
+  initialMetricsReal?: TractionMetricsResult;
 }
 
 export function TractionMetricsClient({
   initialMetricsAll,
-  initialMetricsReal,
 }: TractionMetricsClientProps) {
-  const [realOnly, setRealOnly] = useState(false);
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
 
-  const metrics = realOnly ? initialMetricsReal : initialMetricsAll;
+  const metrics = initialMetricsAll;
 
   const handleCopyTx = async (id: string, hash: string) => {
     try {
@@ -51,74 +43,14 @@ export function TractionMetricsClient({
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Header and Scope Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-6">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-              Live Protocol Metrics
-            </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">
-              • Arc Testnet (Chain ID 5042002)
-            </span>
-          </div>
-          <H1 className="text-2xl sm:text-3xl text-slate-900 dark:text-white">
-            Traction & Settlement Metrics
-          </H1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Auditable Postgres telemetry reconciled with on-chain settlements.
-          </p>
-        </div>
-
-        {/* Filter Toggle */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-[#121915] p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 self-start md:self-auto">
-          <button
-            type="button"
-            onClick={() => setRealOnly(false)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              !realOnly
-                ? "bg-white dark:bg-[#1a2520] text-slate-900 dark:text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            All Organizations ({initialMetricsAll.businesses.totalCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setRealOnly(true)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              realOnly
-                ? "bg-[#107e65] text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span>
-              Real Businesses Only ({initialMetricsReal.businesses.realCount})
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Scope Alert if Real Businesses is toggled but low */}
-      {realOnly && metrics.businesses.realCount === 0 && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>
-              No production businesses have been onboarded yet. Switch back to{" "}
-              <strong>All Organizations</strong> to inspect demo telemetry, or
-              onboard a real business via CSV.
-            </span>
-          </div>
-          <Link
-            href="/onboard"
-            className="px-3 py-1 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700 shrink-0 text-xs transition-colors"
-          >
-            Onboard Business
-          </Link>
-        </div>
-      )}
+      {/* Minimal Reusable Page Header */}
+      <PageHeader
+        badge="Live Protocol Metrics"
+        caption="Arc Testnet (Chain ID 5042002)"
+        title="Traction & Settlement Metrics"
+        description="Auditable Postgres telemetry reconciled with on-chain settlements."
+        className="border-b border-slate-200/80 dark:border-slate-800/80 pb-6"
+      />
 
       {/* Hero Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

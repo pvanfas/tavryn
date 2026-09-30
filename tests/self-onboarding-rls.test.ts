@@ -1,6 +1,8 @@
-import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { after, before, describe, it } from "node:test";
+
 import { createClient } from "@supabase/supabase-js";
+
 import { getServiceSupabase } from "../lib/supabase";
 
 describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
@@ -55,7 +57,10 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       })
       .select("id")
       .single();
-    assert.ok(bA && !bAErr, `Failed to insert Business Alpha: ${bAErr?.message}`);
+    assert.ok(
+      bA && !bAErr,
+      `Failed to insert Business Alpha: ${bAErr?.message}`,
+    );
     businessAId = bA.id;
 
     // Map User A as Owner of Alpha
@@ -114,7 +119,10 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       })
       .select("id")
       .single();
-    assert.ok(bB && !bBErr, `Failed to insert Business Beta: ${bBErr?.message}`);
+    assert.ok(
+      bB && !bBErr,
+      `Failed to insert Business Beta: ${bBErr?.message}`,
+    );
     businessBId = bB.id;
 
     // Map User B as Owner of Beta
@@ -178,12 +186,18 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
 
   after(async () => {
     // Cleanup test data
-    if (contractAId) await admin.from("contracts").delete().eq("id", contractAId);
-    if (contractBId) await admin.from("contracts").delete().eq("id", contractBId);
-    if (eventAId) await admin.from("onboarding_events").delete().eq("id", eventAId);
-    if (eventBId) await admin.from("onboarding_events").delete().eq("id", eventBId);
-    if (businessAId) await admin.from("businesses").delete().eq("id", businessAId);
-    if (businessBId) await admin.from("businesses").delete().eq("id", businessBId);
+    if (contractAId)
+      await admin.from("contracts").delete().eq("id", contractAId);
+    if (contractBId)
+      await admin.from("contracts").delete().eq("id", contractBId);
+    if (eventAId)
+      await admin.from("onboarding_events").delete().eq("id", eventAId);
+    if (eventBId)
+      await admin.from("onboarding_events").delete().eq("id", eventBId);
+    if (businessAId)
+      await admin.from("businesses").delete().eq("id", businessAId);
+    if (businessBId)
+      await admin.from("businesses").delete().eq("id", businessBId);
     if (userAId) await admin.auth.admin.deleteUser(userAId);
     if (userBId) await admin.auth.admin.deleteUser(userBId);
   });
@@ -206,7 +220,11 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .eq("id", contractBId);
 
     assert.ok(!errOther);
-    assert.equal(aOtherContracts?.length, 0, "User A must receive empty set for User B's contract");
+    assert.equal(
+      aOtherContracts?.length,
+      0,
+      "User A must receive empty set for User B's contract",
+    );
   });
 
   it("2. User B can read Business Beta's contracts, but CANNOT read Business Alpha's contracts", async () => {
@@ -227,7 +245,11 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .eq("id", contractAId);
 
     assert.ok(!errOther);
-    assert.equal(bOtherContracts?.length, 0, "User B must receive empty set for User A's contract");
+    assert.equal(
+      bOtherContracts?.length,
+      0,
+      "User B must receive empty set for User A's contract",
+    );
   });
 
   it("3. User A CANNOT read Business Beta profile or settings", async () => {
@@ -237,7 +259,11 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .eq("id", businessBId);
 
     assert.ok(!error);
-    assert.equal(data?.length, 0, "User A must not be able to read Business B's profile");
+    assert.equal(
+      data?.length,
+      0,
+      "User A must not be able to read Business B's profile",
+    );
   });
 
   it("4. User B CANNOT read Business Alpha profile or settings", async () => {
@@ -247,7 +273,11 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .eq("id", businessAId);
 
     assert.ok(!error);
-    assert.equal(data?.length, 0, "User B must not be able to read Business A's profile");
+    assert.equal(
+      data?.length,
+      0,
+      "User B must not be able to read Business A's profile",
+    );
   });
 
   it("5. User A CANNOT read or update Business Beta's policy", async () => {
@@ -272,7 +302,11 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .eq("business_id", businessBId)
       .single();
 
-    assert.equal(checkB?.max_auto_transaction, 8000, "Business B policy must remain 8000 and unchanged by User A");
+    assert.equal(
+      checkB?.max_auto_transaction,
+      8000,
+      "Business B policy must remain 8000 and unchanged by User A",
+    );
   });
 
   it("6. Onboarding events table isolates events by business and records audit history", async () => {
@@ -302,6 +336,10 @@ describe("Self-Service Multi-Tenant Onboarding & RLS Data Isolation", () => {
       .select("id, business_id")
       .in("business_id", [businessAId, businessBId]);
 
-    assert.equal(allEvents?.length, 2, "Admin should see both businesses tracked in onboarding_events");
+    assert.equal(
+      allEvents?.length,
+      2,
+      "Admin should see both businesses tracked in onboarding_events",
+    );
   });
 });

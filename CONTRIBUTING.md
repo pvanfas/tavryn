@@ -53,6 +53,7 @@ cp .env.example .env.local
 ```
 
 Populate the required secrets:
+
 - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous client key.
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (server-only).

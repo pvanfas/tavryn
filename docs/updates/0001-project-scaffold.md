@@ -2,7 +2,7 @@
 
 _Sep 27, 2026 · A clean Next.js slate wired with strict agent boundaries_
 
-## What Tavryn can do now that it couldn't yesterday
+## What Tavryn can do now that it couldn't last time
 
 Tavryn now has a concrete, working Next.js App Router workspace configured with TypeScript and Tailwind CSS v4. The repository establishes non-negotiable architectural boundaries: an autonomous LLM that decides, deterministic tools that execute, and zero direct database writes.
 

@@ -2,7 +2,7 @@
 
 _Sep 27, 2026 · A name, a logo, and a plan land before a single line of code_
 
-## What Tavryn can do now that it couldn't yesterday
+## What Tavryn can do now that it couldn't last time
 
 Nothing yet, and that's the point of this entry. Before Stage 0000, this was "the SaaS renewal
 agent thing." Now it's Tavryn: a name, a mark, a launch target, and a build order. Everything

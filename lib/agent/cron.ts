@@ -1,10 +1,16 @@
-import { getServiceSupabase } from "@/lib/supabase";
-import { evaluateContractOpportunity, ContractLike } from "@/lib/heuristics";
-import { runNegotiationLoop, NegotiationLoopResult } from "@/lib/agent/negotiate";
+import {
+  NegotiationLoopResult,
+  runNegotiationLoop,
+} from "@/lib/agent/negotiate";
+import {
+  DEFAULT_IDEMPOTENCY_WINDOW_DAYS,
+  DEFAULT_RENEWAL_WINDOW_DAYS,
+} from "@/lib/constants";
+import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
 import { createNotification } from "@/lib/notifications";
-import { logAgentAction } from "@/lib/tools/audit";
+import { getServiceSupabase } from "@/lib/supabase";
 import { get_usage } from "@/lib/tools";
-import { DEFAULT_RENEWAL_WINDOW_DAYS, DEFAULT_IDEMPOTENCY_WINDOW_DAYS } from "@/lib/constants";
+import { logAgentAction } from "@/lib/tools/audit";
 
 export interface CronRunOptions {
   renewalWindowDays?: number;
@@ -17,7 +23,11 @@ export interface CronRunOptions {
 export interface SkippedContractInfo {
   contractId: string;
   service: string;
-  reason: "active_negotiation" | "recent_negotiation" | "below_min_savings" | "no_opportunity";
+  reason:
+    | "active_negotiation"
+    | "recent_negotiation"
+    | "below_min_savings"
+    | "no_opportunity";
   detail: string;
 }
 
@@ -67,7 +77,7 @@ async function execTool<T>(tool: any, input: any): Promise<T> {
 
 /**
  * Autonomous Proactive Daily Procurement Agent
- * 
+ *
  * 1. Discovers contracts renewing within N days (default 45)
  * 2. Enforces idempotency (rejects contracts with active or recent negotiations within 14 days)
  * 3. Refreshes telemetry and usage signals
@@ -77,30 +87,40 @@ async function execTool<T>(tool: any, input: any): Promise<T> {
  * 7. Records an immutable summary in agent_actions
  */
 export async function runDailyProcurementCron(
-  options: CronRunOptions = {}
+  options: CronRunOptions = {},
 ): Promise<CronDailyRunResult> {
   const supabase = getServiceSupabase();
 
   const renewalWindowDays =
     options.renewalWindowDays ??
-    (process.env.RENEWAL_WINDOW_DAYS ? Number(process.env.RENEWAL_WINDOW_DAYS) : DEFAULT_RENEWAL_WINDOW_DAYS);
+    (process.env.RENEWAL_WINDOW_DAYS
+      ? Number(process.env.RENEWAL_WINDOW_DAYS)
+      : DEFAULT_RENEWAL_WINDOW_DAYS);
 
   const idempotencyWindowDays =
     options.idempotencyWindowDays ??
-    (process.env.IDEMPOTENCY_WINDOW_DAYS ? Number(process.env.IDEMPOTENCY_WINDOW_DAYS) : DEFAULT_IDEMPOTENCY_WINDOW_DAYS);
+    (process.env.IDEMPOTENCY_WINDOW_DAYS
+      ? Number(process.env.IDEMPOTENCY_WINDOW_DAYS)
+      : DEFAULT_IDEMPOTENCY_WINDOW_DAYS);
 
   const force = options.force ?? false;
   // Default cap to 5 negotiations per cron run to guarantee sub-minute serverless execution
   const maxNegotiations = options.limit !== undefined ? options.limit : 5;
 
   const now = new Date();
-  const renewalHorizon = new Date(now.getTime() + renewalWindowDays * 24 * 60 * 60 * 1000);
-  const idempotencyCutoff = new Date(now.getTime() - idempotencyWindowDays * 24 * 60 * 60 * 1000);
+  const renewalHorizon = new Date(
+    now.getTime() + renewalWindowDays * 24 * 60 * 60 * 1000,
+  );
+  const idempotencyCutoff = new Date(
+    now.getTime() - idempotencyWindowDays * 24 * 60 * 60 * 1000,
+  );
 
   // 1. Fetch Candidate Contracts in a single efficient query
   let contractsQuery = supabase
     .from("contracts")
-    .select("*, businesses ( id, name ), vendors ( id, name, category, contact, reputation_score, is_simulated )")
+    .select(
+      "*, businesses ( id, name ), vendors ( id, name, category, contact, reputation_score, is_simulated )",
+    )
     .not("status", "in", '("cancelled","renewed")')
     .lte("renewal_date", renewalHorizon.toISOString())
     .order("renewal_date", { ascending: true });
@@ -129,7 +149,9 @@ export async function runDailyProcurementCron(
   }
 
   // 2. Extract unique business IDs and contract IDs for batch lookups
-  const businessIds = Array.from(new Set(candidateContracts.map((c) => c.business_id)));
+  const businessIds = Array.from(
+    new Set(candidateContracts.map((c) => c.business_id)),
+  );
   const contractIds = candidateContracts.map((c) => c.id);
 
   // 3. Batch fetch policies
@@ -150,7 +172,10 @@ export async function runDailyProcurementCron(
     .in("contract_id", contractIds)
     .order("created_at", { ascending: false });
 
-  const negotiationsByContract = new Map<string, Array<{ id: string; status: string; created_at: string }>>();
+  const negotiationsByContract = new Map<
+    string,
+    Array<{ id: string; status: string; created_at: string }>
+  >();
   for (const neg of existingNegs || []) {
     const list = negotiationsByContract.get(neg.contract_id) || [];
     list.push(neg);
@@ -173,7 +198,8 @@ export async function runDailyProcurementCron(
     const bContracts = contractsByBusiness.get(businessId) || [];
     const bName = bContracts[0]?.businesses?.name || "Organization";
     const policy = policyMap.get(businessId);
-    const minSavings = policy?.min_savings != null ? Number(policy.min_savings) : 200;
+    const minSavings =
+      policy?.min_savings != null ? Number(policy.min_savings) : 200;
 
     const skippedContracts: SkippedContractInfo[] = [];
     const qualifyingOpportunities: Array<{
@@ -189,7 +215,9 @@ export async function runDailyProcurementCron(
       if (!force) {
         const negs = negotiationsByContract.get(contract.id) || [];
         if (negs.length > 0) {
-          const activeNeg = negs.find((n) => ["initiated", "negotiating"].includes(n.status));
+          const activeNeg = negs.find((n) =>
+            ["initiated", "negotiating"].includes(n.status),
+          );
           if (activeNeg || contract.status === "negotiating") {
             skippedContracts.push({
               contractId: contract.id,
@@ -203,7 +231,9 @@ export async function runDailyProcurementCron(
           const latestNeg = negs[0];
           const negCreatedAt = new Date(latestNeg.created_at);
           if (negCreatedAt > idempotencyCutoff) {
-            const daysAgo = Math.round((now.getTime() - negCreatedAt.getTime()) / (1000 * 60 * 60 * 24));
+            const daysAgo = Math.round(
+              (now.getTime() - negCreatedAt.getTime()) / (1000 * 60 * 60 * 24),
+            );
             skippedContracts.push({
               contractId: contract.id,
               service: contract.service,
@@ -219,7 +249,10 @@ export async function runDailyProcurementCron(
       try {
         await execTool(get_usage, { contractId: contract.id });
       } catch (usageErr) {
-        console.warn(`Telemetry refresh notice for ${contract.service}:`, (usageErr as Error).message);
+        console.warn(
+          `Telemetry refresh notice for ${contract.service}:`,
+          (usageErr as Error).message,
+        );
       }
 
       // 4c. Calculate Opportunity
@@ -259,7 +292,9 @@ export async function runDailyProcurementCron(
 
     // Apply execution cap if configured
     const targetOpportunities =
-      maxNegotiations > 0 ? qualifyingOpportunities.slice(0, maxNegotiations) : qualifyingOpportunities;
+      maxNegotiations > 0
+        ? qualifyingOpportunities.slice(0, maxNegotiations)
+        : qualifyingOpportunities;
 
     const startedNegotiations: StartedNegotiationInfo[] = [];
     let businessNotificationsCount = 0;
@@ -277,7 +312,10 @@ export async function runDailyProcurementCron(
       try {
         negResult = await runNegotiationLoop(contract.id, { maxRounds: 5 });
       } catch (loopErr) {
-        console.error(`Autonomous negotiation failed for contract ${contract.id}:`, loopErr);
+        console.error(
+          `Autonomous negotiation failed for contract ${contract.id}:`,
+          loopErr,
+        );
         continue;
       }
 
@@ -285,7 +323,10 @@ export async function runDailyProcurementCron(
       let telemetrySummary = "";
       if (contract.seat_count && contract.active_seats) {
         telemetrySummary = `${contract.active_seats} of ${contract.seat_count} seats active.`;
-      } else if (contract.usage_metric && typeof (contract.usage_metric as any).decline_pct === "number") {
+      } else if (
+        contract.usage_metric &&
+        typeof (contract.usage_metric as any).decline_pct === "number"
+      ) {
         telemetrySummary = `Telemetry indicates a ${(contract.usage_metric as any).decline_pct}% workload decline.`;
       } else {
         telemetrySummary = "Renewal opportunity identified.";
@@ -311,7 +352,10 @@ export async function runDailyProcurementCron(
         });
         businessNotificationsCount++;
       } catch (notifErr) {
-        console.warn(`Failed to dispatch notification for ${contract.service}:`, notifErr);
+        console.warn(
+          `Failed to dispatch notification for ${contract.service}:`,
+          notifErr,
+        );
       }
 
       startedNegotiations.push({

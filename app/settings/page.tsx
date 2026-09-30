@@ -1,25 +1,25 @@
 "use client";
 
+import {
+  AlertCircle,
+  Bell,
+  Building2,
+  Check,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  Loader2,
+  Save,
+  Send,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+
+import { AppShell } from "@/components/AppShell";
 import { ARC_CONFIG } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
-
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { AppShell } from "@/components/AppShell";
-import {
-  ShieldCheck,
-  Bell,
-  Wallet,
-  ExternalLink,
-  Copy,
-  Check,
-  Save,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Send,
-  Building2,
-} from "lucide-react";
 
 interface PolicyState {
   max_auto_transaction: number;
@@ -48,7 +48,10 @@ function SettingsContent() {
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [webhookMsg, setWebhookMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [webhookMsg, setWebhookMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const [business, setBusiness] = useState<BusinessState | null>(null);
@@ -79,7 +82,9 @@ function SettingsContent() {
         const res = await fetch(`/api/business/${targetId}/settings`);
         if (!res.ok) {
           // If not found, fallback to Demo Co
-          const fallbackRes = await fetch(`/api/business/b655fb94-fc62-4e3c-8898-2c5f88068159/settings`);
+          const fallbackRes = await fetch(
+            `/api/business/b655fb94-fc62-4e3c-8898-2c5f88068159/settings`,
+          );
           if (fallbackRes.ok) {
             const data = await fallbackRes.json();
             if (mounted && data.data) {
@@ -87,11 +92,19 @@ function SettingsContent() {
               setWebhookUrl(data.data.business.webhook_url || "");
               if (data.data.policy) {
                 setPolicy({
-                  max_auto_transaction: data.data.policy.max_auto_transaction ?? 2000,
+                  max_auto_transaction:
+                    data.data.policy.max_auto_transaction ?? 2000,
                   min_savings: data.data.policy.min_savings ?? 200,
-                  human_approval_required_above: data.data.policy.human_approval_required_above ?? 2000,
-                  allowed_categories: data.data.policy.allowed_categories || ["software", "cloud"],
-                  category_budgets: data.data.policy.category_budgets || { software: 25000, cloud: 50000 },
+                  human_approval_required_above:
+                    data.data.policy.human_approval_required_above ?? 2000,
+                  allowed_categories: data.data.policy.allowed_categories || [
+                    "software",
+                    "cloud",
+                  ],
+                  category_budgets: data.data.policy.category_budgets || {
+                    software: 25000,
+                    cloud: 50000,
+                  },
                 });
               }
             }
@@ -105,11 +118,19 @@ function SettingsContent() {
           setWebhookUrl(data.data.business.webhook_url || "");
           if (data.data.policy) {
             setPolicy({
-              max_auto_transaction: data.data.policy.max_auto_transaction ?? 2000,
+              max_auto_transaction:
+                data.data.policy.max_auto_transaction ?? 2000,
               min_savings: data.data.policy.min_savings ?? 200,
-              human_approval_required_above: data.data.policy.human_approval_required_above ?? 2000,
-              allowed_categories: data.data.policy.allowed_categories || ["software", "cloud"],
-              category_budgets: data.data.policy.category_budgets || { software: 25000, cloud: 50000 },
+              human_approval_required_above:
+                data.data.policy.human_approval_required_above ?? 2000,
+              allowed_categories: data.data.policy.allowed_categories || [
+                "software",
+                "cloud",
+              ],
+              category_budgets: data.data.policy.category_budgets || {
+                software: 25000,
+                cloud: 50000,
+              },
             });
           }
         }
@@ -121,7 +142,9 @@ function SettingsContent() {
     }
 
     loadData();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [businessIdParam]);
 
   const handleCopy = (text: string, field: string) => {
@@ -182,7 +205,10 @@ function SettingsContent() {
 
   const handleTestWebhook = async () => {
     if (!business || !webhookUrl.trim()) {
-      setWebhookMsg({ type: "error", text: "Please enter a valid webhook URL first." });
+      setWebhookMsg({
+        type: "error",
+        text: "Please enter a valid webhook URL first.",
+      });
       return;
     }
 
@@ -212,7 +238,14 @@ function SettingsContent() {
     }
   };
 
-  const availableCategories = ["software", "cloud", "contractors", "infrastructure", "legal", "marketing"];
+  const availableCategories = [
+    "software",
+    "cloud",
+    "contractors",
+    "infrastructure",
+    "legal",
+    "marketing",
+  ];
 
   return (
     <AppShell
@@ -232,7 +265,8 @@ function SettingsContent() {
               Organization Settings
             </h1>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-              Configure deterministic spending policies, Arc treasury wallets, and notification alerts
+              Configure deterministic spending policies, Arc treasury wallets,
+              and notification alerts
             </p>
           </div>
 
@@ -271,12 +305,17 @@ function SettingsContent() {
         {loading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-3">
             <Loader2 className="h-8 w-8 text-[#107e65] animate-spin" />
-            <span className="text-xs text-slate-500 font-medium">Loading organization configuration…</span>
+            <span className="text-xs text-slate-500 font-medium">
+              Loading organization configuration…
+            </span>
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-7">
             {/* Section 1: Arc Treasury Wallet Card */}
-            <div id="treasury" className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4">
+            <div
+              id="treasury"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65]">
@@ -287,7 +326,8 @@ function SettingsContent() {
                       Arc Treasury Settlement Wallet
                     </h2>
                     <p className="text-[11px] text-slate-500">
-                      Smart Contract Account (SCA) deployed on Arc Testnet for USDC escrow and payments
+                      Smart Contract Account (SCA) deployed on Arc Testnet for
+                      USDC escrow and payments
                     </p>
                   </div>
                 </div>
@@ -311,10 +351,19 @@ function SettingsContent() {
                 </code>
                 <button
                   type="button"
-                  onClick={() => handleCopy(business?.wallet_address || DEV_TREASURY_ADDRESS, "wallet")}
+                  onClick={() =>
+                    handleCopy(
+                      business?.wallet_address || DEV_TREASURY_ADDRESS,
+                      "wallet",
+                    )
+                  }
                   className="px-3.5 py-2.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
                 >
-                  {copiedField === "wallet" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedField === "wallet" ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
                   <span>{copiedField === "wallet" ? "Copied" : "Copy"}</span>
                 </button>
               </div>
@@ -322,23 +371,31 @@ function SettingsContent() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div>
                   <span className="text-slate-500">Network:</span>{" "}
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">Arc Testnet (5042002)</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    Arc Testnet (5042002)
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-500">Token:</span>{" "}
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">USDC (ERC-20 Precompile)</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    USDC (ERC-20 Precompile)
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-500">Recorded Balance:</span>{" "}
                   <span className="font-bold text-[#107e65] dark:text-[#34d399] font-mono">
-                    ${Number(business?.treasury_balance ?? 0).toLocaleString()} USDC
+                    ${Number(business?.treasury_balance ?? 0).toLocaleString()}{" "}
+                    USDC
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Section 2: Deterministic Policy Configuration */}
-            <div id="policy" className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-6">
+            <div
+              id="policy"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-6"
+            >
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65]">
                   <ShieldCheck className="h-4 w-4" />
@@ -348,7 +405,8 @@ function SettingsContent() {
                     Deterministic Procurement Policy Engine
                   </h2>
                   <p className="text-[11px] text-slate-500">
-                    Pure code boundaries enforced server-side. The AI agent cannot approve its own spend.
+                    Pure code boundaries enforced server-side. The AI agent
+                    cannot approve its own spend.
                   </p>
                 </div>
               </div>
@@ -358,12 +416,19 @@ function SettingsContent() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Autonomous Ceiling ($)
                   </label>
-                  <p className="text-[11px] text-slate-500 mb-2">Max transaction approved without human signature</p>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Max transaction approved without human signature
+                  </p>
                   <input
                     id="settings-max-auto"
                     type="number"
                     value={policy.max_auto_transaction}
-                    onChange={(e) => setPolicy({ ...policy, max_auto_transaction: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        max_auto_transaction: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                   />
                 </div>
@@ -372,12 +437,19 @@ function SettingsContent() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Min Savings Threshold ($)
                   </label>
-                  <p className="text-[11px] text-slate-500 mb-2">Minimum dollar savings required to renegotiate</p>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Minimum dollar savings required to renegotiate
+                  </p>
                   <input
                     id="settings-min-savings"
                     type="number"
                     value={policy.min_savings}
-                    onChange={(e) => setPolicy({ ...policy, min_savings: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        min_savings: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                   />
                 </div>
@@ -386,12 +458,19 @@ function SettingsContent() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Human Approval Required ($)
                   </label>
-                  <p className="text-[11px] text-slate-500 mb-2">Transactions above this require manual sign-off</p>
+                  <p className="text-[11px] text-slate-500 mb-2">
+                    Transactions above this require manual sign-off
+                  </p>
                   <input
                     id="settings-human-ceiling"
                     type="number"
                     value={policy.human_approval_required_above}
-                    onChange={(e) => setPolicy({ ...policy, human_approval_required_above: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setPolicy({
+                        ...policy,
+                        human_approval_required_above: Number(e.target.value),
+                      })
+                    }
                     className="w-full text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                   />
                 </div>
@@ -435,7 +514,8 @@ function SettingsContent() {
                     Per-Business Notification Webhook
                   </h2>
                   <p className="text-[11px] text-slate-500">
-                    Receive live notifications in Slack, Discord, or custom systems when the agent detects waste or settles contracts
+                    Receive live notifications in Slack, Discord, or custom
+                    systems when the agent detects waste or settles contracts
                   </p>
                 </div>
               </div>
@@ -469,7 +549,9 @@ function SettingsContent() {
                 </div>
 
                 {webhookMsg && (
-                  <p className={`mt-2 text-xs font-semibold ${webhookMsg.type === "success" ? "text-[#107e65] dark:text-[#34d399]" : "text-rose-600 dark:text-rose-400"}`}>
+                  <p
+                    className={`mt-2 text-xs font-semibold ${webhookMsg.type === "success" ? "text-[#107e65] dark:text-[#34d399]" : "text-rose-600 dark:text-rose-400"}`}
+                  >
                     {webhookMsg.text}
                   </p>
                 )}
@@ -488,7 +570,9 @@ function SettingsContent() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                <span>{saving ? "Saving Changes…" : "Save Policy & Settings"}</span>
+                <span>
+                  {saving ? "Saving Changes…" : "Save Policy & Settings"}
+                </span>
               </button>
             </div>
           </form>
@@ -500,11 +584,13 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-[#107e65] animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 text-[#107e65] animate-spin" />
+        </div>
+      }
+    >
       <SettingsContent />
     </Suspense>
   );

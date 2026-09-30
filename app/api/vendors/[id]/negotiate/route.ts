@@ -1,11 +1,12 @@
 import { z } from "zod";
+
+import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 import {
   getVendorSimulatorConfig,
   simulateVendorNegotiation,
 } from "@/lib/vendor-simulator";
-import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { logger } from "@/lib/logger";
 
 const ParamSchema = z.object({
   id: z.string().min(1, "Vendor ID is required"),
@@ -27,7 +28,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = ParamSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid vendor route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid vendor route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
     const { id: vendorId } = parsedParams.data;
 
@@ -68,14 +73,18 @@ export async function POST(req: Request, { params }: RouteProps) {
       .eq("contract_id", contract_id)
       .maybeSingle();
 
-    const originalPrice = Number(existingNeg?.original_price ?? contract.current_price);
-    const previousCounter = existingNeg?.current_offer ? Number(existingNeg.current_offer) : originalPrice;
+    const originalPrice = Number(
+      existingNeg?.original_price ?? contract.current_price,
+    );
+    const previousCounter = existingNeg?.current_offer
+      ? Number(existingNeg.current_offer)
+      : originalPrice;
 
     // 3. Configure Vendor Simulator (with hidden floor & personality style)
     const vendorConfig = getVendorSimulatorConfig(
       vendorId || vendor?.id || "default-vendor",
       vendorName,
-      vendorCategory
+      vendorCategory,
     );
 
     // 4. Simulate Negotiation Turn
@@ -88,7 +97,7 @@ export async function POST(req: Request, { params }: RouteProps) {
         original_price: originalPrice,
         previous_counter: previousCounter,
       },
-      vendorConfig
+      vendorConfig,
     );
 
     // Return counter offer, message, accepted. Never leak the floor!

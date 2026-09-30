@@ -1,20 +1,36 @@
 import { z } from "zod";
-import { getServiceSupabase } from "@/lib/supabase";
-import { logAgentAction } from "@/lib/tools/audit";
-import { get_usage, find_vendor_options } from "@/lib/tools";
+
 import { get_vendor_history, record_vendor_memory } from "@/lib/memory";
+import { getServiceSupabase } from "@/lib/supabase";
+import { find_vendor_options, get_usage } from "@/lib/tools";
+import { logAgentAction } from "@/lib/tools/audit";
 
 /**
  * Zod schema for structured vendor reply extraction.
  * Guarantees strict type safety and validates raw vendor input.
  */
 export const VendorReplyExtractionSchema = z.object({
-  counter_offer: z.number().nullable().describe("Extracted counter-offer dollar amount"),
-  accepted: z.boolean().describe("Whether vendor explicitly accepted the agent's proposal"),
-  seats: z.number().nullable().describe("Number of seats or licenses specified in the reply"),
-  commitment_months: z.number().nullable().describe("Commitment duration in months"),
-  accepts_usdc: z.boolean().describe("Whether the vendor accepts USDC / crypto or demands fiat/ACH"),
-  notes: z.string().describe("Key terms, caveats, or constraints extracted from the message"),
+  counter_offer: z
+    .number()
+    .nullable()
+    .describe("Extracted counter-offer dollar amount"),
+  accepted: z
+    .boolean()
+    .describe("Whether vendor explicitly accepted the agent's proposal"),
+  seats: z
+    .number()
+    .nullable()
+    .describe("Number of seats or licenses specified in the reply"),
+  commitment_months: z
+    .number()
+    .nullable()
+    .describe("Commitment duration in months"),
+  accepts_usdc: z
+    .boolean()
+    .describe("Whether the vendor accepts USDC / crypto or demands fiat/ACH"),
+  notes: z
+    .string()
+    .describe("Key terms, caveats, or constraints extracted from the message"),
   raw_text: z.string().describe("The original unparsed reply text"),
 });
 
@@ -47,7 +63,8 @@ export interface ProcessReplyResult {
   reason: string;
   extraction: VendorReplyExtraction;
   message: string;
-  suggested_action: "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away";
+  suggested_action:
+    "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away";
   negotiation: {
     id: string;
     status: string;
@@ -76,7 +93,10 @@ async function execTool<T>(tool: any, input: any): Promise<T> {
  * Extracts structured contract renewal terms from unstructured vendor email reply text.
  * Uses robust regex heuristics with strict Zod validation.
  */
-export function extractTermsFromVendorReply(rawText: string, baselinePrice: number): VendorReplyExtraction {
+export function extractTermsFromVendorReply(
+  rawText: string,
+  baselinePrice: number,
+): VendorReplyExtraction {
   const clean = rawText.trim();
 
   // 1. Detect if vendor accepted our proposal directly
@@ -88,7 +108,8 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
   let isAccepted = acceptPatterns.some((p) => p.test(clean));
 
   // If vendor says "cannot meet" or "unable to meet" our requested price, it is NOT an unconditional acceptance
-  const cannotMeetPattern = /\b(?:cannot|can't|unable to)\s+meet(?:\s+\w+)*\s+\$?(\d[\d,]*(?:\.\d{2})?)/i;
+  const cannotMeetPattern =
+    /\b(?:cannot|can't|unable to)\s+meet(?:\s+\w+)*\s+\$?(\d[\d,]*(?:\.\d{2})?)/i;
   const cannotMeetMatch = clean.match(cannotMeetPattern);
   let rejectedPrice: number | null = null;
   if (cannotMeetMatch) {
@@ -119,11 +140,18 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
 
   // 2b. General price matches if no explicit counter phrase
   if (!extractedPrice) {
-    const priceMatches = Array.from(clean.matchAll(/(?:\$|USD\s*)(\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d{3,7})/gi));
+    const priceMatches = Array.from(
+      clean.matchAll(/(?:\$|USD\s*)(\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d{3,7})/gi),
+    );
     for (const match of priceMatches) {
       const numStr = match[1].replace(/,/g, "");
       const num = parseFloat(numStr);
-      if (!isNaN(num) && num >= 100 && num <= baselinePrice * 1.5 && num !== rejectedPrice) {
+      if (
+        !isNaN(num) &&
+        num >= 100 &&
+        num <= baselinePrice * 1.5 &&
+        num !== rejectedPrice
+      ) {
         extractedPrice = num;
         break;
       }
@@ -132,7 +160,9 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
 
   // 2c. Check percentage discount patterns if no absolute dollar figure (e.g. "15% discount")
   if (!extractedPrice) {
-    const pctMatch = clean.match(/(\d{1,2}(?:\.\d+)?)\s*%\s*(?:discount|reduction|concession|off)/i);
+    const pctMatch = clean.match(
+      /(\d{1,2}(?:\.\d+)?)\s*%\s*(?:discount|reduction|concession|off)/i,
+    );
     if (pctMatch) {
       const discountPct = parseFloat(pctMatch[1]);
       if (!isNaN(discountPct) && discountPct > 0 && discountPct < 90) {
@@ -143,16 +173,26 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
 
   // If still not found but accepted, fallback to baseline or target
   if (!extractedPrice) {
-    extractedPrice = isAccepted ? Math.round(baselinePrice * 0.85) : baselinePrice;
+    extractedPrice = isAccepted
+      ? Math.round(baselinePrice * 0.85)
+      : baselinePrice;
   }
 
   // 3. Detect seats count
   let seats: number | null = null;
-  const offeredSeatsMatch = clean.match(/(?:commit to|agreed to|down to|with|to|for)\s*(\d+)\s*(?:seats|licenses|users|accounts)/i);
-  if (offeredSeatsMatch && (!cannotMeetMatch || clean.indexOf(offeredSeatsMatch[0]) > clean.indexOf(cannotMeetMatch[0]))) {
+  const offeredSeatsMatch = clean.match(
+    /(?:commit to|agreed to|down to|with|to|for)\s*(\d+)\s*(?:seats|licenses|users|accounts)/i,
+  );
+  if (
+    offeredSeatsMatch &&
+    (!cannotMeetMatch ||
+      clean.indexOf(offeredSeatsMatch[0]) > clean.indexOf(cannotMeetMatch[0]))
+  ) {
     seats = parseInt(offeredSeatsMatch[1], 10);
   } else {
-    const allSeats = Array.from(clean.matchAll(/(\d+)\s*(?:seats|licenses|users|accounts)/gi));
+    const allSeats = Array.from(
+      clean.matchAll(/(\d+)\s*(?:seats|licenses|users|accounts)/gi),
+    );
     if (allSeats.length > 1 && /cannot meet/i.test(clean)) {
       seats = parseInt(allSeats[allSeats.length - 1][1], 10);
     } else if (allSeats.length > 0) {
@@ -162,8 +202,10 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
 
   // 4. Detect commitment term in months
   let commitmentMonths: number | null = null;
-  const durationMatch = clean.match(/(?:(?:on|for|with)\s+a\s+)?(\d+)\s*(?:-|\s+)(?:month|mo|yr|year)s?(?:\s*(?:term|commitment|agreement|contract))?/i)
-    || clean.match(/(\d+)\s*(?:month|yr|year)s?\b/i);
+  const durationMatch =
+    clean.match(
+      /(?:(?:on|for|with)\s+a\s+)?(\d+)\s*(?:-|\s+)(?:month|mo|yr|year)s?(?:\s*(?:term|commitment|agreement|contract))?/i,
+    ) || clean.match(/(\d+)\s*(?:month|yr|year)s?\b/i);
 
   if (durationMatch) {
     const termNum = parseInt(durationMatch[1], 10);
@@ -175,7 +217,10 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
       }
     }
   }
-  if (!commitmentMonths && /\b(?:annual|annually|1-year|one-year)\b/i.test(clean)) {
+  if (
+    !commitmentMonths &&
+    /\b(?:annual|annually|1-year|one-year)\b/i.test(clean)
+  ) {
     commitmentMonths = 12;
   }
 
@@ -190,17 +235,27 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
   const cryptoAcceptPatterns = [
     /\b(usdc|crypto|arc escrow|arc network|accept usdc|usdc accepted|usdc invoice|wire or usdc)\b/i,
   ];
-  const explicitlyAcceptsCrypto = cryptoAcceptPatterns.some((p) => p.test(clean));
+  const explicitlyAcceptsCrypto = cryptoAcceptPatterns.some((p) =>
+    p.test(clean),
+  );
 
-  const acceptsUsdc = refusesCrypto ? false : explicitlyAcceptsCrypto ? true : true; // Default true unless refused
+  const acceptsUsdc = refusesCrypto
+    ? false
+    : explicitlyAcceptsCrypto
+      ? true
+      : true; // Default true unless refused
 
   // 6. Build summary notes
   const notesParts: string[] = [];
   if (isAccepted) notesParts.push("Vendor accepted proposal terms.");
-  if (extractedPrice) notesParts.push(`Counter/agreed rate: $${extractedPrice.toLocaleString()}.`);
+  if (extractedPrice)
+    notesParts.push(
+      `Counter/agreed rate: $${extractedPrice.toLocaleString()}.`,
+    );
   if (seats) notesParts.push(`Seats allocated: ${seats}.`);
   if (commitmentMonths) notesParts.push(`Term: ${commitmentMonths} months.`);
-  if (!acceptsUsdc) notesParts.push("Vendor refused USDC/crypto; requires fiat/ACH.");
+  if (!acceptsUsdc)
+    notesParts.push("Vendor refused USDC/crypto; requires fiat/ACH.");
 
   const extraction: VendorReplyExtraction = {
     counter_offer: extractedPrice,
@@ -220,13 +275,17 @@ export function extractTermsFromVendorReply(rawText: string, baselinePrice: numb
  * Cites live seat telemetry, usage drop, competitive benchmarks, and historical vendor memory.
  * Staged for human approval. Never sends automatically.
  */
-export async function draftVendorOutreachEmail(contractId: string): Promise<DraftEmailResult> {
+export async function draftVendorOutreachEmail(
+  contractId: string,
+): Promise<DraftEmailResult> {
   const supabase = getServiceSupabase();
 
   // 1. Fetch contract with vendor
   const { data: contract, error: cErr } = await supabase
     .from("contracts")
-    .select("*, vendors ( id, name, contact, category, reputation_score, is_simulated )")
+    .select(
+      "*, vendors ( id, name, contact, category, reputation_score, is_simulated )",
+    )
     .eq("id", contractId)
     .single();
 
@@ -281,11 +340,13 @@ export async function draftVendorOutreachEmail(contractId: string): Promise<Draf
     discountPct = Math.min(0.35, memory.accepted_discount_pct / 100);
   } else if (usage.utilization_pct && usage.utilization_pct < 80) {
     // Aggressive discount if under-utilized
-    discountPct = Math.min(0.30, ((100 - usage.utilization_pct) / 100) * 0.7);
+    discountPct = Math.min(0.3, ((100 - usage.utilization_pct) / 100) * 0.7);
   }
 
   const walkAwayCeiling = Math.round(originalPrice * 0.92);
-  const targetPrice = Math.round(Math.min(originalPrice * (1 - discountPct), walkAwayCeiling));
+  const targetPrice = Math.round(
+    Math.min(originalPrice * (1 - discountPct), walkAwayCeiling),
+  );
   const openingOffer = Math.round(targetPrice * 0.88);
 
   const recipient =
@@ -300,7 +361,10 @@ export async function draftVendorOutreachEmail(contractId: string): Promise<Draf
       })
     : "the upcoming renewal date";
 
-  const compNames = competitors?.options?.slice(0, 2).map((c: any) => c.name).join(" and ");
+  const compNames = competitors?.options
+    ?.slice(0, 2)
+    .map((c: any) => c.name)
+    .join(" and ");
 
   // Citations
   let usageParagraph = "";
@@ -366,8 +430,12 @@ Tavryn Business Money Agent`;
       conversation: [draftTurn],
     });
   } else {
-    const convo = Array.isArray(existingNeg.conversation) ? [...existingNeg.conversation] : [];
-    const draftIndex = convo.findIndex((t: any) => t.status === "draft_pending_human_approval");
+    const convo = Array.isArray(existingNeg.conversation)
+      ? [...existingNeg.conversation]
+      : [];
+    const draftIndex = convo.findIndex(
+      (t: any) => t.status === "draft_pending_human_approval",
+    );
     if (draftIndex >= 0) {
       convo[draftIndex] = draftTurn;
     } else {
@@ -387,7 +455,8 @@ Tavryn Business Money Agent`;
   await logAgentAction({
     businessId,
     action: "real_vendor_email_drafted",
-    reason: "Generated vendor renewal outreach email citing live usage telemetry and target price; staged for human approval",
+    reason:
+      "Generated vendor renewal outreach email citing live usage telemetry and target price; staged for human approval",
     confidence: 0.95,
     input: {
       contractId,
@@ -434,13 +503,24 @@ Tavryn Business Money Agent`;
  * logs the raw reply to agent_actions, and advances the deterministic negotiation state.
  */
 export async function processVendorReply(
-  contractIdOrParams: string | { contractId: string; rawReply: string; acceptsUsdcOverride?: boolean },
+  contractIdOrParams:
+    | string
+    | { contractId: string; rawReply: string; acceptsUsdcOverride?: boolean },
   rawReplyArg?: string,
-  acceptsUsdcOverrideArg?: boolean
+  acceptsUsdcOverrideArg?: boolean,
 ): Promise<ProcessReplyResult> {
-  const contractId = typeof contractIdOrParams === "string" ? contractIdOrParams : contractIdOrParams.contractId;
-  const rawReply = typeof contractIdOrParams === "string" ? (rawReplyArg || "") : contractIdOrParams.rawReply;
-  const acceptsUsdcOverride = typeof contractIdOrParams === "string" ? acceptsUsdcOverrideArg : contractIdOrParams.acceptsUsdcOverride;
+  const contractId =
+    typeof contractIdOrParams === "string"
+      ? contractIdOrParams
+      : contractIdOrParams.contractId;
+  const rawReply =
+    typeof contractIdOrParams === "string"
+      ? rawReplyArg || ""
+      : contractIdOrParams.rawReply;
+  const acceptsUsdcOverride =
+    typeof contractIdOrParams === "string"
+      ? acceptsUsdcOverrideArg
+      : contractIdOrParams.acceptsUsdcOverride;
 
   const supabase = getServiceSupabase();
 
@@ -499,7 +579,9 @@ export async function processVendorReply(
   // 3. Evaluate next state
   let decision: "agreed" | "counter" | "walk_away" | "usdc_refused" = "counter";
   let reason = "";
-  let suggestedAction: "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away" = "await_vendor";
+  let suggestedAction:
+    "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away" =
+    "await_vendor";
   let newStatus = negotiation.status;
   let finalPrice: number | null = null;
 
@@ -530,7 +612,9 @@ export async function processVendorReply(
   }
 
   // 4. Append turns to conversation
-  const convo = Array.isArray(negotiation.conversation) ? [...negotiation.conversation] : [];
+  const convo = Array.isArray(negotiation.conversation)
+    ? [...negotiation.conversation]
+    : [];
 
   // Vendor's turn
   convo.push({
@@ -610,7 +694,9 @@ export async function processVendorReply(
     },
   });
 
-  const dollarSavings = finalPrice ? originalPrice - finalPrice : originalPrice - counterOffer;
+  const dollarSavings = finalPrice
+    ? originalPrice - finalPrice
+    : originalPrice - counterOffer;
   const explanation = {
     belowPolicyCeiling:
       counterOffer <= walkAwayCeiling
@@ -645,14 +731,42 @@ export async function processVendorReply(
  * updates business memory, and writes an audit row to agent_actions.
  */
 export async function recordSavingsWithoutPayment(
-  contractIdOrParams: string | { contractId: string; negotiationId?: string; finalPrice?: number; final_price?: number; reason?: string; notes?: string },
-  optionsArg?: { final_price?: number; finalPrice?: number; notes?: string; reason?: string }
-): Promise<{ success: boolean; status: string; savings: number; finalPrice: number }> {
-  const contractId = typeof contractIdOrParams === "string" ? contractIdOrParams : contractIdOrParams.contractId;
-  const options = typeof contractIdOrParams === "string" ? (optionsArg || {}) : contractIdOrParams;
+  contractIdOrParams:
+    | string
+    | {
+        contractId: string;
+        negotiationId?: string;
+        finalPrice?: number;
+        final_price?: number;
+        reason?: string;
+        notes?: string;
+      },
+  optionsArg?: {
+    final_price?: number;
+    finalPrice?: number;
+    notes?: string;
+    reason?: string;
+  },
+): Promise<{
+  success: boolean;
+  status: string;
+  savings: number;
+  finalPrice: number;
+}> {
+  const contractId =
+    typeof contractIdOrParams === "string"
+      ? contractIdOrParams
+      : contractIdOrParams.contractId;
+  const options =
+    typeof contractIdOrParams === "string"
+      ? optionsArg || {}
+      : contractIdOrParams;
 
   const finalPrice = Number(options.final_price ?? options.finalPrice ?? 0);
-  const reason = options.reason || options.notes || "Vendor terms agreed without on-chain USDC payment (off-chain ACH/wire settlement).";
+  const reason =
+    options.reason ||
+    options.notes ||
+    "Vendor terms agreed without on-chain USDC payment (off-chain ACH/wire settlement).";
 
   const supabase = getServiceSupabase();
 
@@ -665,7 +779,8 @@ export async function recordSavingsWithoutPayment(
   if (cErr || !contract) throw new Error("Contract not found");
 
   const originalPrice = Number(contract.current_price);
-  const negotiatedPrice = finalPrice > 0 ? finalPrice : Math.round(originalPrice * 0.85);
+  const negotiatedPrice =
+    finalPrice > 0 ? finalPrice : Math.round(originalPrice * 0.85);
   const savings = Math.max(0, originalPrice - negotiatedPrice);
   const businessId = contract.business_id;
 
@@ -703,7 +818,9 @@ export async function recordSavingsWithoutPayment(
       .single();
     negotiation = newNeg;
   } else {
-    const convo = Array.isArray(negotiation.conversation) ? [...negotiation.conversation] : [];
+    const convo = Array.isArray(negotiation.conversation)
+      ? [...negotiation.conversation]
+      : [];
     convo.push({
       role: "system",
       speaker: "Tavryn Procurement",
@@ -723,7 +840,9 @@ export async function recordSavingsWithoutPayment(
   }
 
   // 2. Advance contract renewal date (1 year forward) and update status
-  const currentRenewal = contract.renewal_date ? new Date(contract.renewal_date) : new Date();
+  const currentRenewal = contract.renewal_date
+    ? new Date(contract.renewal_date)
+    : new Date();
   const nextRenewal = new Date(currentRenewal);
   nextRenewal.setFullYear(nextRenewal.getFullYear() + 1);
 

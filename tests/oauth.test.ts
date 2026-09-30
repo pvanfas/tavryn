@@ -1,6 +1,7 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signInWithOAuth, setAuthCookie, clearAuthCookie } from "../lib/auth";
+import { test } from "node:test";
+
+import { clearAuthCookie, setAuthCookie, signInWithOAuth } from "../lib/auth";
 
 test("signInWithOAuth generates accurate redirect URI and options for Google", async () => {
   const result = await signInWithOAuth("google", "/onboard");

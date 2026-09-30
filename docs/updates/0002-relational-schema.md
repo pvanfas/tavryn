@@ -2,7 +2,7 @@
 
 _Sep 27, 2026 · From Postgres schema to real numbers on glass with zero mock data_
 
-## What Tavryn can do now that it couldn't yesterday
+## What Tavryn can do now that it couldn't last time
 
 Tavryn can now model real-world enterprise SaaS spend, mathematically spot renewal savings before an LLM ever touches a prompt, seed realistic test companies idempotently, and project live treasury numbers onto an executive glass dashboard. Instead of guessing with AI hallucinations, it deterministically surfaces unallocated seats and usage declines right alongside a live $42,850 USDC treasury balance.
 

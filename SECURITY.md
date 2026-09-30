@@ -8,10 +8,10 @@ Tavryn is an autonomous procurement system entrusted with organizational funds, 
 
 Only the latest release on the primary development branch receives active security updates:
 
-| Version | Supported | Status |
-| :--- | :--- | :--- |
-| `0.1.x` (Main / MVP) | :white_check_mark: | Active |
-| `< 0.1.0` | :x: | Deprecated |
+| Version              | Supported          | Status     |
+| :------------------- | :----------------- | :--------- |
+| `0.1.x` (Main / MVP) | :white_check_mark: | Active     |
+| `< 0.1.0`            | :x:                | Deprecated |
 
 ---
 

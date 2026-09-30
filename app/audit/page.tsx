@@ -1,12 +1,11 @@
+import { ShieldAlert, ShieldCheck } from "lucide-react";
 import React from "react";
+
+import { AppShell } from "@/components/AppShell";
+import { Caption } from "@/components/ui/text";
 import { getServiceSupabase } from "@/lib/supabase";
 import { verifyAuditChain } from "@/lib/tools/audit";
-import { AppShell } from "@/components/AppShell";
-import { 
-  ShieldCheck, 
-  ShieldAlert, 
-} from "lucide-react";
-import { Caption } from "@/components/ui/text";
+
 import { AuditTableClient } from "./AuditTableClient";
 
 export const revalidate = 0; // Fresh verification on every request
@@ -22,7 +21,9 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
   // 1. Fetch businesses for AppShell
   const { data: bList } = await supabase
     .from("businesses")
-    .select("id, name, is_real, treasury_balance, default_currency, wallet_address")
+    .select(
+      "id, name, is_real, treasury_balance, default_currency, wallet_address",
+    )
     .order("created_at", { ascending: false });
 
   const businesses = bList || [];
@@ -65,20 +66,31 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                  All {verification.totalBlocks} action blocks are sequentially linked via SHA-256 cryptographic hashes.
-                  Database triggers strictly enforce append-only immutability; UPDATE and DELETE operations are physically blocked at the PostgreSQL engine level.
+                  All {verification.totalBlocks} action blocks are sequentially
+                  linked via SHA-256 cryptographic hashes. Database triggers
+                  strictly enforce append-only immutability; UPDATE and DELETE
+                  operations are physically blocked at the PostgreSQL engine
+                  level.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-emerald-500/20">
               <div className="text-right">
-                <Caption className="text-slate-500 dark:text-slate-400 uppercase">Algorithm</Caption>
-                <div className="font-mono text-xs font-bold text-slate-900 dark:text-white">SHA-256 Chained</div>
+                <Caption className="text-slate-500 dark:text-slate-400 uppercase">
+                  Algorithm
+                </Caption>
+                <div className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                  SHA-256 Chained
+                </div>
               </div>
               <div className="text-right pl-4 border-l border-emerald-500/20">
-                <Caption className="text-slate-500 dark:text-slate-400 uppercase">Blocks Verified</Caption>
-                <div className="font-mono text-xs font-bold text-[#107e65] dark:text-[#34d399]">{verification.totalBlocks}</div>
+                <Caption className="text-slate-500 dark:text-slate-400 uppercase">
+                  Blocks Verified
+                </Caption>
+                <div className="font-mono text-xs font-bold text-[#107e65] dark:text-[#34d399]">
+                  {verification.totalBlocks}
+                </div>
               </div>
             </div>
           </div>
@@ -97,11 +109,13 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
                 </span>
               </div>
               <p className="text-xs text-slate-700 dark:text-slate-200 mt-1 leading-relaxed">
-                {verification.reason || "Hash mismatch detected between consecutive audit blocks."}
+                {verification.reason ||
+                  "Hash mismatch detected between consecutive audit blocks."}
               </p>
               {verification.brokenBlockId && (
                 <div className="mt-2 font-mono text-[11px] text-rose-700 dark:text-rose-300">
-                  Compromised Block ID: {verification.brokenBlockId} (Index #{verification.brokenBlockIndex})
+                  Compromised Block ID: {verification.brokenBlockId} (Index #
+                  {verification.brokenBlockIndex})
                 </div>
               )}
             </div>
@@ -110,7 +124,10 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
       </div>
 
       {/* Interactive Client Table */}
-      <AuditTableClient blocks={verification.blocks} isValid={verification.isValid} />
+      <AuditTableClient
+        blocks={verification.blocks}
+        isValid={verification.isValid}
+      />
     </AppShell>
   );
 }

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+
 import { AUTH_COOKIE_MAX_AGE_SECONDS, DEFAULT_SITE_URL } from "@/lib/constants";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,7 +15,7 @@ export function getBrowserSupabase() {
   if (browserClient) return browserClient;
   browserClient = createClient(
     supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder"
+    supabaseAnonKey || "placeholder",
   );
   return browserClient;
 }
@@ -28,7 +29,10 @@ export async function getSession() {
   const { data } = await client.auth.getSession();
   if (data.session) return data.session;
 
-  if (typeof document !== "undefined" && document.cookie.includes("sb-tavryn-auth-token")) {
+  if (
+    typeof document !== "undefined" &&
+    document.cookie.includes("sb-tavryn-auth-token")
+  ) {
     return {
       access_token: "demo-tavryn-session-token",
       user: {
@@ -49,7 +53,10 @@ export async function getCurrentUser() {
   const { data } = await client.auth.getUser();
   if (data.user) return data.user;
 
-  if (typeof document !== "undefined" && document.cookie.includes("sb-tavryn-auth-token")) {
+  if (
+    typeof document !== "undefined" &&
+    document.cookie.includes("sb-tavryn-auth-token")
+  ) {
     return {
       id: "demo-user-001",
       email: "demo@tavryn.io",
@@ -83,7 +90,7 @@ export function clearAuthCookie() {
  */
 export async function signInWithOAuth(
   provider: "google" | "github",
-  next: string = "/"
+  next: string = "/",
 ) {
   const client = getBrowserSupabase();
   const siteUrl =
@@ -108,10 +115,7 @@ export async function signInWithOAuth(
 /**
  * Send a magic link to the user's email for passwordless sign-in or onboarding.
  */
-export async function signInWithOtp(
-  email: string,
-  next: string = "/onboard"
-) {
+export async function signInWithOtp(email: string, next: string = "/onboard") {
   const client = getBrowserSupabase();
   const siteUrl =
     typeof window !== "undefined"
@@ -128,4 +132,3 @@ export async function signInWithOtp(
     },
   });
 }
-

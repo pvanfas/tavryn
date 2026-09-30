@@ -27,7 +27,10 @@ type AsProp<E extends React.ElementType> = {
 };
 
 type PropsWithAs<E extends React.ElementType, P = object> = AsProp<E> &
-  Omit<React.ComponentPropsWithoutRef<E>, keyof AsProp<E> | "className" | "children"> &
+  Omit<
+    React.ComponentPropsWithoutRef<E>,
+    keyof AsProp<E> | "className" | "children"
+  > &
   P & {
     className?: string;
     children?: React.ReactNode;
@@ -50,7 +53,10 @@ export function Display<E extends React.ElementType = "p">({
   const Tag = (as || "p") as React.ElementType;
   return (
     <Tag
-      className={cn("text-display font-extrabold tracking-tight leading-none", className)}
+      className={cn(
+        "text-display font-extrabold tracking-tight leading-none",
+        className,
+      )}
       {...rest}
     >
       {children}
@@ -112,10 +118,7 @@ export function H3<E extends React.ElementType = "h3">({
 }: PropsWithAs<E>) {
   const Tag = (as || "h3") as React.ElementType;
   return (
-    <Tag
-      className={cn("text-h3 font-bold", className)}
-      {...rest}
-    >
+    <Tag className={cn("text-h3 font-bold", className)} {...rest}>
       {children}
     </Tag>
   );
@@ -133,10 +136,7 @@ export function Body<E extends React.ElementType = "p">({
 }: PropsWithAs<E>) {
   const Tag = (as || "p") as React.ElementType;
   return (
-    <Tag
-      className={cn("text-body font-normal", className)}
-      {...rest}
-    >
+    <Tag className={cn("text-body font-normal", className)} {...rest}>
       {children}
     </Tag>
   );
@@ -154,10 +154,7 @@ export function BodySmall<E extends React.ElementType = "p">({
 }: PropsWithAs<E>) {
   const Tag = (as || "p") as React.ElementType;
   return (
-    <Tag
-      className={cn("text-body-sm font-medium", className)}
-      {...rest}
-    >
+    <Tag className={cn("text-body-sm font-medium", className)} {...rest}>
       {children}
     </Tag>
   );
@@ -175,10 +172,7 @@ export function Caption<E extends React.ElementType = "span">({
 }: PropsWithAs<E>) {
   const Tag = (as || "span") as React.ElementType;
   return (
-    <Tag
-      className={cn("text-caption font-semibold", className)}
-      {...rest}
-    >
+    <Tag className={cn("text-caption font-semibold", className)} {...rest}>
       {children}
     </Tag>
   );

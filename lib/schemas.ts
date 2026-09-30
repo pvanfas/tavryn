@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const SubscriptionCategoryEnum = z.enum(["software", "cloud", "contractors"]);
+export const SubscriptionCategoryEnum = z.enum([
+  "software",
+  "cloud",
+  "contractors",
+]);
 export type SubscriptionCategory = z.infer<typeof SubscriptionCategoryEnum>;
 
 /**
@@ -52,7 +56,7 @@ export const SubscriptionRowSchema = z
     {
       message: "Active seats cannot exceed total seat count",
       path: ["active_seats"],
-    }
+    },
   );
 
 export type SubscriptionRow = z.infer<typeof SubscriptionRowSchema>;
@@ -66,6 +70,10 @@ export interface ValidatedSubscriptionRow {
   parsed?: SubscriptionRow;
   isValid: boolean;
   errors: Record<string, string>;
+  source?: "statement-import" | "invoice-import" | "csv-import" | "manual";
+  confidence?: number;
+  needsConfirmation?: boolean;
+  included?: boolean;
 }
 
 /**
@@ -100,7 +108,10 @@ export const DEFAULT_POLICY_CONFIG: PolicyConfig = {
  */
 export const OnboardBusinessPayloadSchema = z.object({
   name: z.string().trim().min(2, "Company name must be at least 2 characters"),
-  treasury_balance: z.coerce.number().nonnegative("Treasury balance must be >= 0").default(50000),
+  treasury_balance: z.coerce
+    .number()
+    .nonnegative("Treasury balance must be >= 0")
+    .default(50000),
   default_currency: z.string().default("USDC"),
   userId: z.string().uuid().optional(),
   webhook_url: z.string().url().optional().or(z.literal("")),
@@ -110,4 +121,6 @@ export const OnboardBusinessPayloadSchema = z.object({
     .min(1, "At least one valid subscription contract is required"),
 });
 
-export type OnboardBusinessPayload = z.infer<typeof OnboardBusinessPayloadSchema>;
+export type OnboardBusinessPayload = z.infer<
+  typeof OnboardBusinessPayloadSchema
+>;

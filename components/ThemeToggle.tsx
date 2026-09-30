@@ -1,7 +1,7 @@
 "use client";
 
+import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -9,7 +9,8 @@ export function ThemeToggle() {
 
   useEffect(() => {
     // Check initial preference from localStorage or system
-    const saved = localStorage.getItem("tavryn-theme") as "light" | "dark" | null;
+    const saved = localStorage.getItem("tavryn-theme") as
+      "light" | "dark" | null;
     if (saved) {
       setTheme(saved);
       if (saved === "dark") {
@@ -19,7 +20,9 @@ export function ThemeToggle() {
       }
     } else {
       // Default to light as requested, or check system
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
       const initial = prefersDark ? "dark" : "light";
       setTheme(initial);
       if (initial === "dark") {

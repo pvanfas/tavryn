@@ -15,7 +15,9 @@ const config = {
     arcTestnet: {
       url: "https://rpc.testnet.arc.network",
       chainId: 5042002,
-      accounts: process.env.ARC_PRIVATE_KEY ? [process.env.ARC_PRIVATE_KEY] : [],
+      accounts: process.env.ARC_PRIVATE_KEY
+        ? [process.env.ARC_PRIVATE_KEY]
+        : [],
     },
   },
 };

@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
 import {
+  ArrowRight,
   CheckCircle2,
-  X,
   ChevronDown,
   ChevronRight,
-  ArrowRight,
+  X,
 } from "lucide-react";
+import Link from "next/link";
+import React, { useState } from "react";
+
 import { AgentAnalysisResult } from "@/lib/agent/run";
 
 interface AnalysisModalProps {
@@ -29,7 +30,9 @@ export function AnalysisModal({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AgentAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expandedTools, setExpandedTools] = useState<Record<number, boolean>>({});
+  const [expandedTools, setExpandedTools] = useState<Record<number, boolean>>(
+    {},
+  );
 
   const runAnalysis = async () => {
     try {
@@ -89,7 +92,9 @@ export function AnalysisModal({
           {loading && (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="h-7 w-7 border-2 border-[#107e65] border-t-transparent rounded-full animate-spin" />
-              <p className="text-slate-500 font-medium">Evaluating usage telemetry &amp; policy...</p>
+              <p className="text-slate-500 font-medium">
+                Evaluating usage telemetry &amp; policy...
+              </p>
             </div>
           )}
 
@@ -105,23 +110,37 @@ export function AnalysisModal({
               {/* Financial Metrics Row */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Baseline Spend</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Baseline Spend
+                  </span>
                   <p className="text-lg font-mono font-bold text-slate-900 dark:text-white mt-1">
                     ${Number(currentPrice).toLocaleString()}
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Target Price</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Target Price
+                  </span>
                   <p className="text-lg font-mono font-bold text-slate-900 dark:text-white mt-1">
-                    ${Number(result.decision?.target_price ?? 0).toLocaleString()}
+                    $
+                    {Number(
+                      result.decision?.target_price ?? 0,
+                    ).toLocaleString()}
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-950/20">
-                  <span className="text-xs font-bold text-[#107e65] dark:text-emerald-400 uppercase tracking-wider">Projected Cut</span>
+                  <span className="text-xs font-bold text-[#107e65] dark:text-emerald-400 uppercase tracking-wider">
+                    Projected Cut
+                  </span>
                   <p className="text-lg font-mono font-bold text-[#107e65] dark:text-emerald-400 mt-1">
-                    ${Math.max(0, currentPrice - (result.decision?.target_price ?? currentPrice)).toLocaleString()}
+                    $
+                    {Math.max(
+                      0,
+                      currentPrice -
+                        (result.decision?.target_price ?? currentPrice),
+                    ).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -129,7 +148,12 @@ export function AnalysisModal({
               {/* Assessment Summary */}
               <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20">
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">
-                  Analysis Outcome: {result.decision?.recommendation ? result.decision.recommendation.replace(/_/g, " ").toUpperCase() : "EVALUATED"}
+                  Analysis Outcome:{" "}
+                  {result.decision?.recommendation
+                    ? result.decision.recommendation
+                        .replace(/_/g, " ")
+                        .toUpperCase()
+                    : "EVALUATED"}
                 </h4>
                 <p className="text-xs font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
                   {result.decision?.reasoning || result.reasoning}
@@ -168,13 +192,17 @@ export function AnalysisModal({
                         {expandedTools[idx] && (
                           <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900 text-xs space-y-2">
                             <div>
-                              <span className="text-slate-600 dark:text-slate-400 font-bold">Args:</span>
+                              <span className="text-slate-600 dark:text-slate-400 font-bold">
+                                Args:
+                              </span>
                               <pre className="overflow-x-auto text-slate-800 dark:text-slate-200 mt-0.5">
                                 {JSON.stringify(tool.input, null, 2)}
                               </pre>
                             </div>
                             <div>
-                              <span className="text-slate-600 dark:text-slate-400 font-bold">Result:</span>
+                              <span className="text-slate-600 dark:text-slate-400 font-bold">
+                                Result:
+                              </span>
                               <pre className="overflow-x-auto text-slate-800 dark:text-slate-200 mt-0.5">
                                 {JSON.stringify(tool.output, null, 2)}
                               </pre>

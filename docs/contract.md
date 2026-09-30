@@ -9,6 +9,7 @@ Smart contract escrow implementation with deterministic on-chain spending limits
 The `ArcEscrow` contract (`contracts/contracts/ArcEscrow.sol`) enforces programmatic escrow agreements on Arc Testnet. USDC functions as the settlement asset (6 decimals, precompile address `0x3600000000000000000000000000000000000000`).
 
 ### Agreement Lifecycle
+
 ```mermaid
 stateDiagram-v2
     [*] --> Created: createAgreement()
@@ -26,14 +27,14 @@ stateDiagram-v2
 
 ## 2. Arc Testnet Network Parameters
 
-| Parameter | Value | Details |
-| --- | --- | --- |
-| **Chain ID** | `5042002` (`0x4cef52`) | Arc Layer-1 Testnet |
-| **Native Gas / Token** | USDC | 6 Decimals |
-| **USDC Precompile** | `0x3600000000000000000000000000000000000000` | ERC-20 & Native Interface |
-| **RPC Endpoint** | `https://rpc.testnet.arc.network` | Public JSON-RPC |
-| **Block Explorer** | `https://testnet.arcscan.app` | ArcScan |
-| **Circle Faucet** | `https://faucet.circle.com` | Testnet USDC Faucet |
+| Parameter              | Value                                        | Details                   |
+| ---------------------- | -------------------------------------------- | ------------------------- |
+| **Chain ID**           | `5042002` (`0x4cef52`)                       | Arc Layer-1 Testnet       |
+| **Native Gas / Token** | USDC                                         | 6 Decimals                |
+| **USDC Precompile**    | `0x3600000000000000000000000000000000000000` | ERC-20 & Native Interface |
+| **RPC Endpoint**       | `https://rpc.testnet.arc.network`            | Public JSON-RPC           |
+| **Block Explorer**     | `https://testnet.arcscan.app`                | ArcScan                   |
+| **Circle Faucet**      | `https://faucet.circle.com`                  | Testnet USDC Faucet       |
 
 ---
 
@@ -70,12 +71,12 @@ The contract implements strict role separation between human governance, autonom
 
 ## 5. Threat Model & Security Mitigations
 
-| Threat | Attack Vector | Contract Mitigation | Severity |
-| --- | --- | --- | --- |
-| **Agent Prompt Injection** | Attacker tricks the LLM into initiating an unauthorized $50,000 escrow | Contract enforces `amount <= maxPerAgreement` on-chain for the agent role. Bypassing prompt instructions cannot bypass EVM byte code. | Critical (Mitigated) |
-| **Agent Self-Approval** | Compromised agent tries to release funds prematurely without vendor confirmation | `approveMilestone` requires `onlyVerifier` and explicitly asserts `msg.sender != agent`. Agent has zero milestone approval authority. | Critical (Mitigated) |
-| **Double Release (Reentrancy)** | Malicious vendor contract calls `release()` recursively in a token fallback | `nonReentrant` mutex lock + Checks-Effects-Interactions: state changes to `Status.Released` prior to external ERC-20 transfer. | High (Mitigated) |
-| **Category Budget Exhaustion** | Agent rapidly spins up agreements depleting business treasury | On-chain budget tracking: `categorySpent[category] + amount <= categoryBudgets[category]` checked atomically. | Medium (Mitigated) |
-| **Vendor Non-Delivery** | Vendor accepts agreement but never provides valid contract renewal | Timelock refund path: after `deadline`, depositor calls `refund()` to reclaim 100% of escrowed USDC and restore category budget. | High (Mitigated) |
-| **Premature Refund** | Depositor attempts to pull funds while vendor is fulfilling obligations | `refund()` requires `block.timestamp > ag.deadline`. Reverts with `ArcEscrow: Deadline has not passed`. | Medium (Mitigated) |
-| **Address Hijacking** | Attacker substitutes a phishing address for the vendor | Server-side address comparison against previous vendor history + vendor screening before escrow funding. | High (Mitigated) |
+| Threat                          | Attack Vector                                                                    | Contract Mitigation                                                                                                                   | Severity             |
+| ------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| **Agent Prompt Injection**      | Attacker tricks the LLM into initiating an unauthorized $50,000 escrow           | Contract enforces `amount <= maxPerAgreement` on-chain for the agent role. Bypassing prompt instructions cannot bypass EVM byte code. | Critical (Mitigated) |
+| **Agent Self-Approval**         | Compromised agent tries to release funds prematurely without vendor confirmation | `approveMilestone` requires `onlyVerifier` and explicitly asserts `msg.sender != agent`. Agent has zero milestone approval authority. | Critical (Mitigated) |
+| **Double Release (Reentrancy)** | Malicious vendor contract calls `release()` recursively in a token fallback      | `nonReentrant` mutex lock + Checks-Effects-Interactions: state changes to `Status.Released` prior to external ERC-20 transfer.        | High (Mitigated)     |
+| **Category Budget Exhaustion**  | Agent rapidly spins up agreements depleting business treasury                    | On-chain budget tracking: `categorySpent[category] + amount <= categoryBudgets[category]` checked atomically.                         | Medium (Mitigated)   |
+| **Vendor Non-Delivery**         | Vendor accepts agreement but never provides valid contract renewal               | Timelock refund path: after `deadline`, depositor calls `refund()` to reclaim 100% of escrowed USDC and restore category budget.      | High (Mitigated)     |
+| **Premature Refund**            | Depositor attempts to pull funds while vendor is fulfilling obligations          | `refund()` requires `block.timestamp > ag.deadline`. Reverts with `ArcEscrow: Deadline has not passed`.                               | Medium (Mitigated)   |
+| **Address Hijacking**           | Attacker substitutes a phishing address for the vendor                           | Server-side address comparison against previous vendor history + vendor screening before escrow funding.                              | High (Mitigated)     |

@@ -1,7 +1,11 @@
+import {
+  DEFAULT_NOTIFICATION_LIMIT,
+  WEBHOOK_TIMEOUT_MS,
+} from "@/lib/constants";
 import { getServiceSupabase } from "@/lib/supabase";
-import { DEFAULT_NOTIFICATION_LIMIT, WEBHOOK_TIMEOUT_MS } from "@/lib/constants";
 
-export type NotificationCategory = "renewal" | "negotiation" | "policy" | "treasury" | "audit";
+export type NotificationCategory =
+  "renewal" | "negotiation" | "policy" | "treasury" | "audit";
 
 export interface CreateNotificationInput {
   businessId: string;
@@ -36,7 +40,7 @@ export async function sendWebhookNotification(
   title: string,
   message: string,
   link?: string | null,
-  customWebhookUrl?: string | null
+  customWebhookUrl?: string | null,
 ): Promise<{ sent: boolean; reason?: string }> {
   const webhookUrl =
     customWebhookUrl ||
@@ -79,13 +83,18 @@ export async function sendWebhookNotification(
     }).finally(() => clearTimeout(timeout));
 
     if (!res.ok) {
-      console.warn(`[Webhook] Remote returned status ${res.status}: ${res.statusText}`);
+      console.warn(
+        `[Webhook] Remote returned status ${res.status}: ${res.statusText}`,
+      );
       return { sent: false, reason: `Status ${res.status}` };
     }
 
     return { sent: true };
   } catch (err) {
-    console.warn("[Webhook] Failed to dispatch webhook notification:", (err as Error).message);
+    console.warn(
+      "[Webhook] Failed to dispatch webhook notification:",
+      (err as Error).message,
+    );
     return { sent: false, reason: (err as Error).message };
   }
 }
@@ -94,7 +103,7 @@ export async function sendWebhookNotification(
  * Persist notification to database and trigger webhook if configured.
  */
 export async function createNotification(
-  input: CreateNotificationInput
+  input: CreateNotificationInput,
 ): Promise<NotificationRecord> {
   const supabase = getServiceSupabase();
 
@@ -118,7 +127,9 @@ export async function createNotification(
 
   if (error || !data) {
     console.error("Failed to insert notification into database:", error);
-    throw new Error(`Failed to create notification: ${error?.message || "Unknown error"}`);
+    throw new Error(
+      `Failed to create notification: ${error?.message || "Unknown error"}`,
+    );
   }
 
   // Trigger webhook asynchronously without blocking return
@@ -133,7 +144,12 @@ export async function createNotification(
           .maybeSingle();
         customUrl = b?.webhook_url || null;
       }
-      await sendWebhookNotification(input.title, input.message, input.link, customUrl);
+      await sendWebhookNotification(
+        input.title,
+        input.message,
+        input.link,
+        customUrl,
+      );
     } catch (err) {
       console.warn("Async webhook dispatch error:", err);
     }
@@ -147,7 +163,7 @@ export async function createNotification(
  */
 export async function getNotifications(
   businessId: string,
-  limit = DEFAULT_NOTIFICATION_LIMIT
+  limit = DEFAULT_NOTIFICATION_LIMIT,
 ): Promise<NotificationRecord[]> {
   const supabase = getServiceSupabase();
 
@@ -183,7 +199,9 @@ export async function markNotificationAsRead(id: string): Promise<boolean> {
 /**
  * Mark all unread notifications for a business as read.
  */
-export async function markAllNotificationsAsRead(businessId: string): Promise<boolean> {
+export async function markAllNotificationsAsRead(
+  businessId: string,
+): Promise<boolean> {
   const supabase = getServiceSupabase();
 
   const { error } = await supabase

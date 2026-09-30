@@ -1,20 +1,43 @@
-import { z } from "zod";
 import { tool } from "ai";
+import { z } from "zod";
+
 import { logAgentAction } from "./audit";
-import { ToolContext, SavingsCalculation } from "./types";
+import { SavingsCalculation, ToolContext } from "./types";
 
 export function buildCalculationTools(ctx: ToolContext) {
   // calculate_savings
   const calculate_savings = tool({
-    description: "Deterministically calculate cost savings, percentage reduction, and run-rate variance between current and target pricing.",
+    description:
+      "Deterministically calculate cost savings, percentage reduction, and run-rate variance between current and target pricing.",
     inputSchema: z.object({
-      oldPrice: z.number().positive().describe("Current annual contract price in USDC"),
-      newPrice: z.number().nonnegative().describe("Target or proposed annual contract price in USDC"),
-      months: z.number().int().positive().default(12).describe("Duration period in months (default 12)"),
+      oldPrice: z
+        .number()
+        .positive()
+        .describe("Current annual contract price in USDC"),
+      newPrice: z
+        .number()
+        .nonnegative()
+        .describe("Target or proposed annual contract price in USDC"),
+      months: z
+        .number()
+        .int()
+        .positive()
+        .default(12)
+        .describe("Duration period in months (default 12)"),
     }),
-    execute: async ({ oldPrice, newPrice, months }: { oldPrice: number; newPrice: number; months: number }): Promise<SavingsCalculation> => {
+    execute: async ({
+      oldPrice,
+      newPrice,
+      months,
+    }: {
+      oldPrice: number;
+      newPrice: number;
+      months: number;
+    }): Promise<SavingsCalculation> => {
       const absoluteSavings = Number((oldPrice - newPrice).toFixed(2));
-      const percentageSavings = Number((((oldPrice - newPrice) / oldPrice) * 100).toFixed(1));
+      const percentageSavings = Number(
+        (((oldPrice - newPrice) / oldPrice) * 100).toFixed(1),
+      );
       const monthlySavings = Number((absoluteSavings / months).toFixed(2));
 
       const businessId = await ctx.resolveBusinessId();

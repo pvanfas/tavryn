@@ -1,6 +1,8 @@
-import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { after, before, describe, it } from "node:test";
+
 import { createClient } from "@supabase/supabase-js";
+
 import { getServiceSupabase } from "../lib/supabase";
 
 describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
@@ -118,10 +120,14 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
 
   after(async () => {
     // Clean up test data
-    if (contractAId) await admin.from("contracts").delete().eq("id", contractAId);
-    if (contractBId) await admin.from("contracts").delete().eq("id", contractBId);
-    if (businessAId) await admin.from("businesses").delete().eq("id", businessAId);
-    if (businessBId) await admin.from("businesses").delete().eq("id", businessBId);
+    if (contractAId)
+      await admin.from("contracts").delete().eq("id", contractAId);
+    if (contractBId)
+      await admin.from("contracts").delete().eq("id", contractBId);
+    if (businessAId)
+      await admin.from("businesses").delete().eq("id", businessAId);
+    if (businessBId)
+      await admin.from("businesses").delete().eq("id", businessBId);
     if (userAId) await admin.auth.admin.deleteUser(userAId);
     if (userBId) await admin.auth.admin.deleteUser(userBId);
   });
@@ -145,8 +151,15 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
       .eq("id", contractBId);
 
     // RLS filters out rows of other businesses, returning an empty set
-    assert.ok(!error, `Query should succeed but return empty set: ${error?.message}`);
-    assert.equal(data?.length, 0, "User A must not be able to read User B's contract");
+    assert.ok(
+      !error,
+      `Query should succeed but return empty set: ${error?.message}`,
+    );
+    assert.equal(
+      data?.length,
+      0,
+      "User A must not be able to read User B's contract",
+    );
   });
 
   it("3. User of Business A CANNOT read Business B's business profile", async () => {
@@ -156,7 +169,11 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
       .eq("id", businessBId);
 
     assert.ok(!error);
-    assert.equal(data?.length, 0, "User A must not be able to see Business B record");
+    assert.equal(
+      data?.length,
+      0,
+      "User A must not be able to see Business B record",
+    );
   });
 
   it("4. User of Business A CANNOT insert a contract into Business B", async () => {
@@ -167,7 +184,10 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
       category: "software",
     });
 
-    assert.ok(error, "Insert into foreign business must be rejected by RLS WITH CHECK policy");
+    assert.ok(
+      error,
+      "Insert into foreign business must be rejected by RLS WITH CHECK policy",
+    );
   });
 
   it("5. User of Business A CANNOT update Business B's contracts", async () => {
@@ -179,7 +199,11 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
 
     // RLS blocks update: 0 rows modified
     assert.ok(!error);
-    assert.equal(data?.length, 0, "User A cannot modify rows belonging to Business B");
+    assert.equal(
+      data?.length,
+      0,
+      "User A cannot modify rows belonging to Business B",
+    );
 
     // Verify Business B's contract current_price was NOT mutated
     const { data: verifiedB } = await admin
@@ -207,6 +231,10 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
       .eq("business_id", businessBId);
 
     assert.ok(!error);
-    assert.equal(data?.length, 0, "User A must not be able to read agent_actions for Business B");
+    assert.equal(
+      data?.length,
+      0,
+      "User A must not be able to read agent_actions for Business B",
+    );
   });
 });

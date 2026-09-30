@@ -1,6 +1,9 @@
 // In-memory sliding window rate limiter for agent and cron routes
 
-import { RATE_LIMIT_CLEANUP_INTERVAL_MS, RATE_LIMIT_STALE_THRESHOLD_MS } from "@/lib/constants";
+import {
+  RATE_LIMIT_CLEANUP_INTERVAL_MS,
+  RATE_LIMIT_STALE_THRESHOLD_MS,
+} from "@/lib/constants";
 
 interface RateLimitRecord {
   timestamps: number[];
@@ -13,7 +16,9 @@ if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
     for (const [key, record] of memoryStore.entries()) {
-      record.timestamps = record.timestamps.filter((ts) => now - ts < RATE_LIMIT_STALE_THRESHOLD_MS);
+      record.timestamps = record.timestamps.filter(
+        (ts) => now - ts < RATE_LIMIT_STALE_THRESHOLD_MS,
+      );
       if (record.timestamps.length === 0) {
         memoryStore.delete(key);
       }
@@ -37,7 +42,7 @@ export interface RateLimitResult {
 export function checkRateLimit(
   key: string,
   limit: number,
-  windowMs: number
+  windowMs: number,
 ): RateLimitResult {
   const now = Date.now();
   let record = memoryStore.get(key);

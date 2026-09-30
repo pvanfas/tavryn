@@ -1,24 +1,33 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { getBrowserSupabase, getCurrentUser, clearAuthCookie } from "@/lib/auth";
 import {
-  Lock,
-  LogOut,
-  ChevronDown,
-  Loader2,
   Building2,
   Check,
+  ChevronDown,
+  Loader2,
+  Lock,
+  LogOut,
   Plus,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+
+import {
+  clearAuthCookie,
+  getBrowserSupabase,
+  getCurrentUser,
+} from "@/lib/auth";
+
 import type { BusinessItem } from "./BusinessSwitcher";
 
 export function formatBusinessName(name?: string | null): string {
   if (!name) return "Demo Co";
   // Strip trailing numeric timestamps, IDs, or numbers (e.g. "Test Real Business 1790488549038" -> "Test Real Business")
-  const cleaned = name.replace(/\s+\d+$/g, "").replace(/\s*\(\d+\)/g, "").trim();
+  const cleaned = name
+    .replace(/\s+\d+$/g, "")
+    .replace(/\s*\(\d+\)/g, "")
+    .trim();
   return cleaned || name;
 }
 
@@ -70,7 +79,10 @@ export function UserDropdown({
   // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -104,7 +116,9 @@ export function UserDropdown({
   // Deduplicate businesses by clean name, preferring the active business if matched
   const uniqueBusinesses = businesses.reduce<BusinessItem[]>((acc, b) => {
     const clean = formatBusinessName(b.name);
-    const existingIndex = acc.findIndex((item) => formatBusinessName(item.name) === clean);
+    const existingIndex = acc.findIndex(
+      (item) => formatBusinessName(item.name) === clean,
+    );
     if (existingIndex === -1) {
       acc.push(b);
     } else if (b.id === activeBusinessId) {
@@ -145,7 +159,11 @@ export function UserDropdown({
         {/* Avatar */}
         <div className="h-8 w-8 rounded-full bg-[#142620] text-emerald-300 font-bold text-xs flex items-center justify-center ring-2 ring-[#107e65]/25 border border-emerald-900/40 shadow-2xs select-none overflow-hidden">
           {avatarUrl ? (
-            <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="h-full w-full object-cover"
+            />
           ) : (
             userInitials
           )}
@@ -172,7 +190,11 @@ export function UserDropdown({
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-[#142620] text-emerald-300 font-bold text-xs flex items-center justify-center ring-2 ring-[#107e65]/20 border border-emerald-900/40 shrink-0 select-none overflow-hidden">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   userInitials
                 )}
@@ -227,7 +249,8 @@ export function UserDropdown({
                 {uniqueBusinesses.map((b) => {
                   const isActive =
                     b.id === activeBusinessId ||
-                    formatBusinessName(b.name) === formatBusinessName(businessName);
+                    formatBusinessName(b.name) ===
+                      formatBusinessName(businessName);
                   const cleanName = formatBusinessName(b.name);
                   return (
                     <button
@@ -245,7 +268,11 @@ export function UserDropdown({
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span
-                          title={b.is_real ? "Verified Real Business" : "Demo / Simulated"}
+                          title={
+                            b.is_real
+                              ? "Verified Real Business"
+                              : "Demo / Simulated"
+                          }
                           className={`h-2 w-2 rounded-full shrink-0 ${
                             b.is_real ? "bg-[#107e65]" : "bg-amber-500"
                           }`}

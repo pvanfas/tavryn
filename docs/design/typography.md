@@ -10,17 +10,17 @@ Loaded via `next/font/google` in `app/layout.tsx` across weights 400, 500, 600, 
 
 All tokens are defined in `app/globals.css` within the Tailwind v4 `@theme` block:
 
-| Token | Size | Line Height | Letter Spacing | Weight | Primary Use Cases |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`display`** | 3rem (48px) | 1.1 | -0.02em | 800 (extrabold) | Hero savings figure, landing headlines, breakthrough numbers |
-| **`h1`** | 2.25rem (36px) | 1.15 | -0.02em | 700 (bold) | Page titles (`Money overview`, `Contract Decision Review`) |
-| **`h2`** | 1.5rem (24px) | 1.25 | -0.01em | 700 (bold) | Section headers (`Opportunities`, `Deterministic Policy Checklist`) |
-| **`h3`** | 1.125rem (18px) | 1.35 | 0 | 600 (semibold) | Card titles, modal headers, table titles (`Exchange Transcript`) |
-| **`body-lg`** | 1rem (16px) | 1.5 | 0 | 400/500 | Primary reading text, lead paragraphs, long-form policy rationales |
-| **`body`** | 0.875rem (14px) | 1.5 | 0 | 400 (normal) | Default UI copy, table cells, negotiation message bodies |
-| **`body-sm`** | 0.8125rem (13px) | 1.45 | 0 | 500 (medium) | Secondary text, timestamps, metadata, speaker titles |
-| **`caption`** | 0.75rem (12px) | 1.4 | +0.01em | 600 (semibold) | Uppercase labels (`TREASURY`, `BASELINE`), pill badges |
-| **`mono`** | 0.8125rem (13px) | 1.5 | 0 | 600 (semibold) | Financial math, USDC amounts, tx hashes, addresses (`font-mono`) |
+| Token         | Size             | Line Height | Letter Spacing | Weight          | Primary Use Cases                                                   |
+| :------------ | :--------------- | :---------- | :------------- | :-------------- | :------------------------------------------------------------------ |
+| **`display`** | 3rem (48px)      | 1.1         | -0.02em        | 800 (extrabold) | Hero savings figure, landing headlines, breakthrough numbers        |
+| **`h1`**      | 2.25rem (36px)   | 1.15        | -0.02em        | 700 (bold)      | Page titles (`Money overview`, `Contract Decision Review`)          |
+| **`h2`**      | 1.5rem (24px)    | 1.25        | -0.01em        | 700 (bold)      | Section headers (`Opportunities`, `Deterministic Policy Checklist`) |
+| **`h3`**      | 1.125rem (18px)  | 1.35        | 0              | 600 (semibold)  | Card titles, modal headers, table titles (`Exchange Transcript`)    |
+| **`body-lg`** | 1rem (16px)      | 1.5         | 0              | 400/500         | Primary reading text, lead paragraphs, long-form policy rationales  |
+| **`body`**    | 0.875rem (14px)  | 1.5         | 0              | 400 (normal)    | Default UI copy, table cells, negotiation message bodies            |
+| **`body-sm`** | 0.8125rem (13px) | 1.45        | 0              | 500 (medium)    | Secondary text, timestamps, metadata, speaker titles                |
+| **`caption`** | 0.75rem (12px)   | 1.4         | +0.01em        | 600 (semibold)  | Uppercase labels (`TREASURY`, `BASELINE`), pill badges              |
+| **`mono`**    | 0.8125rem (13px) | 1.5         | 0              | 600 (semibold)  | Financial math, USDC amounts, tx hashes, addresses (`font-mono`)    |
 
 > Backward Compatibility Note: `--text-xs` is retained at 13px (0.8125rem) to preserve legacy styles.
 
@@ -48,6 +48,7 @@ import {
 ### Examples
 
 #### Page Heading & Hero Metrics
+
 ```tsx
 <H1 className="text-slate-900 dark:text-white">Contracts Ledger</H1>
 
@@ -57,27 +58,30 @@ import {
 ```
 
 #### Section Heading with Polymorphic Rendering
+
 ```tsx
-{/* Renders an <h2> styled with the H3 type-scale */}
+{
+  /* Renders an <h2> styled with the H3 type-scale */
+}
 <H3 as="h2" className="text-slate-900 dark:text-white">
   Deterministic Policy Checklist
-</H3>
+</H3>;
 ```
 
 #### Financial Figures & Metadata
+
 ```tsx
 <div className="flex flex-col">
-  <Caption className="text-slate-400 uppercase tracking-wider">Original Rate</Caption>
-  <Mono className="text-slate-900 dark:text-white text-base">
-    $12,400.00
-  </Mono>
-  <BodySmall className="text-slate-500">
-    Updated 2 hours ago
-  </BodySmall>
+  <Caption className="text-slate-400 uppercase tracking-wider">
+    Original Rate
+  </Caption>
+  <Mono className="text-slate-900 dark:text-white text-base">$12,400.00</Mono>
+  <BodySmall className="text-slate-500">Updated 2 hours ago</BodySmall>
 </div>
 ```
 
 #### Negotiation Transcript Turn
+
 ```tsx
 <div className="flex items-center gap-2">
   <BodySmall as="span" className="font-bold text-slate-900 dark:text-white">

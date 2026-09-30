@@ -1,12 +1,13 @@
-import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { getServiceSupabase } from "../lib/supabase";
+import { after, before, describe, it } from "node:test";
+
 import {
   createNotification,
   getNotifications,
   markNotificationAsRead,
   sendWebhookNotification,
 } from "../lib/notifications";
+import { getServiceSupabase } from "../lib/supabase";
 
 describe("Notifications Service & Webhook Integration", () => {
   let testBusinessId: string;
@@ -27,7 +28,10 @@ describe("Notifications Service & Webhook Integration", () => {
   after(async () => {
     if (testNotificationId) {
       const supabase = getServiceSupabase();
-      await supabase.from("notifications").delete().eq("id", testNotificationId);
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", testNotificationId);
     }
   });
 
@@ -42,7 +46,8 @@ describe("Notifications Service & Webhook Integration", () => {
       businessId: testBusinessId,
       category: "renewal",
       title: "Slack renewal detected",
-      message: "18 of 25 seats active. I have contacted the vendor and requested a revised quote. Status: negotiation in progress.",
+      message:
+        "18 of 25 seats active. I have contacted the vendor and requested a revised quote. Status: negotiation in progress.",
       link: "/negotiate/test-contract",
       linkLabel: "View Negotiation",
     });
@@ -56,7 +61,10 @@ describe("Notifications Service & Webhook Integration", () => {
 
     const list = await getNotifications(testBusinessId, 10);
     const found = list.find((n) => n.id === notification.id);
-    assert.ok(found, "Newly created notification must be returned in getNotifications");
+    assert.ok(
+      found,
+      "Newly created notification must be returned in getNotifications",
+    );
   });
 
   it("markNotificationAsRead updates read status to true in database", async () => {

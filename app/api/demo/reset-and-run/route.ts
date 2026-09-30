@@ -1,13 +1,13 @@
-import { getServiceSupabase } from "@/lib/supabase";
-import { evaluateContractOpportunity } from "@/lib/heuristics";
-import { buildEscrowTools } from "@/lib/tools/escrow";
 import { verifyConfirmationTerms } from "@/lib/agent/verification";
+import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
+import { evaluateContractOpportunity } from "@/lib/heuristics";
+import { logger } from "@/lib/logger";
 import { record_vendor_memory } from "@/lib/memory";
 import { checkPolicy } from "@/lib/policy";
+import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
-import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
-import { logger } from "@/lib/logger";
-import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
+import { buildEscrowTools } from "@/lib/tools/escrow";
 
 export async function POST(req: Request) {
   const supabase = getServiceSupabase();
@@ -24,15 +24,27 @@ export async function POST(req: Request) {
     // 1. Resolve Demo Co
     let demoCo: any = null;
     if (businessId) {
-      const { data } = await supabase.from("businesses").select("*").eq("id", businessId).maybeSingle();
+      const { data } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("id", businessId)
+        .maybeSingle();
       demoCo = data;
     }
     if (!demoCo) {
-      const { data } = await supabase.from("businesses").select("*").eq("name", "Demo Co").maybeSingle();
+      const { data } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("name", "Demo Co")
+        .maybeSingle();
       demoCo = data;
     }
     if (!demoCo) {
-      const { data } = await supabase.from("businesses").select("*").limit(1).maybeSingle();
+      const { data } = await supabase
+        .from("businesses")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
       demoCo = data;
     }
     if (!demoCo) {
@@ -70,7 +82,9 @@ export async function POST(req: Request) {
       .eq("id", bId);
 
     // Pick Slack as the primary candidate, or first contract
-    const slackContract = contracts.find((c) => c.service?.toLowerCase().includes("slack")) || contracts[0];
+    const slackContract =
+      contracts.find((c) => c.service?.toLowerCase().includes("slack")) ||
+      contracts[0];
     const initialPrice = 9600;
     const initialSeats = 25;
     const activeSeats = 18;
@@ -107,8 +121,18 @@ export async function POST(req: Request) {
       action: "detect_waste",
       reason: `Detected renewal opportunity: ${initialSeats - activeSeats} idle seats (${Math.round(((initialSeats - activeSeats) / initialSeats) * 100)}% waste) on ${slackContract.service}.`,
       confidence: 0.95,
-      input: { contractId: slackContract.id, service: slackContract.service, currentPrice: initialPrice, activeSeats, totalSeats: initialSeats },
-      result: { potentialSavings, recommendation: "Downsize to 18 active seats and renegotiate tier rate." },
+      input: {
+        contractId: slackContract.id,
+        service: slackContract.service,
+        currentPrice: initialPrice,
+        activeSeats,
+        totalSeats: initialSeats,
+      },
+      result: {
+        potentialSavings,
+        recommendation:
+          "Downsize to 18 active seats and renegotiate tier rate.",
+      },
     });
 
     steps.push({
@@ -137,7 +161,8 @@ export async function POST(req: Request) {
         role: "agent",
         speaker: "Tavryn Agent",
         amount: 6500,
-        message: "Hello Slack sales team, Tavryn Procurement Agent representing Demo Co. We are renewing our 18 active seats. Based on market comps, we propose $6,500/yr.",
+        message:
+          "Hello Slack sales team, Tavryn Procurement Agent representing Demo Co. We are renewing our 18 active seats. Based on market comps, we propose $6,500/yr.",
         round: 1,
         timestamp: new Date().toISOString(),
       },
@@ -145,7 +170,8 @@ export async function POST(req: Request) {
         role: "vendor",
         speaker: "Slack Account Manager",
         amount: 7600,
-        message: "We appreciate your partnership. We can offer a downsized renewal tier at $7,600/yr with standard SLA guarantee.",
+        message:
+          "We appreciate your partnership. We can offer a downsized renewal tier at $7,600/yr with standard SLA guarantee.",
         round: 2,
         timestamp: new Date().toISOString(),
       },
@@ -153,7 +179,8 @@ export async function POST(req: Request) {
         role: "agent",
         speaker: "Tavryn Agent",
         amount: finalPrice,
-        message: "Counter-proposal: We can commit to a 12-month advance on-chain escrow payment at $6,912/yr ($384/seat/yr). Vendor simulator accepted counter-offer.",
+        message:
+          "Counter-proposal: We can commit to a 12-month advance on-chain escrow payment at $6,912/yr ($384/seat/yr). Vendor simulator accepted counter-offer.",
         round: 3,
         timestamp: new Date().toISOString(),
       },
@@ -176,15 +203,24 @@ export async function POST(req: Request) {
       .select("id")
       .single();
 
-    if (negErr) throw new Error(`Failed to create negotiation: ${negErr.message}`);
+    if (negErr)
+      throw new Error(`Failed to create negotiation: ${negErr.message}`);
 
     await logAgentAction({
       businessId: bId,
       action: "negotiation_agreement",
       reason: `Concluded 3-round autonomous concession curve with ${slackContract.vendors?.name || "Slack"}. Locked price at $${finalPrice}.`,
       confidence: 1.0,
-      input: { contractId: slackContract.id, negotiationId: newNeg.id, rounds: 3 },
-      result: { agreedPrice: finalPrice, savings: realizedSavings, discountPct: "28%" },
+      input: {
+        contractId: slackContract.id,
+        negotiationId: newNeg.id,
+        rounds: 3,
+      },
+      result: {
+        agreedPrice: finalPrice,
+        savings: realizedSavings,
+        discountPct: "28%",
+      },
     });
 
     steps.push({
@@ -226,17 +262,23 @@ export async function POST(req: Request) {
         category: slackContract.category || "software",
         savings: realizedSavings,
         treasuryBalance: demoCo.treasury_balance ?? 42850,
-      }
+      },
     );
 
-    const policyReason = policyDecision.reasons.join("; ") || "Conforms to organizational procurement thresholds";
+    const policyReason =
+      policyDecision.reasons.join("; ") ||
+      "Conforms to organizational procurement thresholds";
 
     await logAgentAction({
       businessId: bId,
       action: "policy_check",
       reason: `Evaluated financial policy ceiling: ${policyReason}`,
       confidence: 1.0,
-      input: { amount: finalPrice, category: slackContract.category, savings: realizedSavings },
+      input: {
+        amount: finalPrice,
+        category: slackContract.category,
+        savings: realizedSavings,
+      },
       result: { approved: policyDecision.approved, reason: policyReason },
     });
 
@@ -263,7 +305,8 @@ export async function POST(req: Request) {
       getBusinessId: () => bId,
     });
 
-    const vendorWallet = slackContract.vendors?.wallet_address || DEV_TREASURY_ADDRESS;
+    const vendorWallet =
+      slackContract.vendors?.wallet_address || DEV_TREASURY_ADDRESS;
     const escrowResult = await (escrowTools.create_escrow as any).execute({
       amount: finalPrice,
       contractId: slackContract.id,
@@ -298,7 +341,9 @@ export async function POST(req: Request) {
       price: finalPrice,
       seats: activeSeats,
       term_months: 12,
-      renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
     };
 
     const expectedTerms = {
@@ -308,15 +353,22 @@ export async function POST(req: Request) {
       renewalDate: simulatedConfirmationDoc.renewal_date,
     };
 
-    const verificationResult = verifyConfirmationTerms(simulatedConfirmationDoc, expectedTerms);
+    const verificationResult = verifyConfirmationTerms(
+      simulatedConfirmationDoc,
+      expectedTerms,
+    );
 
     await logAgentAction({
       businessId: bId,
       action: "verify_vendor_confirmation",
-      reason: "Audited counter-signed vendor order document against agreed commitment terms.",
+      reason:
+        "Audited counter-signed vendor order document against agreed commitment terms.",
       confidence: 1.0,
       input: { expected: expectedTerms, extracted: simulatedConfirmationDoc },
-      result: { allPassed: verificationResult.allPassed, checksCount: verificationResult.checks.length },
+      result: {
+        allPassed: verificationResult.allPassed,
+        checksCount: verificationResult.checks.length,
+      },
     });
 
     steps.push({
@@ -407,7 +459,8 @@ export async function POST(req: Request) {
       .eq("id", slackContract.id);
 
     return apiSuccess({
-      message: "One-click full autonomous procurement demo completed successfully",
+      message:
+        "One-click full autonomous procurement demo completed successfully",
       businessId: bId,
       contractId: slackContract.id,
       negotiationId: newNeg.id,

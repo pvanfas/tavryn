@@ -1,5 +1,6 @@
-import { z } from "zod";
 import { generateObject } from "ai";
+import { z } from "zod";
+
 import { getAgentLanguageModel } from "./provider";
 
 /**
@@ -8,9 +9,19 @@ import { getAgentLanguageModel } from "./provider";
  */
 export const VendorConfirmationSchema = z.object({
   price: z.number().positive().describe("Annual commitment price in USDC"),
-  seats: z.number().int().positive().describe("Total number of licensed seats/users"),
-  term_months: z.number().int().positive().describe("Duration of the contract in months"),
-  renewal_date: z.string().describe("Effective renewal date in YYYY-MM-DD format"),
+  seats: z
+    .number()
+    .int()
+    .positive()
+    .describe("Total number of licensed seats/users"),
+  term_months: z
+    .number()
+    .int()
+    .positive()
+    .describe("Duration of the contract in months"),
+  renewal_date: z
+    .string()
+    .describe("Effective renewal date in YYYY-MM-DD format"),
 });
 
 export type VendorConfirmationData = z.infer<typeof VendorConfirmationSchema>;
@@ -45,10 +56,14 @@ export interface VerificationResult {
  * The LLM only extracts fields; deterministic logic determines validity.
  */
 export async function extractVendorConfirmation(
-  documentText: string
+  documentText: string,
 ): Promise<VendorConfirmationData> {
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY);
+  const hasKey = Boolean(
+    process.env.OPENAI_API_KEY ||
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.LLM_API_KEY,
+  );
 
   // If a live AI key is provided, use structured extraction with Vercel AI SDK
   if (hasKey && provider !== "mock") {
@@ -61,7 +76,10 @@ export async function extractVendorConfirmation(
       });
       return object;
     } catch (err) {
-      console.warn("LLM extraction failed, falling back to deterministic extractor:", err);
+      console.warn(
+        "LLM extraction failed, falling back to deterministic extractor:",
+        err,
+      );
     }
   }
 
@@ -72,31 +90,39 @@ export async function extractVendorConfirmation(
 /**
  * Robust regex-based fallback extractor for standard document templates
  */
-export function extractFromDocumentRegex(documentText: string): VendorConfirmationData {
+export function extractFromDocumentRegex(
+  documentText: string,
+): VendorConfirmationData {
   // 1. Price
   const priceMatch =
-    documentText.match(/(?:Annual Commitment Price|Price|Total|Amount):\s*\$?([\d,]+(?:\.\d+)?)/i) ||
-    documentText.match(/\$([\d,]+(?:\.\d+)?)\s*USDC/i);
+    documentText.match(
+      /(?:Annual Commitment Price|Price|Total|Amount):\s*\$?([\d,]+(?:\.\d+)?)/i,
+    ) || documentText.match(/\$([\d,]+(?:\.\d+)?)\s*USDC/i);
   const rawPriceStr = priceMatch ? priceMatch[1].replace(/,/g, "") : "0";
   const price = parseFloat(rawPriceStr) || 0;
 
   // 2. Seats
   const seatsMatch =
-    documentText.match(/(?:Authorized User Seats|Seats|User Accounts):\s*(\d+)/i) ||
-    documentText.match(/(\d+)\s*(?:licensed accounts|seats|users)/i);
+    documentText.match(
+      /(?:Authorized User Seats|Seats|User Accounts):\s*(\d+)/i,
+    ) || documentText.match(/(\d+)\s*(?:licensed accounts|seats|users)/i);
   const seats = seatsMatch ? parseInt(seatsMatch[1], 10) : 0;
 
   // 3. Term Months
   const termMatch =
-    documentText.match(/(?:Contract Duration|Term|Duration):\s*(\d+)\s*Months/i) ||
-    documentText.match(/(\d+)\s*(?:Month|Months)/i);
+    documentText.match(
+      /(?:Contract Duration|Term|Duration):\s*(\d+)\s*Months/i,
+    ) || documentText.match(/(\d+)\s*(?:Month|Months)/i);
   const term_months = termMatch ? parseInt(termMatch[1], 10) : 12;
 
   // 4. Renewal Date
   const dateMatch =
-    documentText.match(/(?:Effective Renewal Date|Renewal Date|Effective Date):\s*(\d{4}-\d{2}-\d{2})/i) ||
-    documentText.match(/(\d{4}-\d{2}-\d{2})/);
-  const renewal_date = dateMatch ? dateMatch[1] : new Date().toISOString().split("T")[0];
+    documentText.match(
+      /(?:Effective Renewal Date|Renewal Date|Effective Date):\s*(\d{4}-\d{2}-\d{2})/i,
+    ) || documentText.match(/(\d{4}-\d{2}-\d{2})/);
+  const renewal_date = dateMatch
+    ? dateMatch[1]
+    : new Date().toISOString().split("T")[0];
 
   return {
     price,
@@ -112,7 +138,7 @@ export function extractFromDocumentRegex(documentText: string): VendorConfirmati
  */
 export function verifyConfirmationTerms(
   extracted: VendorConfirmationData,
-  expected: ExpectedTerms
+  expected: ExpectedTerms,
 ): VerificationResult {
   const checks: FieldCheck[] = [];
   const discrepancies: string[] = [];

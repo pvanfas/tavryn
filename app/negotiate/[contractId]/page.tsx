@@ -1,24 +1,25 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
-import Link from "next/link";
-import { AgentIcon } from "@/components/AgentIcon";
-import { AppShell } from "@/components/AppShell";
 import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  Play,
+  ArrowLeft,
   ArrowRight,
   Brain,
-  Mail,
-  Copy,
   Check,
+  CheckCircle2,
   Coins,
+  Copy,
   FileText,
+  Mail,
+  Play,
+  XCircle,
 } from "lucide-react";
-import { H1, H3, Body, BodySmall, Caption, Mono } from "@/components/ui/text";
+import Link from "next/link";
+import React, { use, useEffect, useState } from "react";
+
+import { AgentIcon } from "@/components/AgentIcon";
+import { AppShell } from "@/components/AppShell";
+import { Body, BodySmall, Caption, H1, H3, Mono } from "@/components/ui/text";
 
 interface Turn {
   role: "agent" | "vendor" | "system";
@@ -98,7 +99,8 @@ interface ReplyProcessResult {
   reason: string;
   extraction: ExtractedTerms;
   message: string;
-  suggested_action: "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away";
+  suggested_action:
+    "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away";
 }
 
 const SAMPLE_REPLIES = [
@@ -143,7 +145,9 @@ export default function NegotiationDetailPage({
 
   const [contract, setContract] = useState<ContractData | null>(null);
   const [negotiation, setNegotiation] = useState<NegotiationData | null>(null);
-  const [vendorMemory, setVendorMemory] = useState<VendorMemoryData | null>(null);
+  const [vendorMemory, setVendorMemory] = useState<VendorMemoryData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -164,7 +168,8 @@ export default function NegotiationDetailPage({
 
   const [replyText, setReplyText] = useState("");
   const [processingReply, setProcessingReply] = useState(false);
-  const [extractedResult, setExtractedResult] = useState<ReplyProcessResult | null>(null);
+  const [extractedResult, setExtractedResult] =
+    useState<ReplyProcessResult | null>(null);
 
   const [recordingSavings, setRecordingSavings] = useState(false);
   const [savingsSuccess, setSavingsSuccess] = useState<string | null>(null);
@@ -222,7 +227,8 @@ export default function NegotiationDetailPage({
           vendors: vendorData
             ? {
                 name: vendorData.name,
-                category: vendorData.category || rawContract.category || "software",
+                category:
+                  vendorData.category || rawContract.category || "software",
                 contact: vendorData.contact ?? null,
                 reputation_score: vendorData.reputation_score ?? null,
                 is_simulated: vendorData.is_simulated ?? null,
@@ -358,14 +364,21 @@ export default function NegotiationDetailPage({
       setRecordingSavings(true);
       setError(null);
 
-      const res = await fetch(`/api/agent/negotiate/${contractId}/record-savings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          final_price: extractedResult?.extraction?.counter_offer || negotiation?.current_offer,
-          notes: extractedResult?.extraction?.notes || "Vendor terms agreed without on-chain USDC payment.",
-        }),
-      });
+      const res = await fetch(
+        `/api/agent/negotiate/${contractId}/record-savings`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            final_price:
+              extractedResult?.extraction?.counter_offer ||
+              negotiation?.current_offer,
+            notes:
+              extractedResult?.extraction?.notes ||
+              "Vendor terms agreed without on-chain USDC payment.",
+          }),
+        },
+      );
 
       if (!res.ok) {
         const errJson = await res.json();
@@ -373,7 +386,9 @@ export default function NegotiationDetailPage({
       }
 
       const data = await res.json();
-      setSavingsSuccess(data.message || "Savings recorded successfully without payment.");
+      setSavingsSuccess(
+        data.message || "Savings recorded successfully without payment.",
+      );
       await loadData();
     } catch (err) {
       console.error(err);
@@ -400,14 +415,20 @@ export default function NegotiationDetailPage({
       <div className="min-h-screen bg-slate-100/60 dark:bg-slate-950 flex items-center justify-center p-6 font-sans">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 border-2 border-[#107e65] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-slate-500 font-medium">Loading negotiation session...</p>
+          <p className="text-xs text-slate-500 font-medium">
+            Loading negotiation session...
+          </p>
         </div>
       </div>
     );
   }
 
-  const baselinePrice = Number(negotiation?.original_price || contract?.current_price || 0);
-  const currentOffer = Number(negotiation?.current_offer || negotiation?.final_price || baselinePrice);
+  const baselinePrice = Number(
+    negotiation?.original_price || contract?.current_price || 0,
+  );
+  const currentOffer = Number(
+    negotiation?.current_offer || negotiation?.final_price || baselinePrice,
+  );
   const savings = baselinePrice - currentOffer;
 
   return (
@@ -415,8 +436,8 @@ export default function NegotiationDetailPage({
       businessName="Demo Co"
       isReal={!contract?.vendors?.is_simulated}
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "Contracts Ledger", href: "/dashboard#contracts" },
+        { label: "Overview", href: "/" },
+        { label: "Negotiations", href: "/negotiations" },
         { label: `${contract?.service || "Vendor"} Negotiation` },
       ]}
       currency="USDC"
@@ -424,11 +445,11 @@ export default function NegotiationDetailPage({
       {/* Top Actions Bar */}
       <div className="flex items-center justify-between">
         <Link
-          href="/dashboard"
+          href="/negotiations"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Ledger</span>
+          <span>Back to Negotiations</span>
         </Link>
 
         <Link
@@ -449,7 +470,9 @@ export default function NegotiationDetailPage({
                 {contract?.service || "Contract"}
               </H1>
               <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-                {contract?.category || contract?.vendors?.category || "Subscription"}
+                {contract?.category ||
+                  contract?.vendors?.category ||
+                  "Subscription"}
               </span>
               {contract?.vendors ? (
                 contract.vendors.is_simulated ? (
@@ -464,7 +487,10 @@ export default function NegotiationDetailPage({
               ) : null}
             </div>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-              Account Executive: <span className="font-semibold text-slate-700 dark:text-slate-300">{contract?.vendors?.name || contract?.service}</span>
+              Account Executive:{" "}
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {contract?.vendors?.name || contract?.service}
+              </span>
               {contract?.vendors?.contact && ` (${contract.vendors.contact})`}
             </p>
           </div>
@@ -472,22 +498,31 @@ export default function NegotiationDetailPage({
           {/* Price Stats */}
           <div className="flex items-center gap-3">
             <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-400 dark:text-slate-500 block">Original Rate</Caption>
+              <Caption className="uppercase text-slate-400 dark:text-slate-500 block">
+                Original Rate
+              </Caption>
               <Mono as="p" className="text-base text-slate-400 line-through">
                 ${baselinePrice.toLocaleString()}
               </Mono>
             </div>
 
             <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-500 dark:text-slate-400 block">Current Counter</Caption>
+              <Caption className="uppercase text-slate-500 dark:text-slate-400 block">
+                Current Counter
+              </Caption>
               <Mono as="p" className="text-base text-slate-900 dark:text-white">
                 ${currentOffer.toLocaleString()}
               </Mono>
             </div>
 
             <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block">Achieved Cut</Caption>
-              <Mono as="p" className="text-base text-[#107e65] dark:text-[#34d399]">
+              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block">
+                Achieved Cut
+              </Caption>
+              <Mono
+                as="p"
+                className="text-base text-[#107e65] dark:text-[#34d399]"
+              >
                 ${Math.max(0, savings).toLocaleString()}
               </Mono>
             </div>
@@ -506,14 +541,19 @@ export default function NegotiationDetailPage({
         {savingsSuccess && (
           <div className="mt-4 p-3.5 rounded-xl border border-purple-200 bg-purple-50 dark:bg-purple-950/20 text-purple-800 dark:text-purple-300 text-xs font-semibold flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-purple-600" />
-            <span>{savingsSuccess} (Off-chain savings captured in executive metrics).</span>
+            <span>
+              {savingsSuccess} (Off-chain savings captured in executive
+              metrics).
+            </span>
           </div>
         )}
 
         {/* Mode Switcher & Status Bar */}
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mode:</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Mode:
+            </span>
             <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-800">
               <button
                 type="button"
@@ -541,16 +581,18 @@ export default function NegotiationDetailPage({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Status:</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Status:
+            </span>
             <span
               className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
                 negotiation?.status === "agreed"
                   ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                   : negotiation?.status === "savings_recorded_no_payment"
-                  ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
-                  : negotiation?.status === "walked_away"
-                  ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
-                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                    ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
+                    : negotiation?.status === "walked_away"
+                      ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
+                      : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
               }`}
             >
               {negotiation?.status === "savings_recorded_no_payment"
@@ -581,7 +623,9 @@ export default function NegotiationDetailPage({
                       </span>
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Agent constructs targeted email citing telemetry and benchmarks. Real emails are NEVER dispatched automatically.
+                      Agent constructs targeted email citing telemetry and
+                      benchmarks. Real emails are NEVER dispatched
+                      automatically.
                     </p>
                   </div>
                 </div>
@@ -600,7 +644,11 @@ export default function NegotiationDetailPage({
                   ) : (
                     <>
                       <AgentIcon className="h-3.5 w-3.5" />
-                      <span>{draftEmail ? "Regenerate Draft" : "Draft Outreach Email"}</span>
+                      <span>
+                        {draftEmail
+                          ? "Regenerate Draft"
+                          : "Draft Outreach Email"}
+                      </span>
                     </>
                   )}
                 </button>
@@ -611,7 +659,9 @@ export default function NegotiationDetailPage({
                   <div className="rounded-lg border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900/60 p-4 space-y-2 text-xs">
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
                       <div>
-                        <span className="font-semibold text-slate-900 dark:text-white">To: </span>
+                        <span className="font-semibold text-slate-900 dark:text-white">
+                          To:{" "}
+                        </span>
                         <Mono as="span">{draftEmail.to}</Mono>
                       </div>
                       <div className="flex items-center gap-2">
@@ -620,7 +670,11 @@ export default function NegotiationDetailPage({
                           onClick={handleCopyEmail}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 transition-colors"
                         >
-                          {copiedEmail ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                          {copiedEmail ? (
+                            <Check className="h-3 w-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
                           <span>{copiedEmail ? "Copied" : "Copy Email"}</span>
                         </button>
 
@@ -634,14 +688,22 @@ export default function NegotiationDetailPage({
                           }`}
                         >
                           <CheckCircle2 className="h-3 w-3" />
-                          <span>{emailApproved ? "Approved & Dispatched" : "Approve & Mark Sent"}</span>
+                          <span>
+                            {emailApproved
+                              ? "Approved & Dispatched"
+                              : "Approve & Mark Sent"}
+                          </span>
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <span className="font-semibold text-slate-900 dark:text-white">Subject: </span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">{draftEmail.subject}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        Subject:{" "}
+                      </span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                        {draftEmail.subject}
+                      </span>
                     </div>
 
                     <div className="pt-2 text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-sans bg-slate-50/70 dark:bg-slate-950/40 p-3.5 rounded-lg border border-slate-100 dark:border-slate-800">
@@ -652,13 +714,18 @@ export default function NegotiationDetailPage({
                   {emailApproved && (
                     <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-[#107e65] dark:text-[#34d399] flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span>Outreach email approved by human supervisor. Ready to ingest vendor reply below.</span>
+                      <span>
+                        Outreach email approved by human supervisor. Ready to
+                        ingest vendor reply below.
+                      </span>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="mt-4 p-4 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-500">
-                  Click &quot;Draft Outreach Email&quot; above to have the agent review telemetry, calculate the target discount, and compose the opening communication.
+                  Click &quot;Draft Outreach Email&quot; above to have the agent
+                  review telemetry, calculate the target discount, and compose
+                  the opening communication.
                 </div>
               )}
             </div>
@@ -675,14 +742,18 @@ export default function NegotiationDetailPage({
                       Step 2: Paste Vendor Reply
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Paste the raw email or message received from the vendor. Tavryn deterministically extracts counter terms and payment conditions.
+                      Paste the raw email or message received from the vendor.
+                      Tavryn deterministically extracts counter terms and
+                      payment conditions.
                     </p>
                   </div>
                 </div>
 
                 {/* Quick Presets */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Presets:</span>
+                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                    Presets:
+                  </span>
                   {SAMPLE_REPLIES.map((sample, idx) => (
                     <button
                       key={idx}
@@ -707,7 +778,8 @@ export default function NegotiationDetailPage({
 
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-slate-500">
-                    Extracts price, seat constraints, commitment duration, and USDC acceptability.
+                    Extracts price, seat constraints, commitment duration, and
+                    USDC acceptability.
                   </span>
 
                   <button
@@ -744,10 +816,10 @@ export default function NegotiationDetailPage({
                         extractedResult.decision === "agreed"
                           ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                           : extractedResult.decision === "usdc_refused"
-                          ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
-                          : extractedResult.decision === "walk_away"
-                          ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
-                          : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                            ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
+                            : extractedResult.decision === "walk_away"
+                              ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
+                              : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
                       }`}
                     >
                       Decision: {extractedResult.decision}
@@ -756,8 +828,13 @@ export default function NegotiationDetailPage({
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                      <Caption className="text-slate-400">Extracted Counter</Caption>
-                      <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                      <Caption className="text-slate-400">
+                        Extracted Counter
+                      </Caption>
+                      <Mono
+                        as="p"
+                        className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+                      >
                         {extractedResult.extraction.counter_offer
                           ? `$${extractedResult.extraction.counter_offer.toLocaleString()}`
                           : "None"}
@@ -766,8 +843,12 @@ export default function NegotiationDetailPage({
 
                     <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                       <Caption className="text-slate-400">Seats & Term</Caption>
-                      <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                        {extractedResult.extraction.seats || "—"} seats / {extractedResult.extraction.commitment_months || 12} mo
+                      <Mono
+                        as="p"
+                        className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+                      >
+                        {extractedResult.extraction.seats || "—"} seats /{" "}
+                        {extractedResult.extraction.commitment_months || 12} mo
                       </Mono>
                     </div>
 
@@ -787,8 +868,13 @@ export default function NegotiationDetailPage({
                     </div>
 
                     <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                      <Caption className="text-slate-400">Negotiation Round</Caption>
-                      <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                      <Caption className="text-slate-400">
+                        Negotiation Round
+                      </Caption>
+                      <Mono
+                        as="p"
+                        className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+                      >
                         Round {negotiation?.rounds || 1} / 5
                       </Mono>
                     </div>
@@ -796,33 +882,41 @@ export default function NegotiationDetailPage({
 
                   {/* Agent Assessment Narrative */}
                   <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 text-xs">
-                    <span className="font-bold text-slate-900 dark:text-white">Agent Reason: </span>
-                    <span className="text-slate-600 dark:text-slate-300">{extractedResult.reason}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      Agent Reason:{" "}
+                    </span>
+                    <span className="text-slate-600 dark:text-slate-300">
+                      {extractedResult.reason}
+                    </span>
                   </div>
 
                   {/* Decision Next Step Actions */}
-                  {extractedResult.decision === "agreed" && extractedResult.extraction.accepts_usdc && (
-                    <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <h4 className="text-xs font-bold text-[#107e65] dark:text-[#34d399] flex items-center gap-1.5">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Terms Agreed With USDC Settlement
-                        </h4>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                          Counter-offer adheres to deterministic budget ceiling. Ready for policy check, attestation, Arc escrow, and verified release.
-                        </p>
+                  {extractedResult.decision === "agreed" &&
+                    extractedResult.extraction.accepts_usdc && (
+                      <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-xs font-bold text-[#107e65] dark:text-[#34d399] flex items-center gap-1.5">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Terms Agreed With USDC Settlement
+                          </h4>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                            Counter-offer adheres to deterministic budget
+                            ceiling. Ready for policy check, attestation, Arc
+                            escrow, and verified release.
+                          </p>
+                        </div>
+                        <Link
+                          href={`/decision/${contractId}`}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs transition-colors shrink-0"
+                        >
+                          <span>Proceed to Escrow & Settlement</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
                       </div>
-                      <Link
-                        href={`/decision/${contractId}`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs transition-colors shrink-0"
-                      >
-                        <span>Proceed to Escrow & Settlement</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  )}
+                    )}
 
-                  {(!extractedResult.extraction.accepts_usdc || extractedResult.decision === "usdc_refused") && (
+                  {(!extractedResult.extraction.accepts_usdc ||
+                    extractedResult.decision === "usdc_refused") && (
                     <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/60 dark:bg-purple-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <h4 className="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
@@ -830,13 +924,19 @@ export default function NegotiationDetailPage({
                           Non-USDC Vendor (Off-Chain Settlement)
                         </h4>
                         <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                          The vendor agreed to discounted renewal pricing but requires traditional billing (ACH / Wire). Tavryn captures the savings in business traction metrics without locking on-chain funds.
+                          The vendor agreed to discounted renewal pricing but
+                          requires traditional billing (ACH / Wire). Tavryn
+                          captures the savings in business traction metrics
+                          without locking on-chain funds.
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={handleRecordSavingsWithoutPayment}
-                        disabled={recordingSavings || negotiation?.status === "savings_recorded_no_payment"}
+                        disabled={
+                          recordingSavings ||
+                          negotiation?.status === "savings_recorded_no_payment"
+                        }
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors shrink-0"
                       >
                         {recordingSavings ? (
@@ -847,7 +947,12 @@ export default function NegotiationDetailPage({
                         ) : (
                           <>
                             <Check className="h-3.5 w-3.5" />
-                            <span>{negotiation?.status === "savings_recorded_no_payment" ? "Savings Recorded" : "Record Savings Without Payment"}</span>
+                            <span>
+                              {negotiation?.status ===
+                              "savings_recorded_no_payment"
+                                ? "Savings Recorded"
+                                : "Record Savings Without Payment"}
+                            </span>
                           </>
                         )}
                       </button>
@@ -861,10 +966,13 @@ export default function NegotiationDetailPage({
           /* Simulated Autonomous Mode Action Bar */
           <div className="mt-6 flex items-center justify-between">
             <span className="text-xs text-slate-500">
-              Agent will simulate multi-round counter-offers deterministically based on market benchmarks.
+              Agent will simulate multi-round counter-offers deterministically
+              based on market benchmarks.
             </span>
 
-            {(!negotiation || negotiation.status === "in_progress" || negotiation.status === "initiated") && (
+            {(!negotiation ||
+              negotiation.status === "in_progress" ||
+              negotiation.status === "initiated") && (
               <button
                 type="button"
                 onClick={handleStartNegotiation}
@@ -896,7 +1004,9 @@ export default function NegotiationDetailPage({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <H3 className="text-slate-900 dark:text-white">Business Memory Used</H3>
+                  <H3 className="text-slate-900 dark:text-white">
+                    Business Memory Used
+                  </H3>
                   {vendorMemory?.has_history ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
                       <AgentIcon className="h-3 w-3" />
@@ -909,7 +1019,8 @@ export default function NegotiationDetailPage({
                   )}
                 </div>
                 <Caption className="text-slate-500 dark:text-slate-400 mt-0.5">
-                  Deterministic memory injected into autonomous negotiation intelligence
+                  Deterministic memory injected into autonomous negotiation
+                  intelligence
                 </Caption>
               </div>
             </div>
@@ -919,7 +1030,10 @@ export default function NegotiationDetailPage({
                 Reputation Score:
               </span>
               <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-                {vendorMemory?.reputation_score ?? contract?.vendors?.reputation_score ?? 50} / 100
+                {vendorMemory?.reputation_score ??
+                  contract?.vendors?.reputation_score ??
+                  50}{" "}
+                / 100
               </span>
             </div>
           </div>
@@ -930,13 +1044,19 @@ export default function NegotiationDetailPage({
               <Caption className="uppercase text-slate-400 dark:text-slate-500 font-bold block">
                 Last Accepted Discount
               </Caption>
-              <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                {vendorMemory?.accepted_discount_pct !== null && vendorMemory?.accepted_discount_pct !== undefined
+              <Mono
+                as="p"
+                className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+              >
+                {vendorMemory?.accepted_discount_pct !== null &&
+                vendorMemory?.accepted_discount_pct !== undefined
                   ? `${vendorMemory.accepted_discount_pct.toFixed(1)}%`
                   : "22.0% (Default)"}
               </Mono>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                {vendorMemory?.has_history ? "Anchored target price" : "Telemetry estimate"}
+                {vendorMemory?.has_history
+                  ? "Anchored target price"
+                  : "Telemetry estimate"}
               </span>
             </div>
 
@@ -944,8 +1064,13 @@ export default function NegotiationDetailPage({
               <Caption className="uppercase text-slate-400 dark:text-slate-500 font-bold block">
                 Pace to Close
               </Caption>
-              <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                {vendorMemory?.rounds_to_close ? `${vendorMemory.rounds_to_close} rounds` : "3 rounds (avg)"}
+              <Mono
+                as="p"
+                className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+              >
+                {vendorMemory?.rounds_to_close
+                  ? `${vendorMemory.rounds_to_close} rounds`
+                  : "3 rounds (avg)"}
               </Mono>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Historical negotiation velocity
@@ -956,8 +1081,13 @@ export default function NegotiationDetailPage({
               <Caption className="uppercase text-slate-400 dark:text-slate-500 font-bold block">
                 Last Final Price
               </Caption>
-              <Mono as="p" className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                {vendorMemory?.last_price ? `$${vendorMemory.last_price.toLocaleString()}` : `$${baselinePrice.toLocaleString()}`}
+              <Mono
+                as="p"
+                className="text-sm font-bold text-slate-900 dark:text-white mt-1"
+              >
+                {vendorMemory?.last_price
+                  ? `$${vendorMemory.last_price.toLocaleString()}`
+                  : `$${baselinePrice.toLocaleString()}`}
               </Mono>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Prior renewal rate
@@ -991,12 +1121,14 @@ export default function NegotiationDetailPage({
           <div className="mt-3.5 p-3 rounded-lg bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/15 dark:border-emerald-900/30 flex items-start gap-2.5">
             <AgentIcon className="h-4 w-4 text-[#107e65] dark:text-[#34d399] shrink-0 mt-0.5" />
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              <span className="font-semibold text-slate-900 dark:text-white">Active Agent Strategy: </span>
-              {vendorMemory?.summary_sentence || vendorMemory?.insight || (
-                vendorMemory?.has_history
+              <span className="font-semibold text-slate-900 dark:text-white">
+                Active Agent Strategy:{" "}
+              </span>
+              {vendorMemory?.summary_sentence ||
+                vendorMemory?.insight ||
+                (vendorMemory?.has_history
                   ? `${contract?.vendors?.name || contract?.service || "Vendor"} previously accepted a ${vendorMemory?.accepted_discount_pct?.toFixed(1) || "22.6"}% discount for a 12-month commitment, so a similar target is reasonable.`
-                  : "First negotiation cycle for this vendor. Telemetry metrics will determine opening concessions, and final terms will be committed to vendor memory for future renewals."
-              )}
+                  : "First negotiation cycle for this vendor. Telemetry metrics will determine opening concessions, and final terms will be committed to vendor memory for future renewals.")}
             </p>
           </div>
         </div>
@@ -1009,7 +1141,8 @@ export default function NegotiationDetailPage({
 
           {sortedRoundNumbers.length === 0 ? (
             <div className="py-10 text-center text-xs font-medium text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-              No rounds exchanged yet. Use either the Real Vendor email outreach or Autonomous Rounds above.
+              No rounds exchanged yet. Use either the Real Vendor email outreach
+              or Autonomous Rounds above.
             </div>
           ) : (
             sortedRoundNumbers.map((rnd) => {
@@ -1039,7 +1172,12 @@ export default function NegotiationDetailPage({
                     <div className="text-xs space-y-1.5 pl-3 border-l-2 border-[#107e65]/80">
                       <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
                         <div className="flex items-center gap-2">
-                          <BodySmall as="span" className="font-bold text-slate-900 dark:text-white">Tavryn Procurement</BodySmall>
+                          <BodySmall
+                            as="span"
+                            className="font-bold text-slate-900 dark:text-white"
+                          >
+                            Tavryn Procurement
+                          </BodySmall>
                           <Caption className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#107e65] dark:text-emerald-400">
                             Autonomous Agent
                           </Caption>
@@ -1059,13 +1197,19 @@ export default function NegotiationDetailPage({
                     <div className="text-xs space-y-1.5 pl-3 border-l-2 border-slate-400 dark:border-slate-600">
                       <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
                         <div className="flex items-center gap-2">
-                          <BodySmall as="span" className="font-bold text-slate-900 dark:text-white">{vendorTurn.speaker}</BodySmall>
+                          <BodySmall
+                            as="span"
+                            className="font-bold text-slate-900 dark:text-white"
+                          >
+                            {vendorTurn.speaker}
+                          </BodySmall>
                           <Caption className="px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                             Vendor Account Exec
                           </Caption>
                         </div>
                         <Mono className="text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/70 dark:border-slate-700/70">
-                          {vendorTurn.accepted ? "Agreed:" : "Counter:"} ${vendorTurn.amount?.toLocaleString()}
+                          {vendorTurn.accepted ? "Agreed:" : "Counter:"} $
+                          {vendorTurn.amount?.toLocaleString()}
                         </Mono>
                       </div>
                       <Body className="text-slate-600 dark:text-slate-300 leading-relaxed bg-white/90 dark:bg-[#111714]/90 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
@@ -1080,55 +1224,58 @@ export default function NegotiationDetailPage({
         </div>
 
         {/* Outcome Justification Grid */}
-        {negotiation && (negotiation.status === "agreed" || negotiation.status === "savings_recorded_no_payment" || negotiation.status === "walked_away") && (
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/70 space-y-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Deterministic Verification Summary
-            </h3>
+        {negotiation &&
+          (negotiation.status === "agreed" ||
+            negotiation.status === "savings_recorded_no_payment" ||
+            negotiation.status === "walked_away") && (
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/70 space-y-4">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Deterministic Verification Summary
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
-                <span className="font-bold text-slate-900 dark:text-white block">
-                  1. Policy Ceiling Compliance
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {explanation?.belowPolicyCeiling ||
-                    `Adheres to approved budget ceiling ($${negotiation.final_price?.toLocaleString() || negotiation.current_offer?.toLocaleString()}).`}
-                </p>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
+                  <span className="font-bold text-slate-900 dark:text-white block">
+                    1. Policy Ceiling Compliance
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                    {explanation?.belowPolicyCeiling ||
+                      `Adheres to approved budget ceiling ($${negotiation.final_price?.toLocaleString() || negotiation.current_offer?.toLocaleString()}).`}
+                  </p>
+                </div>
 
-              <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
-                <span className="font-bold text-slate-900 dark:text-white block">
-                  2. Realized Cash Savings
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {explanation?.dollarSavings ||
-                    `Captured $${Number(negotiation.savings || 0).toLocaleString()} in annual recurring cash reductions.`}
-                </p>
-              </div>
+                <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
+                  <span className="font-bold text-slate-900 dark:text-white block">
+                    2. Realized Cash Savings
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                    {explanation?.dollarSavings ||
+                      `Captured $${Number(negotiation.savings || 0).toLocaleString()} in annual recurring cash reductions.`}
+                  </p>
+                </div>
 
-              <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
-                <span className="font-bold text-slate-900 dark:text-white block">
-                  3. Market Benchmark Alignment
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {explanation?.competitorComparison ||
-                    "Benchmarked within target quartile for enterprise peer contracts."}
-                </p>
-              </div>
+                <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
+                  <span className="font-bold text-slate-900 dark:text-white block">
+                    3. Market Benchmark Alignment
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                    {explanation?.competitorComparison ||
+                      "Benchmarked within target quartile for enterprise peer contracts."}
+                  </p>
+                </div>
 
-              <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
-                <span className="font-bold text-slate-900 dark:text-white block">
-                  4. Service SLA Integrity
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {explanation?.serviceLevelsPreserved ||
-                    "Active seat allocations, license entitlements, and core support tiers preserved."}
-                </p>
+                <div className="p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-[#131b17]/30 text-xs space-y-1">
+                  <span className="font-bold text-slate-900 dark:text-white block">
+                    4. Service SLA Integrity
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                    {explanation?.serviceLevelsPreserved ||
+                      "Active seat allocations, license entitlements, and core support tiers preserved."}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </AppShell>
   );

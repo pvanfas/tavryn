@@ -1,11 +1,12 @@
 import { z } from "zod";
-import {
-  getNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from "@/lib/notifications";
+
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import {
+  getNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
       return apiError(
         "Invalid request body. Must provide either notification 'id' (UUID) or 'all: true' with 'businessId' (UUID)",
         400,
-        parsed.error.issues
+        parsed.error.issues,
       );
     }
 

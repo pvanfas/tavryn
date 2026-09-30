@@ -1,14 +1,16 @@
-import { z } from "zod";
 import { tool } from "ai";
 import crypto from "crypto";
-import { getServiceSupabase } from "@/lib/supabase";
-import { verifyPolicyExecutionAuthorization } from "@/lib/policy";
+import { z } from "zod";
+
 import { ARC_CONFIG } from "@/lib/circle";
-import { screenAddress, isValidEVMAddress } from "@/lib/screening";
+import { SIMULATED_VENDOR_WALLET } from "@/lib/constants";
 import { record_vendor_memory } from "@/lib/memory";
+import { verifyPolicyExecutionAuthorization } from "@/lib/policy";
+import { isValidEVMAddress, screenAddress } from "@/lib/screening";
+import { getServiceSupabase } from "@/lib/supabase";
+
 import { logAgentAction } from "./audit";
 import { ToolContext } from "./types";
-import { SIMULATED_VENDOR_WALLET } from "@/lib/constants";
 
 /**
  * Computes a deterministic SHA-256 idempotency key for escrow transactions:
@@ -27,17 +29,33 @@ export function computeEscrowIdempotencyKey(params: {
 export function buildEscrowTools(ctx: ToolContext) {
   // create_escrow
   const create_escrow = tool({
-    description: "Create on-chain Arc USDC escrow with deterministic server-side policy enforcement, SHA-256 idempotency, and vendor address compliance screening.",
+    description:
+      "Create on-chain Arc USDC escrow with deterministic server-side policy enforcement, SHA-256 idempotency, and vendor address compliance screening.",
     inputSchema: z.object({
       amount: z.number().positive().describe("Amount of USDC to escrow"),
-      vendor: z.union([z.string(), z.record(z.string(), z.any())]).optional().describe("Vendor name, UUID, or object"),
-      vendorWallet: z.string().optional().describe("Vendor recipient EVM wallet address"),
-      idempotencyKey: z.string().optional().describe("Optional precomputed SHA-256 idempotency key"),
+      vendor: z
+        .union([z.string(), z.record(z.string(), z.any())])
+        .optional()
+        .describe("Vendor name, UUID, or object"),
+      vendorWallet: z
+        .string()
+        .optional()
+        .describe("Vendor recipient EVM wallet address"),
+      idempotencyKey: z
+        .string()
+        .optional()
+        .describe("Optional precomputed SHA-256 idempotency key"),
       contractId: z.string().optional().describe("Associated contract UUID"),
-      negotiationId: z.string().optional().describe("Associated negotiation UUID"),
+      negotiationId: z
+        .string()
+        .optional()
+        .describe("Associated negotiation UUID"),
       category: z.string().optional().describe("Contract category"),
       savings: z.number().optional().describe("Annual dollar savings"),
-      forceFailSimulation: z.boolean().optional().describe("Simulate on-chain RPC/balance funding failure"),
+      forceFailSimulation: z
+        .boolean()
+        .optional()
+        .describe("Simulate on-chain RPC/balance funding failure"),
     }),
     execute: async (input: {
       amount: number;
@@ -56,14 +74,17 @@ export function buildEscrowTools(ctx: ToolContext) {
       let savings = input.savings;
       let vendorId: string | null = null;
       let resolvedCategory = input.category || "software";
-      let resolvedWallet = input.vendorWallet !== undefined ? input.vendorWallet : null;
+      let resolvedWallet =
+        input.vendorWallet !== undefined ? input.vendorWallet : null;
       let negId = input.negotiationId || null;
       let contractRecord: any = null;
 
       if (input.contractId) {
         const { data: contract } = await supabase
           .from("contracts")
-          .select("vendor_id, category, current_price, vendors ( id, name, wallet_address )")
+          .select(
+            "vendor_id, category, current_price, vendors ( id, name, wallet_address )",
+          )
           .eq("id", input.contractId)
           .maybeSingle();
 
@@ -72,10 +93,18 @@ export function buildEscrowTools(ctx: ToolContext) {
           vendorId = contract.vendor_id || null;
           resolvedCategory = input.category || contract.category || "software";
           if (resolvedWallet === null) {
-            if (contract.vendors && typeof contract.vendors === "object" && !Array.isArray(contract.vendors)) {
-              resolvedWallet = (contract.vendors as Record<string, any>).wallet_address || null;
+            if (
+              contract.vendors &&
+              typeof contract.vendors === "object" &&
+              !Array.isArray(contract.vendors)
+            ) {
+              resolvedWallet =
+                (contract.vendors as Record<string, any>).wallet_address ||
+                null;
             } else if (Array.isArray(contract.vendors) && contract.vendors[0]) {
-              resolvedWallet = (contract.vendors[0] as Record<string, any>).wallet_address || null;
+              resolvedWallet =
+                (contract.vendors[0] as Record<string, any>).wallet_address ||
+                null;
             }
           }
 
@@ -94,7 +123,10 @@ export function buildEscrowTools(ctx: ToolContext) {
                 if (neg.savings) {
                   savings = Number(neg.savings);
                 } else if (neg.original_price) {
-                  savings = Math.max(0, Number(neg.original_price) - input.amount);
+                  savings = Math.max(
+                    0,
+                    Number(neg.original_price) - input.amount,
+                  );
                 }
               }
             }
@@ -103,7 +135,11 @@ export function buildEscrowTools(ctx: ToolContext) {
       }
 
       // If vendor was passed as object or UUID string
-      if (!vendorId && typeof input.vendor === "string" && input.vendor.length === 36) {
+      if (
+        !vendorId &&
+        typeof input.vendor === "string" &&
+        input.vendor.length === 36
+      ) {
         vendorId = input.vendor;
       }
 
@@ -124,12 +160,16 @@ export function buildEscrowTools(ctx: ToolContext) {
 
       // Wrong-vendor defense: if contract has an assigned vendor and input.vendor is provided, verify match
       if (input.contractId && input.vendor && vendorId) {
-        const inputVendorStr = typeof input.vendor === "string" ? input.vendor : input.vendor.id || input.vendor.name || "";
+        const inputVendorStr =
+          typeof input.vendor === "string"
+            ? input.vendor
+            : input.vendor.id || input.vendor.name || "";
         const contractVendorId = vendorId;
         const contractVendorName = (contractRecord as any)?.vendors?.name || "";
         const matches =
           inputVendorStr === contractVendorId ||
-          (contractVendorName && inputVendorStr.toLowerCase() === contractVendorName.toLowerCase());
+          (contractVendorName &&
+            inputVendorStr.toLowerCase() === contractVendorName.toLowerCase());
 
         if (!matches) {
           const mismatchErr = `Wrong-vendor violation: Mismatch between contract vendor (${contractVendorName || contractVendorId}) and transaction vendor (${inputVendorStr}). Escrow creation blocked.`;
@@ -138,7 +178,11 @@ export function buildEscrowTools(ctx: ToolContext) {
             action: "create_escrow",
             reason: mismatchErr,
             confidence: 1.0,
-            input: { contractId: input.contractId, inputVendor: input.vendor, contractVendor: contractVendorName || contractVendorId },
+            input: {
+              contractId: input.contractId,
+              inputVendor: input.vendor,
+              contractVendor: contractVendorName || contractVendorId,
+            },
             result: { status: "rejected_vendor_mismatch", error: mismatchErr },
           });
           throw new Error(mismatchErr);
@@ -146,13 +190,19 @@ export function buildEscrowTools(ctx: ToolContext) {
       }
 
       // If contract has no vendor_id or vendor record has no address, and caller did not explicitly pass empty string
-      if (resolvedWallet === null && input.contractId && input.vendorWallet === undefined) {
+      if (
+        resolvedWallet === null &&
+        input.contractId &&
+        input.vendorWallet === undefined
+      ) {
         resolvedWallet = SIMULATED_VENDOR_WALLET;
       }
 
       // 1. Vendor recipient wallet presence and format check
       if (!resolvedWallet || resolvedWallet.trim() === "") {
-        throw new Error("Vendor wallet address is required before funding escrow");
+        throw new Error(
+          "Vendor wallet address is required before funding escrow",
+        );
       }
 
       if (!isValidEVMAddress(resolvedWallet)) {
@@ -189,16 +239,25 @@ export function buildEscrowTools(ctx: ToolContext) {
           .from("transactions")
           .select("escrow_address, status")
           .eq("vendor_id", vendorId)
-          .in("status", ["funded", "verified", "released", "escrowed", "completed"])
+          .in("status", [
+            "funded",
+            "verified",
+            "released",
+            "escrowed",
+            "completed",
+          ])
           .order("created_at", { ascending: false });
 
         const pastAddress = pastTxs?.find(
-          (t) => t.escrow_address && isValidEVMAddress(t.escrow_address)
+          (t) => t.escrow_address && isValidEVMAddress(t.escrow_address),
         )?.escrow_address;
 
         const knownAddress = registeredAddress || pastAddress;
 
-        if (knownAddress && knownAddress.toLowerCase() !== resolvedWallet.toLowerCase()) {
+        if (
+          knownAddress &&
+          knownAddress.toLowerCase() !== resolvedWallet.toLowerCase()
+        ) {
           const reason = `Vendor wallet address changed from ${knownAddress} to ${resolvedWallet}; human supervisor approval required before funding`;
           await supabase.from("approvals").insert({
             business_id: businessId,
@@ -210,7 +269,8 @@ export function buildEscrowTools(ctx: ToolContext) {
           await logAgentAction({
             businessId,
             action: "create_escrow",
-            reason: "Escalated to human supervisor due to mutated vendor wallet address",
+            reason:
+              "Escalated to human supervisor due to mutated vendor wallet address",
             confidence: 1.0,
             input: {
               contractId: input.contractId,
@@ -247,7 +307,8 @@ export function buildEscrowTools(ctx: ToolContext) {
               : undefined,
             idempotencyKey: existingNegTx.idempotency_key,
             idempotentHit: true,
-            message: "Idempotent hit: negotiation already has an active or completed transaction; duplicate payment prohibited",
+            message:
+              "Idempotent hit: negotiation already has an active or completed transaction; duplicate payment prohibited",
           };
         }
       }
@@ -283,7 +344,8 @@ export function buildEscrowTools(ctx: ToolContext) {
             : undefined,
           idempotencyKey,
           idempotentHit: true,
-          message: "Idempotent hit: existing escrow returned without creating duplicate on-chain transaction",
+          message:
+            "Idempotent hit: existing escrow returned without creating duplicate on-chain transaction",
         };
       }
 
@@ -296,7 +358,11 @@ export function buildEscrowTools(ctx: ToolContext) {
           action: "create_escrow",
           reason: screenErr,
           confidence: 1.0,
-          input: { contractId: input.contractId, vendorWallet: resolvedWallet, screening },
+          input: {
+            contractId: input.contractId,
+            vendorWallet: resolvedWallet,
+            screening,
+          },
           result: { status: "screening_failed", reason: screening.reason },
         });
         throw new Error(screenErr);
@@ -330,11 +396,16 @@ export function buildEscrowTools(ctx: ToolContext) {
         ) {
           let winnerQuery = supabase.from("transactions").select("*");
           if (negId) {
-            winnerQuery = winnerQuery.eq("negotiation_id", negId).not("status", "eq", "failed");
+            winnerQuery = winnerQuery
+              .eq("negotiation_id", negId)
+              .not("status", "eq", "failed");
           } else {
             winnerQuery = winnerQuery.eq("idempotency_key", idempotencyKey);
           }
-          const { data: winnerTx } = await winnerQuery.order("created_at", { ascending: false }).limit(1).maybeSingle();
+          const { data: winnerTx } = await winnerQuery
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
           if (winnerTx) {
             return {
               success: true,
@@ -345,17 +416,22 @@ export function buildEscrowTools(ctx: ToolContext) {
               txHash: winnerTx.tx_hash,
               idempotencyKey: winnerTx.idempotency_key,
               idempotentHit: true,
-              message: "Idempotent hit: concurrent request resolved to existing transaction",
+              message:
+                "Idempotent hit: concurrent request resolved to existing transaction",
             };
           }
         }
-        throw new Error(`Failed to initialize pending escrow transaction: ${txError?.message}`);
+        throw new Error(
+          `Failed to initialize pending escrow transaction: ${txError?.message}`,
+        );
       }
 
       // 7. On-chain funding execution: Step 2 -> 'funded' (or catch failure -> 'failed')
       try {
         if (input.forceFailSimulation) {
-          throw new Error("Simulated on-chain RPC error or EVM execution revert during funding");
+          throw new Error(
+            "Simulated on-chain RPC error or EVM execution revert during funding",
+          );
         }
 
         // Generate Arc Testnet transaction hash
@@ -371,7 +447,9 @@ export function buildEscrowTools(ctx: ToolContext) {
           .eq("id", newTx.id);
 
         if (updateErr) {
-          throw new Error(`Failed to commit funded status: ${updateErr.message}`);
+          throw new Error(
+            `Failed to commit funded status: ${updateErr.message}`,
+          );
         }
 
         // Log successful escrow to agent_actions (append-only)
@@ -408,7 +486,10 @@ export function buildEscrowTools(ctx: ToolContext) {
           idempotentHit: false,
         };
       } catch (fundErr) {
-        const failureMessage = fundErr instanceof Error ? fundErr.message : "Funding execution failed";
+        const failureMessage =
+          fundErr instanceof Error
+            ? fundErr.message
+            : "Funding execution failed";
 
         // Transition state to 'failed' to prevent half-updated state
         await supabase
@@ -435,22 +516,37 @@ export function buildEscrowTools(ctx: ToolContext) {
           },
         });
 
-        throw new Error(`Escrow funding failed on Arc testnet: ${failureMessage}`);
+        throw new Error(
+          `Escrow funding failed on Arc testnet: ${failureMessage}`,
+        );
       }
     },
   });
 
   // release_escrow
   const release_escrow = tool({
-    description: "Release funds from Arc escrow to vendor upon verified confirmation and policy clearance.",
+    description:
+      "Release funds from Arc escrow to vendor upon verified confirmation and policy clearance.",
     inputSchema: z.object({
       contractId: z.string().optional().describe("Associated contract UUID"),
-      escrowId: z.string().optional().describe("Transaction UUID or escrow identifier"),
+      escrowId: z
+        .string()
+        .optional()
+        .describe("Transaction UUID or escrow identifier"),
       transactionId: z.string().optional().describe("Transaction UUID"),
-      idempotencyKey: z.string().optional().describe("Optional idempotency key"),
-      negotiationId: z.string().optional().describe("Associated negotiation UUID"),
+      idempotencyKey: z
+        .string()
+        .optional()
+        .describe("Optional idempotency key"),
+      negotiationId: z
+        .string()
+        .optional()
+        .describe("Associated negotiation UUID"),
       savings: z.number().optional().describe("Optional savings in USDC"),
-      verificationPassed: z.boolean().optional().describe("Vendor confirmation verification result"),
+      verificationPassed: z
+        .boolean()
+        .optional()
+        .describe("Vendor confirmation verification result"),
     }),
     execute: async (input: {
       contractId?: string;
@@ -467,7 +563,9 @@ export function buildEscrowTools(ctx: ToolContext) {
 
       // 1. Mandatory verification check
       if (input.verificationPassed === false) {
-        throw new Error("Cannot release escrow: vendor confirmation verification has not passed.");
+        throw new Error(
+          "Cannot release escrow: vendor confirmation verification has not passed.",
+        );
       }
 
       // Resolve contract and business ID
@@ -515,11 +613,14 @@ export function buildEscrowTools(ctx: ToolContext) {
       }
 
       const finalPrice = Number(
-        neg?.final_price || neg?.current_offer || contract?.current_price || 0
+        neg?.final_price || neg?.current_offer || contract?.current_price || 0,
       );
-      const savings = input.savings !== undefined
-        ? input.savings
-        : (neg?.savings ? Number(neg.savings) : 500);
+      const savings =
+        input.savings !== undefined
+          ? input.savings
+          : neg?.savings
+            ? Number(neg.savings)
+            : 500;
 
       // 2. Mandatory server-side policy authorization
       const auth = await verifyPolicyExecutionAuthorization(businessId, {
@@ -551,7 +652,10 @@ export function buildEscrowTools(ctx: ToolContext) {
 
       const { data: existingTx } = await query.limit(1).maybeSingle();
 
-      if (existingTx?.status === "released" || existingTx?.status === "completed") {
+      if (
+        existingTx?.status === "released" ||
+        existingTx?.status === "completed"
+      ) {
         return {
           success: true,
           transactionId: existingTx.id,
@@ -576,7 +680,7 @@ export function buildEscrowTools(ctx: ToolContext) {
 
         if (!approval) {
           throw new Error(
-            "Cannot release escrow: transaction is disputed and requires human supervisor approval."
+            "Cannot release escrow: transaction is disputed and requires human supervisor approval.",
           );
         }
       }
@@ -630,13 +734,18 @@ export function buildEscrowTools(ctx: ToolContext) {
           vendorId: contract.vendor_id,
           contractId: contract?.id,
           negotiationId: neg?.id,
-          originalPrice: Number(neg?.original_price || contract.current_price || finalPrice),
+          originalPrice: Number(
+            neg?.original_price || contract.current_price || finalPrice,
+          ),
           finalPrice,
           roundsToClose: neg?.rounds || 3,
           outcome: "success",
           deliveredOk: true,
         }).catch((err) =>
-          console.warn("Failed to record vendor memory on payment release:", err)
+          console.warn(
+            "Failed to record vendor memory on payment release:",
+            err,
+          ),
         );
       }
 
@@ -644,7 +753,8 @@ export function buildEscrowTools(ctx: ToolContext) {
       await logAgentAction({
         businessId,
         action: "release_escrow",
-        reason: "Vendor confirmation fully verified; released USDC payment on Arc testnet",
+        reason:
+          "Vendor confirmation fully verified; released USDC payment on Arc testnet",
         confidence: 1.0,
         input: {
           contractId: contract?.id,
@@ -671,7 +781,8 @@ export function buildEscrowTools(ctx: ToolContext) {
 
   // dispute_escrow
   const dispute_escrow = tool({
-    description: "Flag an escrow transaction as disputed due to confirmation discrepancies and request human approval.",
+    description:
+      "Flag an escrow transaction as disputed due to confirmation discrepancies and request human approval.",
     inputSchema: z.object({
       contractId: z.string(),
       negotiationId: z.string().optional(),
@@ -722,18 +833,16 @@ export function buildEscrowTools(ctx: ToolContext) {
           .update({ status: "disputed" })
           .eq("id", existingTx.id);
       } else {
-        await supabase
-          .from("transactions")
-          .insert({
-            business_id: businessId,
-            vendor_id: contract?.vendor_id || null,
-            contract_id: input.contractId,
-            negotiation_id: negotiationId || null,
-            amount: 0,
-            currency: "USDC",
-            status: "disputed",
-            idempotency_key: txKey,
-          });
+        await supabase.from("transactions").insert({
+          business_id: businessId,
+          vendor_id: contract?.vendor_id || null,
+          contract_id: input.contractId,
+          negotiation_id: negotiationId || null,
+          amount: 0,
+          currency: "USDC",
+          status: "disputed",
+          idempotency_key: txKey,
+        });
       }
 
       // 3. Create Human Approval entry
@@ -760,7 +869,11 @@ export function buildEscrowTools(ctx: ToolContext) {
       // 3b. Automatically record disputed delivery into vendor memory
       if (contract?.vendor_id) {
         const { data: negData } = negotiationId
-          ? await supabase.from("negotiations").select("*").eq("id", negotiationId).maybeSingle()
+          ? await supabase
+              .from("negotiations")
+              .select("*")
+              .eq("id", negotiationId)
+              .maybeSingle()
           : { data: null };
         await record_vendor_memory({
           businessId,
@@ -772,7 +885,9 @@ export function buildEscrowTools(ctx: ToolContext) {
           roundsToClose: negData?.rounds || 3,
           outcome: "disputed",
           deliveredOk: false,
-        }).catch((err) => console.warn("Failed to record vendor memory on dispute:", err));
+        }).catch((err) =>
+          console.warn("Failed to record vendor memory on dispute:", err),
+        );
       }
 
       // 4. Log append-only action

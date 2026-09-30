@@ -1,15 +1,15 @@
-import { getServiceSupabase } from "@/lib/supabase";
-import { logAgentAction } from "@/lib/tools/audit";
 import {
+  REPUTATION_DEFAULT_SCORE,
+  REPUTATION_DELTA_DISPUTED,
   REPUTATION_DELTA_FAST_CLOSE,
   REPUTATION_DELTA_MODERATE_CLOSE,
   REPUTATION_DELTA_SLOW_CLOSE,
   REPUTATION_DELTA_WALKED_AWAY,
-  REPUTATION_DELTA_DISPUTED,
-  REPUTATION_DEFAULT_SCORE,
-  REPUTATION_MIN,
   REPUTATION_MAX,
+  REPUTATION_MIN,
 } from "@/lib/constants";
+import { getServiceSupabase } from "@/lib/supabase";
+import { logAgentAction } from "@/lib/tools/audit";
 
 export interface VendorHistory {
   vendor_id: string;
@@ -52,32 +52,43 @@ export interface RecordOutcomeParams {
 export function calculateNewReputationScore(
   currentScore: number = REPUTATION_DEFAULT_SCORE,
   outcome: "success" | "walked_away" | "disputed",
-  roundsToClose: number = 3
+  roundsToClose: number = 3,
 ): number {
   let delta = 0;
   if (outcome === "success") {
-    delta = roundsToClose <= 2 ? REPUTATION_DELTA_FAST_CLOSE : roundsToClose <= 4 ? REPUTATION_DELTA_MODERATE_CLOSE : REPUTATION_DELTA_SLOW_CLOSE;
+    delta =
+      roundsToClose <= 2
+        ? REPUTATION_DELTA_FAST_CLOSE
+        : roundsToClose <= 4
+          ? REPUTATION_DELTA_MODERATE_CLOSE
+          : REPUTATION_DELTA_SLOW_CLOSE;
   } else if (outcome === "walked_away") {
     delta = REPUTATION_DELTA_WALKED_AWAY;
   } else if (outcome === "disputed") {
     delta = REPUTATION_DELTA_DISPUTED;
   }
-  return Math.max(REPUTATION_MIN, Math.min(REPUTATION_MAX, Math.round(currentScore + delta)));
+  return Math.max(
+    REPUTATION_MIN,
+    Math.min(REPUTATION_MAX, Math.round(currentScore + delta)),
+  );
 }
 
 // Local in-process memory cache for fast recall and seamless fallback
-const localMemoryCache = new Map<string, Array<{
-  business_id: string;
-  vendor_id: string;
-  contract_id: string | null;
-  negotiation_id: string | null;
-  last_price: number;
-  accepted_discount_pct: number;
-  rounds_to_close: number;
-  outcome: string;
-  delivered_ok: boolean;
-  last_updated: string;
-}>>();
+const localMemoryCache = new Map<
+  string,
+  Array<{
+    business_id: string;
+    vendor_id: string;
+    contract_id: string | null;
+    negotiation_id: string | null;
+    last_price: number;
+    accepted_discount_pct: number;
+    rounds_to_close: number;
+    outcome: string;
+    delivered_ok: boolean;
+    last_updated: string;
+  }>
+>();
 
 /**
  * Retrieve vendor negotiation and delivery memory.
@@ -85,7 +96,7 @@ const localMemoryCache = new Map<string, Array<{
  */
 export async function get_vendor_history(
   vendorId: string,
-  businessId?: string
+  businessId?: string,
 ): Promise<VendorHistory> {
   const supabase = getServiceSupabase();
 
@@ -97,7 +108,8 @@ export async function get_vendor_history(
     .maybeSingle();
 
   const vendorName = vendor?.name || "Vendor";
-  const currentReputation = vendor?.reputation_score ?? REPUTATION_DEFAULT_SCORE;
+  const currentReputation =
+    vendor?.reputation_score ?? REPUTATION_DEFAULT_SCORE;
 
   // 2. Attempt to query dedicated vendor_memory table
   let memoryRow: {
@@ -121,7 +133,10 @@ export async function get_vendor_history(
       query = query.eq("business_id", businessId);
     }
 
-    const { data: rows, error: memoryTableErr } = await query.order("last_updated", { ascending: false });
+    const { data: rows, error: memoryTableErr } = await query.order(
+      "last_updated",
+      { ascending: false },
+    );
     if (!memoryTableErr && rows && rows.length > 0) {
       memoryRow = rows[0];
       totalDeals = rows.length;
@@ -170,11 +185,19 @@ export async function get_vendor_history(
             .limit(1)
             .maybeSingle();
 
-          const origPrice = Number(latestNeg.original_price || contracts?.[0]?.current_price || 0);
-          const finalPrice = Number(latestNeg.final_price || latestNeg.current_offer || origPrice);
-          const discountPct = origPrice > 0 ? Math.max(0, ((origPrice - finalPrice) / origPrice) * 100) : 0;
+          const origPrice = Number(
+            latestNeg.original_price || contracts?.[0]?.current_price || 0,
+          );
+          const finalPrice = Number(
+            latestNeg.final_price || latestNeg.current_offer || origPrice,
+          );
+          const discountPct =
+            origPrice > 0
+              ? Math.max(0, ((origPrice - finalPrice) / origPrice) * 100)
+              : 0;
 
-          let outcome: "success" | "walked_away" | "disputed" | "pending" = "pending";
+          let outcome: "success" | "walked_away" | "disputed" | "pending" =
+            "pending";
           if (tx?.status === "completed" || latestNeg.status === "agreed") {
             outcome = "success";
           } else if (tx?.status === "disputed") {
@@ -246,7 +269,9 @@ export async function get_vendor_history(
  * Record negotiation outcome into persistent memory and update vendor reputation.
  * Executed deterministically by code — never by the LLM.
  */
-export async function record_vendor_memory(params: RecordOutcomeParams): Promise<{
+export async function record_vendor_memory(
+  params: RecordOutcomeParams,
+): Promise<{
   success: boolean;
   newReputationScore: number;
   acceptedDiscountPct: number;
@@ -257,7 +282,12 @@ export async function record_vendor_memory(params: RecordOutcomeParams): Promise
   const origPrice = Number(params.originalPrice);
   const finPrice = Number(params.finalPrice);
   const discountPct =
-    origPrice > 0 ? Math.max(0, Math.round(((origPrice - finPrice) / origPrice) * 1000) / 10) : 0;
+    origPrice > 0
+      ? Math.max(
+          0,
+          Math.round(((origPrice - finPrice) / origPrice) * 1000) / 10,
+        )
+      : 0;
 
   // 2. Fetch current vendor reputation
   const { data: vendor } = await supabase
@@ -272,7 +302,7 @@ export async function record_vendor_memory(params: RecordOutcomeParams): Promise
   const newScore = calculateNewReputationScore(
     currentScore,
     params.outcome,
-    params.roundsToClose
+    params.roundsToClose,
   );
 
   // 4. Update vendor reputation score in database
@@ -292,7 +322,7 @@ export async function record_vendor_memory(params: RecordOutcomeParams): Promise
     accepted_discount_pct: discountPct,
     rounds_to_close: params.roundsToClose,
     outcome: params.outcome,
-    delivered_ok: params.deliveredOk ?? (params.outcome !== "disputed"),
+    delivered_ok: params.deliveredOk ?? params.outcome !== "disputed",
     last_updated: new Date().toISOString(),
   });
   localMemoryCache.set(params.vendorId, cachedRecords);
@@ -308,7 +338,7 @@ export async function record_vendor_memory(params: RecordOutcomeParams): Promise
       accepted_discount_pct: discountPct,
       rounds_to_close: params.roundsToClose,
       outcome: params.outcome,
-      delivered_ok: params.deliveredOk ?? (params.outcome !== "disputed"),
+      delivered_ok: params.deliveredOk ?? params.outcome !== "disputed",
       last_updated: new Date().toISOString(),
     });
   } catch {
@@ -339,7 +369,10 @@ export async function record_vendor_memory(params: RecordOutcomeParams): Promise
       },
     });
   } catch (err) {
-    console.warn("[agent_actions] Failed to append log for action 'record_vendor_memory':", (err as Error).message);
+    console.warn(
+      "[agent_actions] Failed to append log for action 'record_vendor_memory':",
+      (err as Error).message,
+    );
   }
 
   return {

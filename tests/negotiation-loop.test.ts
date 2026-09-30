@@ -1,7 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { getServiceSupabase } from "../lib/supabase";
+import { describe, it } from "node:test";
+
 import { runNegotiationLoop } from "../lib/agent/negotiate";
+import { getServiceSupabase } from "../lib/supabase";
 
 describe("Agent Negotiation Loop E2E & Boundary Tests", () => {
   it("negotiates autonomously, respects max rounds, concessions, and produces 4-part explanation", async () => {
@@ -19,16 +20,34 @@ describe("Agent Negotiation Loop E2E & Boundary Tests", () => {
     });
 
     assert.equal(result.contractId, slackContract.id);
-    assert.ok(result.rounds >= 1 && result.rounds <= 5, "Rounds must be between 1 and 5");
+    assert.ok(
+      result.rounds >= 1 && result.rounds <= 5,
+      "Rounds must be between 1 and 5",
+    );
     assert.ok(result.status === "agreed" || result.status === "walked_away");
     assert.ok(result.targetPrice < Number(slackContract.current_price));
 
     // Confirm 4-part explanation is fully populated
-    assert.ok(result.explanation.belowPolicyCeiling.length > 10, "belowPolicyCeiling must be populated");
-    assert.ok(result.explanation.dollarSavings.length > 10, "dollarSavings must be populated");
-    assert.ok(result.explanation.competitorComparison.length > 10, "competitorComparison must be populated");
-    assert.ok(result.explanation.serviceLevelsPreserved.length > 10, "serviceLevelsPreserved must be populated");
-    assert.ok(result.explanation.summary.length > 10, "summary must be populated");
+    assert.ok(
+      result.explanation.belowPolicyCeiling.length > 10,
+      "belowPolicyCeiling must be populated",
+    );
+    assert.ok(
+      result.explanation.dollarSavings.length > 10,
+      "dollarSavings must be populated",
+    );
+    assert.ok(
+      result.explanation.competitorComparison.length > 10,
+      "competitorComparison must be populated",
+    );
+    assert.ok(
+      result.explanation.serviceLevelsPreserved.length > 10,
+      "serviceLevelsPreserved must be populated",
+    );
+    assert.ok(
+      result.explanation.summary.length > 10,
+      "summary must be populated",
+    );
 
     // Conversation should contain multi-turn dialogue
     assert.ok(result.conversation.length >= 2);
@@ -47,7 +66,7 @@ describe("Agent Negotiation Loop E2E & Boundary Tests", () => {
 
     const originalPrice = Number(contract.current_price);
     // Set an unrealistically low walkAwayCeiling (e.g. 50% discount when vendor floor is higher)
-    const impossibleCeiling = Math.round(originalPrice * 0.50);
+    const impossibleCeiling = Math.round(originalPrice * 0.5);
 
     const result = await runNegotiationLoop(contract.id, {
       maxRounds: 3,

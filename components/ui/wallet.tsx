@@ -57,7 +57,7 @@ const WalletIcon = forwardRef<WalletIconHandle, WalletIconProps>(
           controls.start("animate");
         }
       },
-      [controls, onMouseEnter]
+      [controls, onMouseEnter],
     );
 
     const handleMouseLeave = useCallback(
@@ -68,7 +68,7 @@ const WalletIcon = forwardRef<WalletIconHandle, WalletIconProps>(
           controls.start("normal");
         }
       },
-      [controls, onMouseLeave]
+      [controls, onMouseLeave],
     );
 
     return (
@@ -98,7 +98,7 @@ const WalletIcon = forwardRef<WalletIconHandle, WalletIconProps>(
         </motion.svg>
       </div>
     );
-  }
+  },
 );
 
 WalletIcon.displayName = "WalletIcon";

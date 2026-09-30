@@ -1,6 +1,6 @@
 /**
  * Deterministic Policy Engine (/lib/policy.ts)
- * 
+ *
  * Strict architectural rule: Pure deterministic code. Zero LLM involvement.
  * The LLM cannot approve its own actions or bypass policy constraints.
  * Payment/escrow tools MUST call checkPolicy server-side and refuse if not approved.
@@ -47,7 +47,7 @@ export interface PolicyEvaluation {
 
 /**
  * Pure deterministic evaluation of a proposed transaction against an organization's policy.
- * 
+ *
  * Overloaded to support both:
  * 1. checkPolicy(action, policy, context)
  * 2. checkPolicy(policy, context)
@@ -55,7 +55,7 @@ export interface PolicyEvaluation {
 export function checkPolicy(
   actionOrPolicy: string | PolicyRule,
   policyOrContext: PolicyRule | PolicyContext,
-  maybeContext?: PolicyContext
+  maybeContext?: PolicyContext,
 ): PolicyEvaluation {
   let _action = "execute";
   let policy: PolicyRule;
@@ -84,7 +84,8 @@ export function checkPolicy(
   let needsHuman = false;
 
   // 1. Validate numbers (negative numbers are strictly rejected)
-  const isNegative = isNaN(amount) || isNaN(savings) || amount < 0 || savings < 0;
+  const isNegative =
+    isNaN(amount) || isNaN(savings) || amount < 0 || savings < 0;
   if (isNegative) {
     checks.push({
       name: "valid_numbers",
@@ -97,12 +98,15 @@ export function checkPolicy(
     checks.push({
       name: "valid_numbers",
       passed: true,
-      detail: "Transaction amount and savings values are valid non-negative numbers",
+      detail:
+        "Transaction amount and savings values are valid non-negative numbers",
     });
   }
 
   // 2. Category validation (disallowed category returns 'rejected')
-  const allowed = (policy.allowed_categories || []).map((c) => c.trim().toLowerCase());
+  const allowed = (policy.allowed_categories || []).map((c) =>
+    c.trim().toLowerCase(),
+  );
   const categoryAllowed = category.length > 0 && allowed.includes(category);
   if (!categoryAllowed) {
     checks.push({
@@ -129,7 +133,9 @@ export function checkPolicy(
       passed: false,
       detail: `Projected savings of $${savings.toLocaleString()} is below the required policy minimum of $${minSavings.toLocaleString()}`,
     });
-    reasons.push(`Projected savings ($${savings.toLocaleString()}) does not meet minimum policy threshold ($${minSavings.toLocaleString()})`);
+    reasons.push(
+      `Projected savings ($${savings.toLocaleString()}) does not meet minimum policy threshold ($${minSavings.toLocaleString()})`,
+    );
     isRejected = true;
   } else {
     checks.push({
@@ -140,7 +146,10 @@ export function checkPolicy(
   }
 
   // 4. Category budget remaining (if defined)
-  if (policy.category_budgets && policy.category_budgets[category] !== undefined) {
+  if (
+    policy.category_budgets &&
+    policy.category_budgets[category] !== undefined
+  ) {
     const budget = Number(policy.category_budgets[category]);
     if (amount > budget) {
       checks.push({
@@ -148,7 +157,9 @@ export function checkPolicy(
         passed: false,
         detail: `Amount ($${amount.toLocaleString()}) exceeds defined budget limit for category '${context.category}' ($${budget.toLocaleString()})`,
       });
-      reasons.push(`Amount ($${amount.toLocaleString()}) exceeds defined budget for category '${context.category}' ($${budget.toLocaleString()})`);
+      reasons.push(
+        `Amount ($${amount.toLocaleString()}) exceeds defined budget for category '${context.category}' ($${budget.toLocaleString()})`,
+      );
       isRejected = true;
     } else {
       checks.push({
@@ -174,7 +185,9 @@ export function checkPolicy(
         passed: false,
         detail: `Transaction amount ($${amount.toLocaleString()}) exceeds organization treasury balance ($${treasury.toLocaleString()})`,
       });
-      reasons.push(`Insufficient treasury balance ($${treasury.toLocaleString()}) for amount ($${amount.toLocaleString()})`);
+      reasons.push(
+        `Insufficient treasury balance ($${treasury.toLocaleString()}) for amount ($${amount.toLocaleString()})`,
+      );
       isRejected = true;
     } else {
       checks.push({
@@ -200,7 +213,9 @@ export function checkPolicy(
       passed: false,
       detail: `Amount ($${amount.toLocaleString()}) exceeds human approval threshold ($${humanAbove.toLocaleString()})`,
     });
-    reasons.push(`Amount ($${amount.toLocaleString()}) exceeds human approval threshold ($${humanAbove.toLocaleString()})`);
+    reasons.push(
+      `Amount ($${amount.toLocaleString()}) exceeds human approval threshold ($${humanAbove.toLocaleString()})`,
+    );
     needsHuman = true;
   } else {
     checks.push({
@@ -219,7 +234,9 @@ export function checkPolicy(
       passed: false,
       detail: `Amount ($${amount.toLocaleString()}) exceeds autonomous transaction ceiling ($${maxAuto.toLocaleString()})`,
     });
-    reasons.push(`Amount ($${amount.toLocaleString()}) exceeds autonomous transaction ceiling ($${maxAuto.toLocaleString()})`);
+    reasons.push(
+      `Amount ($${amount.toLocaleString()}) exceeds autonomous transaction ceiling ($${maxAuto.toLocaleString()})`,
+    );
     needsHuman = true;
   } else {
     checks.push({
@@ -245,7 +262,10 @@ export function checkPolicy(
   return {
     decision,
     checks,
-    reasons: reasons.length > 0 ? reasons : ["Transaction complies with all deterministic policy rules"],
+    reasons:
+      reasons.length > 0
+        ? reasons
+        : ["Transaction complies with all deterministic policy rules"],
     approved,
     requiresHumanApproval,
   };
@@ -253,7 +273,7 @@ export function checkPolicy(
 
 /**
  * Server-Side Policy Enforcement Guard
- * 
+ *
  * Strict architectural rule: Any execution path (escrow creation, payments) must re-evaluate
  * policy server-side and refuse execution unless automatically 'approved' or backed by an
  * approved row in the 'approvals' table. The agent cannot bypass this via prompt content.
@@ -267,7 +287,7 @@ export async function verifyPolicyExecutionAuthorization(
     savings?: number;
     category: string;
     action?: string;
-  }
+  },
 ): Promise<{
   authorized: boolean;
   decision: PolicyDecision;
@@ -288,7 +308,9 @@ export async function verifyPolicyExecutionAuthorization(
     ? {
         max_auto_transaction: Number(pData.max_auto_transaction),
         min_savings: Number(pData.min_savings),
-        human_approval_required_above: Number(pData.human_approval_required_above),
+        human_approval_required_above: Number(
+          pData.human_approval_required_above,
+        ),
         allowed_categories: pData.allowed_categories || [],
         category_budgets: pData.category_budgets,
       }
@@ -306,9 +328,10 @@ export async function verifyPolicyExecutionAuthorization(
     .eq("id", businessId)
     .maybeSingle();
 
-  const treasuryBalance = bData?.treasury_balance !== null && bData?.treasury_balance !== undefined
-    ? Number(bData.treasury_balance)
-    : undefined;
+  const treasuryBalance =
+    bData?.treasury_balance !== null && bData?.treasury_balance !== undefined
+      ? Number(bData.treasury_balance)
+      : undefined;
 
   // 3. Re-evaluate policy purely deterministically
   const evalResult = checkPolicy(context.action || "payment", policy, {
@@ -325,7 +348,8 @@ export async function verifyPolicyExecutionAuthorization(
     return {
       authorized: true,
       decision: "approved",
-      reason: "Transaction automatically authorized under deterministic spending policy",
+      reason:
+        "Transaction automatically authorized under deterministic spending policy",
     };
   }
 
@@ -349,7 +373,9 @@ export async function verifyPolicyExecutionAuthorization(
     approvalQuery = approvalQuery.eq("negotiation_id", context.negotiationId);
   }
 
-  const { data: approvedRecords } = await approvalQuery.order("created_at", { ascending: false }).limit(1);
+  const { data: approvedRecords } = await approvalQuery
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   if (approvedRecords && approvedRecords.length > 0) {
     return {

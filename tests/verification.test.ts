@@ -1,12 +1,13 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
+import { test } from "node:test";
+
 import {
+  ExpectedTerms,
   extractFromDocumentRegex,
   verifyConfirmationTerms,
-  ExpectedTerms,
 } from "../lib/agent/verification";
 import { getServiceSupabase } from "../lib/supabase";
-import { dispute_escrow, create_escrow } from "../lib/tools";
+import { create_escrow, dispute_escrow } from "../lib/tools";
 
 test("extractFromDocumentRegex extracts exact numeric and date fields from order document", () => {
   const sampleDoc = `
@@ -77,7 +78,10 @@ test("verifyConfirmationTerms detects price tampering (?tamper=price)", () => {
 
   assert.equal(result.allPassed, false);
   assert.equal(result.discrepancies.length, 1);
-  assert.match(result.discrepancies[0], /Price mismatch: confirmation states \$11,400/);
+  assert.match(
+    result.discrepancies[0],
+    /Price mismatch: confirmation states \$11,400/,
+  );
 
   const priceCheck = result.checks.find((c) => c.field === "price");
   assert.ok(priceCheck);
@@ -110,7 +114,10 @@ test("verifyConfirmationTerms detects seat count tampering (?tamper=seats)", () 
 
   assert.equal(result.allPassed, false);
   assert.equal(result.discrepancies.length, 1);
-  assert.match(result.discrepancies[0], /Seat allocation mismatch: confirmation states 23 seats/);
+  assert.match(
+    result.discrepancies[0],
+    /Seat allocation mismatch: confirmation states 23 seats/,
+  );
 
   const seatsCheck = result.checks.find((c) => c.field === "seats");
   assert.ok(seatsCheck);
@@ -138,7 +145,7 @@ test("release_escrow and dispute_escrow interact correctly with Supabase transac
       reason: "Automated test verification mismatch",
       discrepancies: ["Price mismatch: expected $9,600, got $11,400"],
     },
-    { toolCallId: "test-dispute", messages: [] }
+    { toolCallId: "test-dispute", messages: [] },
   );
 
   assert.equal(disputeRes.success, true);
@@ -164,7 +171,7 @@ test("release_escrow and dispute_escrow interact correctly with Supabase transac
       contractId: contract.id,
       idempotencyKey,
     },
-    { toolCallId: "test-escrow-1", messages: [] }
+    { toolCallId: "test-escrow-1", messages: [] },
   );
 
   assert.equal(escrowRes1.success, true);
@@ -177,7 +184,7 @@ test("release_escrow and dispute_escrow interact correctly with Supabase transac
       contractId: contract.id,
       idempotencyKey,
     },
-    { toolCallId: "test-escrow-2", messages: [] }
+    { toolCallId: "test-escrow-2", messages: [] },
   );
 
   assert.equal(escrowRes2.success, true);

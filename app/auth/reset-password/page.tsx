@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+
 import { getBrowserSupabase } from "@/lib/auth";
-import { Eye, EyeOff, KeyRound, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -54,7 +62,9 @@ function ResetPasswordForm() {
     setLoading(true);
     try {
       const supabase = getBrowserSupabase();
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
       if (updateError) {
         setError(updateError.message);
         return;
@@ -77,7 +87,9 @@ function ResetPasswordForm() {
               <CheckCircle2 className="h-7 w-7 text-[#107e65] dark:text-[#34d399]" />
             </div>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Password updated</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Password updated
+          </h2>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             Redirecting you to sign in…
           </p>
@@ -107,7 +119,10 @@ function ResetPasswordForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="reset-password" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+            <label
+              htmlFor="reset-password"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
               New Password
             </label>
             <div className="relative">
@@ -128,13 +143,20 @@ function ResetPasswordForm() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 aria-label="Toggle password visibility"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           <div>
-            <label htmlFor="reset-confirm" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+            <label
+              htmlFor="reset-confirm"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
               Confirm Password
             </label>
             <input
@@ -155,13 +177,20 @@ function ResetPasswordForm() {
             disabled={loading || !sessionReady}
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] active:bg-[#0a5944] text-white text-sm font-bold transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <KeyRound className="h-4 w-4" />
+            )}
             {loading ? "Updating…" : "Update password"}
           </button>
         </form>
 
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/60 text-center">
-          <Link href="/auth/login" className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link
+            href="/auth/login"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
             Back to sign in
           </Link>
         </div>

@@ -1,6 +1,6 @@
 import {
-  SubscriptionRowSchema,
   SubscriptionRow,
+  SubscriptionRowSchema,
   ValidatedSubscriptionRow,
 } from "./schemas";
 
@@ -37,9 +37,7 @@ export function parseCSVLine(line: string): string[] {
 /**
  * Parses full CSV text and validates each row against SubscriptionRowSchema
  */
-export function parseAndValidateSubscriptionsCSV(
-  csvText: string
-): {
+export function parseAndValidateSubscriptionsCSV(csvText: string): {
   rows: ValidatedSubscriptionRow[];
   validCount: number;
   invalidCount: number;
@@ -55,7 +53,9 @@ export function parseAndValidateSubscriptionsCSV(
   }
 
   const rawHeaders = parseCSVLine(lines[0]);
-  const headers = rawHeaders.map((h) => h.toLowerCase().replace(/[\s_-]+/g, "_"));
+  const headers = rawHeaders.map((h) =>
+    h.toLowerCase().replace(/[\s_-]+/g, "_"),
+  );
 
   const rows: ValidatedSubscriptionRow[] = [];
   let validCount = 0;
@@ -74,15 +74,22 @@ export function parseAndValidateSubscriptionsCSV(
       vendor: rawRecord.vendor,
       service: rawRecord.service,
       category: rawRecord.category?.toLowerCase(),
-      annual_price: rawRecord.annual_price !== "" ? Number(rawRecord.annual_price) : undefined,
+      annual_price:
+        rawRecord.annual_price !== ""
+          ? Number(rawRecord.annual_price)
+          : undefined,
       renewal_date: rawRecord.renewal_date,
-      seats: rawRecord.seats !== "" && rawRecord.seats !== undefined ? Number(rawRecord.seats) : null,
+      seats:
+        rawRecord.seats !== "" && rawRecord.seats !== undefined
+          ? Number(rawRecord.seats)
+          : null,
       active_seats:
         rawRecord.active_seats !== "" && rawRecord.active_seats !== undefined
           ? Number(rawRecord.active_seats)
           : null,
       usage_decline_pct:
-        rawRecord.usage_decline_pct !== "" && rawRecord.usage_decline_pct !== undefined
+        rawRecord.usage_decline_pct !== "" &&
+        rawRecord.usage_decline_pct !== undefined
           ? Number(rawRecord.usage_decline_pct)
           : null,
     };
@@ -121,9 +128,11 @@ export function parseAndValidateSubscriptionsCSV(
 /**
  * Validates a single manual subscription entry
  */
-export function validateSingleSubscription(
-  input: Record<string, unknown>
-): { isValid: boolean; parsed?: SubscriptionRow; errors: Record<string, string> } {
+export function validateSingleSubscription(input: Record<string, unknown>): {
+  isValid: boolean;
+  parsed?: SubscriptionRow;
+  errors: Record<string, string>;
+} {
   const result = SubscriptionRowSchema.safeParse(input);
   if (result.success) {
     return { isValid: true, parsed: result.data, errors: {} };

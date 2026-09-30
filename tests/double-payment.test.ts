@@ -1,5 +1,6 @@
-import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { after, before, describe, it } from "node:test";
+
 import { getServiceSupabase } from "../lib/supabase";
 import { create_escrow } from "../lib/tools";
 
@@ -104,11 +105,31 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
 
     // Fire 5 concurrent payment attempts simultaneously
     const results = await Promise.all([
-      (create_escrow as any).execute({ amount: 6500, contractId, negotiationId: concurrentNeg.id }),
-      (create_escrow as any).execute({ amount: 6500, contractId, negotiationId: concurrentNeg.id }),
-      (create_escrow as any).execute({ amount: 6500, contractId, negotiationId: concurrentNeg.id }),
-      (create_escrow as any).execute({ amount: 6500, contractId, negotiationId: concurrentNeg.id }),
-      (create_escrow as any).execute({ amount: 6500, contractId, negotiationId: concurrentNeg.id }),
+      (create_escrow as any).execute({
+        amount: 6500,
+        contractId,
+        negotiationId: concurrentNeg.id,
+      }),
+      (create_escrow as any).execute({
+        amount: 6500,
+        contractId,
+        negotiationId: concurrentNeg.id,
+      }),
+      (create_escrow as any).execute({
+        amount: 6500,
+        contractId,
+        negotiationId: concurrentNeg.id,
+      }),
+      (create_escrow as any).execute({
+        amount: 6500,
+        contractId,
+        negotiationId: concurrentNeg.id,
+      }),
+      (create_escrow as any).execute({
+        amount: 6500,
+        contractId,
+        negotiationId: concurrentNeg.id,
+      }),
     ]);
 
     // All must succeed
@@ -125,17 +146,27 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
       .eq("negotiation_id", concurrentNeg.id)
       .not("status", "eq", "failed");
 
-    assert.equal(count, 1, "Exactly one active/funded transaction must exist in DB for this negotiation");
+    assert.equal(
+      count,
+      1,
+      "Exactly one active/funded transaction must exist in DB for this negotiation",
+    );
 
     // Clean up concurrent test records
-    await supabase.from("transactions").delete().eq("negotiation_id", concurrentNeg.id);
+    await supabase
+      .from("transactions")
+      .delete()
+      .eq("negotiation_id", concurrentNeg.id);
     await supabase.from("negotiations").delete().eq("id", concurrentNeg.id);
   });
 
   after(async () => {
     const supabase = getServiceSupabase();
     if (testNegotiationId) {
-      await supabase.from("transactions").delete().eq("negotiation_id", testNegotiationId);
+      await supabase
+        .from("transactions")
+        .delete()
+        .eq("negotiation_id", testNegotiationId);
       await supabase.from("negotiations").delete().eq("id", testNegotiationId);
     }
   });

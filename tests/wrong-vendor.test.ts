@@ -1,5 +1,6 @@
-import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
+import { before, describe, it } from "node:test";
+
 import { getServiceSupabase } from "../lib/supabase";
 import { create_escrow } from "../lib/tools";
 
@@ -19,7 +20,10 @@ describe("Wrong-Vendor & Wallet Mutation Defenses", () => {
       .limit(1)
       .single();
 
-    assert.ok(contract && contract.vendor_id, "Slack contract and vendor must exist");
+    assert.ok(
+      contract && contract.vendor_id,
+      "Slack contract and vendor must exist",
+    );
     slackContractId = contract.id;
     slackVendorId = contract.vendor_id;
 
@@ -46,20 +50,25 @@ describe("Wrong-Vendor & Wallet Mutation Defenses", () => {
       },
       (err: Error) => {
         assert.ok(
-          err.message.includes("Wrong-vendor violation") || err.message.includes("Mismatch between contract vendor"),
-          `Expected wrong-vendor mismatch error, got: ${err.message}`
+          err.message.includes("Wrong-vendor violation") ||
+            err.message.includes("Mismatch between contract vendor"),
+          `Expected wrong-vendor mismatch error, got: ${err.message}`,
         );
         return true;
-      }
+      },
     );
   });
 
   it("2. Mutated vendor recipient wallet address blocks execution and escalates to human approval", async () => {
     const supabase = getServiceSupabase();
 
-    const approvalsBefore = (
-      await supabase.from("approvals").select("id", { count: "exact", head: true }).eq("status", "pending")
-    ).count || 0;
+    const approvalsBefore =
+      (
+        await supabase
+          .from("approvals")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending")
+      ).count || 0;
 
     const fakeMutatedWallet = "0x8888888888888888888888888888888888888888";
 
@@ -74,18 +83,26 @@ describe("Wrong-Vendor & Wallet Mutation Defenses", () => {
       },
       (err: Error) => {
         assert.ok(
-          err.message.includes("Vendor wallet address changed") || err.message.includes("human supervisor approval required"),
-          `Expected wallet mutation escalation error, got: ${err.message}`
+          err.message.includes("Vendor wallet address changed") ||
+            err.message.includes("human supervisor approval required"),
+          `Expected wallet mutation escalation error, got: ${err.message}`,
         );
         return true;
-      }
+      },
     );
 
     // Verify an approval record was inserted into approvals table
-    const approvalsAfter = (
-      await supabase.from("approvals").select("id", { count: "exact", head: true }).eq("status", "pending")
-    ).count || 0;
+    const approvalsAfter =
+      (
+        await supabase
+          .from("approvals")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending")
+      ).count || 0;
 
-    assert.ok(approvalsAfter > approvalsBefore, "A pending human approval row must be generated upon wallet change");
+    assert.ok(
+      approvalsAfter > approvalsBefore,
+      "A pending human approval row must be generated upon wallet change",
+    );
   });
 });

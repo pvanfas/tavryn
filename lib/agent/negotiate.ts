@@ -1,14 +1,14 @@
+import { getServiceSupabase } from "@/lib/supabase";
 import {
-  get_contract,
-  get_usage,
-  find_vendor_options,
   check_policy,
+  find_vendor_options,
+  get_contract,
+  get_negotiation_status,
+  get_usage,
+  get_vendor_history,
   record_outcome,
   send_vendor_message,
-  get_negotiation_status,
-  get_vendor_history,
 } from "@/lib/tools";
-import { getServiceSupabase } from "@/lib/supabase";
 
 export interface NegotiationOptions {
   maxRounds?: number;
@@ -143,7 +143,7 @@ async function execTool<T>(tool: any, input: any): Promise<T> {
 
 /**
  * Autonomous Negotiation Loop
- * 
+ *
  * Rules:
  * - Max 5 rounds
  * - Opening offer below target price
@@ -153,7 +153,7 @@ async function execTool<T>(tool: any, input: any): Promise<T> {
  */
 export async function runNegotiationLoop(
   contractId: string,
-  options: NegotiationOptions = {}
+  options: NegotiationOptions = {},
 ): Promise<NegotiationLoopResult> {
   const maxRounds = options.maxRounds ?? 5;
   const commitmentMonths = options.commitmentMonths ?? 12;
@@ -186,7 +186,8 @@ export async function runNegotiationLoop(
   // 2. Derive financial boundaries deterministically
   // If vendor memory exists with a prior accepted discount, anchor our target discount to it!
   let targetDiscountPct = 0.22;
-  let memoryInsight = "No prior vendor negotiation history found; established initial baseline using usage telemetry.";
+  let memoryInsight =
+    "No prior vendor negotiation history found; established initial baseline using usage telemetry.";
 
   if (
     vendorHistory &&
@@ -200,7 +201,13 @@ export async function runNegotiationLoop(
     if (usage.signals.some((s) => s.toLowerCase().includes("decline"))) {
       targetDiscountPct += 0.05;
     }
-    if (usage.signals.some((s) => s.toLowerCase().includes("idle") || s.toLowerCase().includes("unallocated"))) {
+    if (
+      usage.signals.some(
+        (s) =>
+          s.toLowerCase().includes("idle") ||
+          s.toLowerCase().includes("unallocated"),
+      )
+    ) {
       targetDiscountPct += 0.04;
     }
   }
@@ -210,11 +217,16 @@ export async function runNegotiationLoop(
   const defaultCeiling = Math.round(originalPrice * 0.92);
   const walkAwayCeiling = options.walkAwayCeiling ?? defaultCeiling;
 
-  const derivedTargetPrice = Math.round(originalPrice * (1 - targetDiscountPct));
-  const targetPrice = options.targetPrice ?? Math.min(derivedTargetPrice, walkAwayCeiling);
+  const derivedTargetPrice = Math.round(
+    originalPrice * (1 - targetDiscountPct),
+  );
+  const targetPrice =
+    options.targetPrice ?? Math.min(derivedTargetPrice, walkAwayCeiling);
 
   // Opening offer: strictly below target price (~10-15% lower than target) and capped below ceiling
-  const openingOffer = Math.round(Math.min(targetPrice * 0.88, walkAwayCeiling * 0.85));
+  const openingOffer = Math.round(
+    Math.min(targetPrice * 0.88, walkAwayCeiling * 0.85),
+  );
 
   const policyCheck = await execTool<PolicyCheckOutput>(check_policy, {
     action: "negotiate",
@@ -237,8 +249,13 @@ export async function runNegotiationLoop(
 
     if (round === 1) {
       currentOffer = openingOffer;
-      const compSample = competitors.options.slice(0, 2).map((c) => c.name).join(" and ");
-      const seatInfo = usage.seat_count ? ` (${usage.active_seats}/${usage.seat_count} active seats)` : "";
+      const compSample = competitors.options
+        .slice(0, 2)
+        .map((c) => c.name)
+        .join(" and ");
+      const seatInfo = usage.seat_count
+        ? ` (${usage.active_seats}/${usage.seat_count} active seats)`
+        : "";
 
       if (vendorHistory?.has_history && vendorHistory.accepted_discount_pct) {
         agentMessage = `Hello, we are reviewing our renewal for ${serviceName}. In our previous renewal, ${vendorName} accepted a ${vendorHistory.accepted_discount_pct}% discount (${commitmentMonths}-month commitment). Given our ongoing partnership and market alternatives like ${compSample || "competing vendors"}, we propose renewing at $${currentOffer.toLocaleString()} for a ${commitmentMonths}-month commitment.`;
@@ -262,7 +279,7 @@ export async function runNegotiationLoop(
         } else {
           // Counter is above ceiling, walk away
           agentMessage = `We appreciate your discussions, but your counter-offer of $${lastCounter.toLocaleString()} exceeds our firm policy ceiling of $${walkAwayCeiling.toLocaleString()}. Consequently, we are unable to renew and must transition to an alternative solution.`;
-          
+
           // Submit walk-away message
           await execTool<SendVendorMessageOutput>(send_vendor_message, {
             contractId,
@@ -292,13 +309,23 @@ export async function runNegotiationLoop(
         const gap = lastCounter - previousOffer;
         // Concede 35% of the remaining gap towards vendor's counter
         const concession = Math.round(gap * 0.35);
-        currentOffer = Math.min(walkAwayCeiling, Math.min(lastCounter, previousOffer + concession));
+        currentOffer = Math.min(
+          walkAwayCeiling,
+          Math.min(lastCounter, previousOffer + concession),
+        );
 
         if (round === 2) {
-          const utilPct = usage.utilization_pct ?? (usage.seat_count ? Math.round(((usage.active_seats || 0) / usage.seat_count) * 100) : 80);
+          const utilPct =
+            usage.utilization_pct ??
+            (usage.seat_count
+              ? Math.round(((usage.active_seats || 0) / usage.seat_count) * 100)
+              : 80);
           agentMessage = `We understand your margin requirements, but our telemetry shows average seat utilization is around ${utilPct}%. We can increase our offer to $${currentOffer.toLocaleString()} to bridge the difference.`;
         } else if (round === 3) {
-          const compNames = competitors.options.map((c) => c.name).slice(0, 2).join(", ");
+          const compNames = competitors.options
+            .map((c) => c.name)
+            .slice(0, 2)
+            .join(", ");
           agentMessage = `We are comparing this against pricing packages from ${compNames || "competing providers"}. We can commit to $${currentOffer.toLocaleString()} for an immediate renewal agreement today.`;
         } else {
           agentMessage = `We are nearing our maximum authorized allocation. We can make a final adjustment to $${currentOffer.toLocaleString()} to lock in this agreement.`;
@@ -307,15 +334,21 @@ export async function runNegotiationLoop(
     }
 
     // Dispatch message to vendor through tool
-    const vendorResponse = await execTool<SendVendorMessageOutput>(send_vendor_message, {
-      contractId,
-      offer: currentOffer,
-      message: agentMessage,
-      round,
-      commitmentMonths,
-    });
+    const vendorResponse = await execTool<SendVendorMessageOutput>(
+      send_vendor_message,
+      {
+        contractId,
+        offer: currentOffer,
+        message: agentMessage,
+        round,
+        commitmentMonths,
+      },
+    );
 
-    if (vendorResponse.accepted && vendorResponse.counter_offer <= walkAwayCeiling) {
+    if (
+      vendorResponse.accepted &&
+      vendorResponse.counter_offer <= walkAwayCeiling
+    ) {
       isAgreed = true;
       finalAgreedPrice = vendorResponse.counter_offer;
       break;
@@ -326,8 +359,10 @@ export async function runNegotiationLoop(
 
   // 4. Calculate final savings and compile 4-part explanation
   const finalPrice = isAgreed ? (finalAgreedPrice ?? currentOffer) : null;
-  const savingsAmount = finalPrice !== null ? Math.max(0, originalPrice - finalPrice) : 0;
-  const savingsPct = finalPrice !== null ? Math.round((savingsAmount / originalPrice) * 100) : 0;
+  const savingsAmount =
+    finalPrice !== null ? Math.max(0, originalPrice - finalPrice) : 0;
+  const savingsPct =
+    finalPrice !== null ? Math.round((savingsAmount / originalPrice) * 100) : 0;
 
   // Retrieve competitor names
   const competitorNames = competitors.options.map((o) => o.name).join(", ");
@@ -341,9 +376,10 @@ export async function runNegotiationLoop(
       ? `Generated $${savingsAmount.toLocaleString()} in annual recurring savings (${savingsPct}% reduction) compared to the baseline rate of $${originalPrice.toLocaleString()}.`
       : `Prevented an unfavorable renewal above authorized ceiling; baseline cost was $${originalPrice.toLocaleString()}.`,
 
-    competitorComparison: competitors.options.length > 0
-      ? `Benchmarked against ${competitors.options.length} alternative solutions (${competitorNames}). Negotiated rate delivers enterprise feature parity without incurring migration re-tooling friction.`
-      : `Market benchmark verified against standard enterprise category tiers with verified SLA parity.`,
+    competitorComparison:
+      competitors.options.length > 0
+        ? `Benchmarked against ${competitors.options.length} alternative solutions (${competitorNames}). Negotiated rate delivers enterprise feature parity without incurring migration re-tooling friction.`
+        : `Market benchmark verified against standard enterprise category tiers with verified SLA parity.`,
 
     serviceLevelsPreserved: `All ${usage.seat_count || "enterprise"} enterprise seats, 99.9% uptime commitments, SSO access, and dedicated technical support SLAs are 100% preserved in the revised contract schedule.`,
 
@@ -353,11 +389,16 @@ export async function runNegotiationLoop(
   };
 
   // 5. Append system explanation card to negotiation conversation
-  const statusRes = await execTool<NegotiationStatusOutput>(get_negotiation_status, { contractId });
+  const statusRes = await execTool<NegotiationStatusOutput>(
+    get_negotiation_status,
+    { contractId },
+  );
   const supabase = getServiceSupabase();
 
   if (statusRes.exists && statusRes.negotiation) {
-    const updatedConversation = Array.isArray(statusRes.negotiation.conversation)
+    const updatedConversation = Array.isArray(
+      statusRes.negotiation.conversation,
+    )
       ? [...statusRes.negotiation.conversation]
       : [];
 
@@ -386,7 +427,9 @@ export async function runNegotiationLoop(
   // 6. Record final outcome in append-only agent_actions log and business memory
   await execTool(record_outcome, {
     contractId,
-    recommendation: isAgreed ? "renew_at_negotiated_rate" : "migrate_to_alternative",
+    recommendation: isAgreed
+      ? "renew_at_negotiated_rate"
+      : "migrate_to_alternative",
     targetPrice,
     savingsEstimate: savingsAmount,
     reasoning: `${explanation.summary} | Ceiling: ${explanation.belowPolicyCeiling} | Savings: ${explanation.dollarSavings} | Benchmark: ${explanation.competitorComparison} | SLAs: ${explanation.serviceLevelsPreserved}`,
@@ -396,7 +439,10 @@ export async function runNegotiationLoop(
   });
 
   // 7. Return complete structured response with business memory payload
-  const finalStatus = await execTool<NegotiationStatusOutput>(get_negotiation_status, { contractId });
+  const finalStatus = await execTool<NegotiationStatusOutput>(
+    get_negotiation_status,
+    { contractId },
+  );
 
   const memoryUsed: MemoryUsedInfo = {
     hasHistory: Boolean(vendorHistory?.has_history),
@@ -407,8 +453,12 @@ export async function runNegotiationLoop(
     roundsToClose: vendorHistory?.rounds_to_close ?? null,
     outcome: vendorHistory?.outcome,
     deliveredOk: vendorHistory?.delivered_ok,
-    reputationScore: vendorHistory?.reputation_score ?? contract.vendor?.reputation_score ?? 50,
-    dealsCount: vendorHistory?.deals_count ?? (vendorHistory?.has_history ? 1 : 0),
+    reputationScore:
+      vendorHistory?.reputation_score ??
+      contract.vendor?.reputation_score ??
+      50,
+    dealsCount:
+      vendorHistory?.deals_count ?? (vendorHistory?.has_history ? 1 : 0),
     insight: memoryInsight,
     summarySentence: vendorHistory?.summary_sentence,
   };
@@ -425,7 +475,9 @@ export async function runNegotiationLoop(
     rounds: roundsCompleted,
     status: isAgreed ? "agreed" : "walked_away",
     explanation,
-    conversation: (finalStatus.negotiation?.conversation as unknown as NegotiationTurn[]) || [],
+    conversation:
+      (finalStatus.negotiation?.conversation as unknown as NegotiationTurn[]) ||
+      [],
     memoryUsed,
   };
 }

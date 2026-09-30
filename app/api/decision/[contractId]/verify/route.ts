@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { getServiceSupabase } from "@/lib/supabase";
+
 import {
-  extractVendorConfirmation,
-  verifyConfirmationTerms,
   ExpectedTerms,
+  extractVendorConfirmation,
   VerificationResult,
+  verifyConfirmationTerms,
 } from "@/lib/agent/verification";
-import { release_escrow, dispute_escrow } from "@/lib/tools";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { getServiceSupabase } from "@/lib/supabase";
+import { dispute_escrow, release_escrow } from "@/lib/tools";
 
 interface RouteProps {
   params: Promise<{ contractId: string }>;
@@ -29,7 +30,11 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
@@ -76,7 +81,11 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
     }
 
     const expected: ExpectedTerms = {
-      finalPrice: Number(negotiation?.final_price || negotiation?.target_price || contract.current_price * 0.8),
+      finalPrice: Number(
+        negotiation?.final_price ||
+          negotiation?.target_price ||
+          contract.current_price * 0.8,
+      ),
       seats: contract.seat_count || 18,
       termMonths: 12,
       renewalDate: contract.renewal_date
@@ -106,7 +115,11 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
@@ -149,7 +162,11 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       .maybeSingle();
 
     const expected: ExpectedTerms = {
-      finalPrice: Number(negotiation?.final_price || negotiation?.target_price || contract.current_price * 0.8),
+      finalPrice: Number(
+        negotiation?.final_price ||
+          negotiation?.target_price ||
+          contract.current_price * 0.8,
+      ),
       seats: contract.seat_count || 18,
       termMonths: 12,
       renewalDate: contract.renewal_date
@@ -158,7 +175,8 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     };
 
     // 2. Fetch vendor confirmation from simulator
-    const vendorId = contract.vendor_id || contract.vendors?.id || "mock-vendor";
+    const vendorId =
+      contract.vendor_id || contract.vendors?.id || "mock-vendor";
     const host = req.headers.get("host") || "localhost:3000";
     const protocol = host.includes("localhost") ? "http" : "https";
     const confirmUrl = `${protocol}://${host}/api/vendors/${vendorId}/confirm${body.tamper ? `?tamper=${body.tamper}` : ""}`;
@@ -170,35 +188,51 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     });
 
     if (!confirmRes.ok) {
-      throw new Error(`Failed to simulate vendor confirmation: ${confirmRes.statusText}`);
+      throw new Error(
+        `Failed to simulate vendor confirmation: ${confirmRes.statusText}`,
+      );
     }
 
     const confirmData = await confirmRes.json();
-    const documentText = confirmData.data?.document || confirmData.document || "";
+    const documentText =
+      confirmData.data?.document || confirmData.document || "";
 
     // 3. LLM Extraction (Strict Schema)
     const extracted = await extractVendorConfirmation(documentText);
 
     // 4. Deterministic Verification Comparison
-    const verification: VerificationResult = verifyConfirmationTerms(extracted, expected);
+    const verification: VerificationResult = verifyConfirmationTerms(
+      extracted,
+      expected,
+    );
 
     let releaseResult = null;
     let disputeResult = null;
 
     // 5. Handle Pass or Fail
     if (!verification.allPassed) {
-      disputeResult = await (dispute_escrow.execute as (...args: any[]) => Promise<any>)({
-        contractId,
-        negotiationId: negotiation?.id,
-        reason: `Vendor confirmation verification failed with ${verification.discrepancies.length} discrepancy(ies)`,
-        discrepancies: verification.discrepancies,
-      }, { toolCallId: "dispute-tool-call", messages: [] });
+      disputeResult = await (
+        dispute_escrow.execute as (...args: any[]) => Promise<any>
+      )(
+        {
+          contractId,
+          negotiationId: negotiation?.id,
+          reason: `Vendor confirmation verification failed with ${verification.discrepancies.length} discrepancy(ies)`,
+          discrepancies: verification.discrepancies,
+        },
+        { toolCallId: "dispute-tool-call", messages: [] },
+      );
     } else if (body.action === "release") {
-      releaseResult = await (release_escrow.execute as (...args: any[]) => Promise<any>)({
-        contractId,
-        negotiationId: negotiation?.id,
-        verificationPassed: true,
-      }, { toolCallId: "release-tool-call", messages: [] });
+      releaseResult = await (
+        release_escrow.execute as (...args: any[]) => Promise<any>
+      )(
+        {
+          contractId,
+          negotiationId: negotiation?.id,
+          verificationPassed: true,
+        },
+        { toolCallId: "release-tool-call", messages: [] },
+      );
     }
 
     // 6. Fetch updated transaction & approval state
@@ -226,7 +260,8 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       extracted: verification.extracted,
       expected: verification.expected,
       confirmationDocument: documentText,
-      confirmationData: confirmData.data?.confirmation || confirmData.confirmation,
+      confirmationData:
+        confirmData.data?.confirmation || confirmData.confirmation,
       transaction: updatedTx || null,
       approval: updatedApproval || null,
       releaseResult,

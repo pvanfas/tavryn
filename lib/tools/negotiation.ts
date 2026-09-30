@@ -1,26 +1,42 @@
-import { z } from "zod";
 import { tool } from "ai";
+import { z } from "zod";
+
+import {
+  get_vendor_history as fetchVendorHistory,
+  record_vendor_memory,
+} from "@/lib/memory";
 import { getServiceSupabase } from "@/lib/supabase";
-import { get_vendor_history as fetchVendorHistory, record_vendor_memory } from "@/lib/memory";
+
 import { logAgentAction } from "./audit";
 import { ToolContext } from "./types";
 
 export function buildNegotiationTools(ctx: ToolContext) {
   // get_vendor_history (Business Memory)
   const get_vendor_history = tool({
-    description: "Fetch historical negotiation outcomes, past accepted discount percentages, and concession speed for a vendor from business memory.",
+    description:
+      "Fetch historical negotiation outcomes, past accepted discount percentages, and concession speed for a vendor from business memory.",
     inputSchema: z.object({
       vendorId: z.string().describe("Vendor UUID"),
-      contractId: z.string().optional().describe("Optional contract UUID to resolve business context"),
+      contractId: z
+        .string()
+        .optional()
+        .describe("Optional contract UUID to resolve business context"),
     }),
-    execute: async ({ vendorId, contractId }: { vendorId: string; contractId?: string }) => {
+    execute: async ({
+      vendorId,
+      contractId,
+    }: {
+      vendorId: string;
+      contractId?: string;
+    }) => {
       const businessId = await ctx.resolveBusinessId(contractId);
       const history = await fetchVendorHistory(vendorId, businessId);
 
       await logAgentAction({
         businessId,
         action: "get_vendor_history",
-        reason: "Consulted business memory for past vendor concessions and reputation",
+        reason:
+          "Consulted business memory for past vendor concessions and reputation",
         confidence: 1.0,
         input: { vendorId, contractId },
         result: {
@@ -37,15 +53,26 @@ export function buildNegotiationTools(ctx: ToolContext) {
 
   // record_outcome
   const record_outcome = tool({
-    description: "Record the analysis conclusion, proposed target price, and strategic reasoning in the audit trail and vendor memory.",
+    description:
+      "Record the analysis conclusion, proposed target price, and strategic reasoning in the audit trail and vendor memory.",
     inputSchema: z.object({
       contractId: z.string().describe("The UUID of the analyzed contract"),
-      recommendation: z.string().describe("Core recommendation, e.g. 'negotiate', 'downsize_seats', 'renew_as_is'"),
+      recommendation: z
+        .string()
+        .describe(
+          "Core recommendation, e.g. 'negotiate', 'downsize_seats', 'renew_as_is'",
+        ),
       targetPrice: z.number().optional().describe("Target price in USDC"),
-      finalPrice: z.number().optional().describe("Final agreed price if concluded"),
+      finalPrice: z
+        .number()
+        .optional()
+        .describe("Final agreed price if concluded"),
       roundsToClose: z.number().optional().describe("Rounds taken to finalize"),
       outcomeStatus: z.enum(["success", "walked_away", "disputed"]).optional(),
-      savingsEstimate: z.number().optional().describe("Estimated annual savings in USDC"),
+      savingsEstimate: z
+        .number()
+        .optional()
+        .describe("Estimated annual savings in USDC"),
       reasoning: z.string().describe("Detailed financial reasoning"),
     }),
     execute: async ({
@@ -105,10 +132,15 @@ export function buildNegotiationTools(ctx: ToolContext) {
       await logAgentAction({
         businessId,
         action: "record_outcome",
-        reason: "Persist autonomous contract evaluation outcome to audit log and business memory",
+        reason:
+          "Persist autonomous contract evaluation outcome to audit log and business memory",
         confidence: 1.0,
         input: outcome,
-        result: { status: "recorded", timestamp: outcome.recordedAt, memoryResult },
+        result: {
+          status: "recorded",
+          timestamp: outcome.recordedAt,
+          memoryResult,
+        },
       });
 
       return {
@@ -120,12 +152,20 @@ export function buildNegotiationTools(ctx: ToolContext) {
 
   // send_vendor_message
   const send_vendor_message = tool({
-    description: "Submit a price counter-offer and negotiation message to the vendor account manager, logging to negotiations table and audit trail.",
+    description:
+      "Submit a price counter-offer and negotiation message to the vendor account manager, logging to negotiations table and audit trail.",
     inputSchema: z.object({
       contractId: z.string().describe("Contract UUID"),
       offer: z.number().positive().describe("Proposed renewal price in USDC"),
-      message: z.string().describe("Agent justification or offer message to vendor"),
-      round: z.number().int().positive().default(1).describe("Negotiation round index (1 to 5)"),
+      message: z
+        .string()
+        .describe("Agent justification or offer message to vendor"),
+      round: z
+        .number()
+        .int()
+        .positive()
+        .default(1)
+        .describe("Negotiation round index (1 to 5)"),
       commitmentMonths: z.number().int().positive().default(12).optional(),
     }),
     execute: async ({
@@ -149,7 +189,9 @@ export function buildNegotiationTools(ctx: ToolContext) {
         .single();
 
       if (contractErr || !contract) {
-        throw new Error(`Contract ${contractId} not found: ${contractErr?.message}`);
+        throw new Error(
+          `Contract ${contractId} not found: ${contractErr?.message}`,
+        );
       }
 
       const businessId = await ctx.resolveBusinessId(contract.business_id);
@@ -183,19 +225,24 @@ export function buildNegotiationTools(ctx: ToolContext) {
           .single();
 
         if (createNegErr || !newNeg) {
-          throw new Error(`Failed to create negotiation record: ${createNegErr?.message}`);
+          throw new Error(
+            `Failed to create negotiation record: ${createNegErr?.message}`,
+          );
         }
         negotiation = newNeg;
       }
 
-      const previousCounter = negotiation.current_offer ? Number(negotiation.current_offer) : originalPrice;
+      const previousCounter = negotiation.current_offer
+        ? Number(negotiation.current_offer)
+        : originalPrice;
 
       // 2. Invoke vendor simulator engine
-      const { getVendorSimulatorConfig, simulateVendorNegotiation } = await import("@/lib/vendor-simulator");
+      const { getVendorSimulatorConfig, simulateVendorNegotiation } =
+        await import("@/lib/vendor-simulator");
       const vendorConfig = getVendorSimulatorConfig(
         vendor?.id || "sim-vendor",
         vendor?.name || contract.service,
-        vendor?.category || contract.category || "software"
+        vendor?.category || contract.category || "software",
       );
 
       const simResponse = simulateVendorNegotiation(
@@ -207,7 +254,7 @@ export function buildNegotiationTools(ctx: ToolContext) {
           original_price: originalPrice,
           previous_counter: previousCounter,
         },
-        vendorConfig
+        vendorConfig,
       );
 
       // 3. Append to conversation transcript
@@ -239,7 +286,9 @@ export function buildNegotiationTools(ctx: ToolContext) {
       // 4. Update negotiations record in database
       const isAccepted = simResponse.accepted;
       const finalPrice = isAccepted ? simResponse.counter_offer : null;
-      const savings = isAccepted ? originalPrice - simResponse.counter_offer : null;
+      const savings = isAccepted
+        ? originalPrice - simResponse.counter_offer
+        : null;
 
       const { error: updateNegErr } = await supabase
         .from("negotiations")
@@ -254,7 +303,10 @@ export function buildNegotiationTools(ctx: ToolContext) {
         .eq("id", negotiation.id);
 
       if (updateNegErr) {
-        console.warn("Failed to update negotiations table:", updateNegErr.message);
+        console.warn(
+          "Failed to update negotiations table:",
+          updateNegErr.message,
+        );
       }
 
       // 5. Append-only audit log in agent_actions
@@ -288,7 +340,8 @@ export function buildNegotiationTools(ctx: ToolContext) {
 
   // get_negotiation_status
   const get_negotiation_status = tool({
-    description: "Retrieve active negotiation state, rounds count, current offer, and conversation history for a contract.",
+    description:
+      "Retrieve active negotiation state, rounds count, current offer, and conversation history for a contract.",
     inputSchema: z.object({
       contractId: z.string().describe("Contract UUID"),
     }),

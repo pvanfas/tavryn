@@ -1,26 +1,37 @@
-import { z } from "zod";
 import { tool } from "ai";
+import { z } from "zod";
+
 import { getServiceSupabase } from "@/lib/supabase";
+
 import { logAgentAction } from "./audit";
-import { ToolContext, ContractDetails, UsageDetails } from "./types";
+import { ContractDetails, ToolContext, UsageDetails } from "./types";
 
 export function buildContractTools(ctx: ToolContext) {
   // 1. get_contract
   const get_contract = tool({
-    description: "Fetch comprehensive contract details, terms, pricing, and vendor information for a given contract ID.",
+    description:
+      "Fetch comprehensive contract details, terms, pricing, and vendor information for a given contract ID.",
     inputSchema: z.object({
       contractId: z.string().describe("The UUID of the contract to inspect"),
     }),
-    execute: async ({ contractId }: { contractId: string }): Promise<ContractDetails> => {
+    execute: async ({
+      contractId,
+    }: {
+      contractId: string;
+    }): Promise<ContractDetails> => {
       const supabase = getServiceSupabase();
       const { data: contract, error } = await supabase
         .from("contracts")
-        .select("*, vendors ( id, name, category, contact, reputation_score, is_simulated )")
+        .select(
+          "*, vendors ( id, name, category, contact, reputation_score, is_simulated )",
+        )
         .eq("id", contractId)
         .maybeSingle();
 
       if (error || !contract) {
-        throw new Error(`Contract with ID ${contractId} not found: ${error?.message || "Record missing"}`);
+        throw new Error(
+          `Contract with ID ${contractId} not found: ${error?.message || "Record missing"}`,
+        );
       }
 
       const businessId = await ctx.resolveBusinessId(contract.business_id);
@@ -66,15 +77,24 @@ export function buildContractTools(ctx: ToolContext) {
 
   // 2. get_usage
   const get_usage = tool({
-    description: "Inspect usage telemetry, active seat allocation, idle licenses, and workload drop metrics for a contract.",
+    description:
+      "Inspect usage telemetry, active seat allocation, idle licenses, and workload drop metrics for a contract.",
     inputSchema: z.object({
-      contractId: z.string().describe("The UUID of the contract to analyze usage signals for"),
+      contractId: z
+        .string()
+        .describe("The UUID of the contract to analyze usage signals for"),
     }),
-    execute: async ({ contractId }: { contractId: string }): Promise<UsageDetails> => {
+    execute: async ({
+      contractId,
+    }: {
+      contractId: string;
+    }): Promise<UsageDetails> => {
       const supabase = getServiceSupabase();
       const { data: contract, error } = await supabase
         .from("contracts")
-        .select("id, business_id, service, current_price, seat_count, active_seats, usage_metric, status")
+        .select(
+          "id, business_id, service, current_price, seat_count, active_seats, usage_metric, status",
+        )
         .eq("id", contractId)
         .maybeSingle();
 
@@ -84,8 +104,10 @@ export function buildContractTools(ctx: ToolContext) {
 
       const businessId = await ctx.resolveBusinessId(contract.business_id);
 
-      const seatCount = contract.seat_count != null ? Number(contract.seat_count) : null;
-      const activeSeats = contract.active_seats != null ? Number(contract.active_seats) : null;
+      const seatCount =
+        contract.seat_count != null ? Number(contract.seat_count) : null;
+      const activeSeats =
+        contract.active_seats != null ? Number(contract.active_seats) : null;
       let unusedSeats: number | null = null;
       let utilizationPct: number | null = null;
 
@@ -94,18 +116,30 @@ export function buildContractTools(ctx: ToolContext) {
         utilizationPct = Math.round((activeSeats / seatCount) * 100);
       }
 
-      const usageMetric = contract.usage_metric as { type?: string; decline_pct?: number } | null;
-      const declinePct = usageMetric?.decline_pct != null ? Number(usageMetric.decline_pct) : null;
+      const usageMetric = contract.usage_metric as {
+        type?: string;
+        decline_pct?: number;
+      } | null;
+      const declinePct =
+        usageMetric?.decline_pct != null
+          ? Number(usageMetric.decline_pct)
+          : null;
 
       const signals: string[] = [];
       if (unusedSeats && unusedSeats > 0) {
-        signals.push(`${unusedSeats} unallocated / idle seats detected (${100 - (utilizationPct || 0)}% waste)`);
+        signals.push(
+          `${unusedSeats} unallocated / idle seats detected (${100 - (utilizationPct || 0)}% waste)`,
+        );
       }
       if (declinePct && declinePct > 0) {
-        signals.push(`Telemetry indicates a ${declinePct}% decline in active workload / consumption`);
+        signals.push(
+          `Telemetry indicates a ${declinePct}% decline in active workload / consumption`,
+        );
       }
       if (signals.length === 0) {
-        signals.push("Healthy baseline utilization with no idle seats or usage drop detected");
+        signals.push(
+          "Healthy baseline utilization with no idle seats or usage drop detected",
+        );
       }
 
       const result: UsageDetails = {
@@ -134,20 +168,34 @@ export function buildContractTools(ctx: ToolContext) {
 
   // 3. find_vendor_options
   const find_vendor_options = tool({
-    description: "Search for comparable marketplace vendors within the same category to benchmark pricing and alternative leverage.",
+    description:
+      "Search for comparable marketplace vendors within the same category to benchmark pricing and alternative leverage.",
     inputSchema: z.object({
       requirement: z.string().describe("Requirement or service description"),
-      category: z.enum(["software", "cloud", "contractors"]).optional().describe("Contract category filter"),
+      category: z
+        .enum(["software", "cloud", "contractors"])
+        .optional()
+        .describe("Contract category filter"),
     }),
-    execute: async ({ requirement, category }: { requirement: string; category?: "software" | "cloud" | "contractors" }) => {
+    execute: async ({
+      requirement,
+      category,
+    }: {
+      requirement: string;
+      category?: "software" | "cloud" | "contractors";
+    }) => {
       const supabase = getServiceSupabase();
-      let query = supabase.from("vendors").select("id, name, category, reputation_score, is_simulated");
+      let query = supabase
+        .from("vendors")
+        .select("id, name, category, reputation_score, is_simulated");
 
       if (category) {
         query = query.eq("category", category);
       }
 
-      const { data: vendors, error } = await query.order("reputation_score", { ascending: false }).limit(6);
+      const { data: vendors, error } = await query
+        .order("reputation_score", { ascending: false })
+        .limit(6);
 
       if (error) {
         throw new Error(`Failed to query vendor options: ${error.message}`);
@@ -174,7 +222,10 @@ export function buildContractTools(ctx: ToolContext) {
         reason: "Retrieve competitive vendor landscape for price benchmarking",
         confidence: 1.0,
         input: { requirement, category },
-        result: { count: result.matchCount, names: result.options.map((o) => o.name) },
+        result: {
+          count: result.matchCount,
+          names: result.options.map((o) => o.name),
+        },
       });
 
       return result;

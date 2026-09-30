@@ -1,13 +1,18 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { getServiceSupabase } from "../lib/supabase";
+import { describe, it } from "node:test";
+
 import { verifyPolicyExecutionAuthorization } from "../lib/policy";
+import { getServiceSupabase } from "../lib/supabase";
 import { create_escrow } from "../lib/tools";
 
 describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
   it("authorizes transaction when within autonomous policy threshold", async () => {
     const supabase = getServiceSupabase();
-    const { data: business } = await supabase.from("businesses").select("id").limit(1).single();
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
     assert.ok(business, "Business must exist");
 
     const auth = await verifyPolicyExecutionAuthorization(business.id, {
@@ -23,7 +28,11 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
 
   it("refuses execution when transaction exceeds autonomous ceiling without human approval", async () => {
     const supabase = getServiceSupabase();
-    const { data: business } = await supabase.from("businesses").select("id").limit(1).single();
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
     assert.ok(business, "Business must exist");
 
     // Clean any prior approvals for clean test
@@ -42,7 +51,11 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
 
   it("authorizes execution after human approval row is inserted into approvals table", async () => {
     const supabase = getServiceSupabase();
-    const { data: business } = await supabase.from("businesses").select("id").limit(1).single();
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
     assert.ok(business, "Business must exist");
 
     // Insert an approved row
@@ -85,24 +98,24 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
     assert.ok(contract, "Datadog contract must exist");
 
     // Clean prior approvals for this business
-    await supabase.from("approvals").delete().eq("business_id", contract.business_id);
+    await supabase
+      .from("approvals")
+      .delete()
+      .eq("business_id", contract.business_id);
 
     // Attempt to invoke create_escrow for $28,800 without approval
-    await assert.rejects(
-      async () => {
-        await (create_escrow as any).execute(
-          {
-            amount: 28800,
-            vendorWallet: "0x1234567890123456789012345678901234567890",
-            idempotencyKey: `test-refusal-${Date.now()}`,
-            contractId: contract.id,
-            category: "cloud",
-            savings: 7200,
-          },
-          { messages: [], toolCallId: "t-refusal" }
-        );
-      },
-      /Policy refusal: Transaction exceeds autonomous ceiling/
-    );
+    await assert.rejects(async () => {
+      await (create_escrow as any).execute(
+        {
+          amount: 28800,
+          vendorWallet: "0x1234567890123456789012345678901234567890",
+          idempotencyKey: `test-refusal-${Date.now()}`,
+          contractId: contract.id,
+          category: "cloud",
+          savings: 7200,
+        },
+        { messages: [], toolCallId: "t-refusal" },
+      );
+    }, /Policy refusal: Transaction exceeds autonomous ceiling/);
   });
 });

@@ -5,7 +5,11 @@ export interface ApiResponseOptions {
   headers?: Record<string, string>;
 }
 
-export function apiSuccess<T>(data: T, status = 200, options?: ApiResponseOptions): NextResponse {
+export function apiSuccess<T>(
+  data: T,
+  status = 200,
+  options?: ApiResponseOptions,
+): NextResponse {
   const payload =
     typeof data === "object" && data !== null && !Array.isArray(data)
       ? { success: true, ...(data as Record<string, any>), data }
@@ -21,7 +25,7 @@ export function apiError(
   message: string,
   status = 400,
   details?: any,
-  options?: ApiResponseOptions
+  options?: ApiResponseOptions,
 ): NextResponse {
   return NextResponse.json(
     {
@@ -32,11 +36,14 @@ export function apiError(
     {
       status,
       headers: options?.headers,
-    }
+    },
   );
 }
 
-export function handleApiError(err: unknown, fallbackMessage = "Internal server error"): NextResponse {
+export function handleApiError(
+  err: unknown,
+  fallbackMessage = "Internal server error",
+): NextResponse {
   if (err instanceof ZodError) {
     return apiError("Validation failed", 400, err.issues);
   }

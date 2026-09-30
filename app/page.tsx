@@ -1,23 +1,24 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRight,
-  ShieldCheck,
-  TrendingDown,
-  Lock,
-  Layers,
-  ExternalLink,
-  PlayCircle,
-  FileCheck,
-  Zap,
   CheckCircle2,
   Database,
+  ExternalLink,
+  FileCheck,
+  Layers,
+  Lock,
+  PlayCircle,
+  ShieldCheck,
+  TrendingDown,
+  Zap,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+
 import { AgentIcon } from "@/components/AgentIcon";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ARC_CONFIG } from "@/lib/circle";
-import { LANDING_NAV_LINKS, FOOTER_NAV_LINKS } from "@/lib/nav";
+import { FOOTER_NAV_LINKS, LANDING_NAV_LINKS } from "@/lib/nav";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -36,9 +37,28 @@ function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-export const revalidate = 3600; // Static friendly landing page
+import { cookies } from "next/headers";
 
-export default function LandingPage() {
+import DashboardPage from "./dashboard/page";
+
+export const dynamic = "force-dynamic";
+
+export default async function Page(props: {
+  searchParams: Promise<{ businessId?: string }>;
+}) {
+  const cookieStore = await cookies();
+  const hasAuth = cookieStore
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+
+  if (hasAuth) {
+    return <DashboardPage searchParams={props.searchParams} />;
+  }
+
+  return <LandingPage />;
+}
+
+function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f7f9f8] dark:bg-[#0b100e] text-slate-900 dark:text-slate-100 selection:bg-emerald-500/20 selection:text-[#107e65] dark:selection:text-[#34d399]">
       {/* Top Navbar */}
@@ -91,7 +111,7 @@ export default function LandingPage() {
                 >
                   {link.label}
                 </a>
-              )
+              ),
             )}
           </nav>
 
@@ -529,7 +549,7 @@ await release_escrow({
                 >
                   {link.label}
                 </Link>
-              )
+              ),
             )}
           </div>
         </div>

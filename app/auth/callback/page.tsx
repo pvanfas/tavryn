@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import { AlertCircle, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+
 import { getBrowserSupabase, setAuthCookie } from "@/lib/auth";
-import { Loader2, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
+  const [status, setStatus] = useState<"processing" | "success" | "error">(
+    "processing",
+  );
 
   useEffect(() => {
-    const errorParam = searchParams.get("error_description") || searchParams.get("error");
+    const errorParam =
+      searchParams.get("error_description") || searchParams.get("error");
     if (errorParam) {
       setError(errorParam);
       setStatus("error");
@@ -27,7 +31,8 @@ function CallbackHandler() {
     const completeAuth = async () => {
       try {
         if (code) {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
             setError(exchangeError.message);
             setStatus("error");
@@ -42,7 +47,8 @@ function CallbackHandler() {
         }
 
         // If no code, check for existing session or hash fragment
-        const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionErr } =
+          await supabase.auth.getSession();
         if (sessionErr) {
           setError(sessionErr.message);
           setStatus("error");
@@ -57,13 +63,15 @@ function CallbackHandler() {
         }
 
         // Listen for auth state change if session hasn't settled yet
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session) {
-            setAuthCookie(session.access_token);
-            setStatus("success");
-            router.replace(next);
-          }
-        });
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (session) {
+              setAuthCookie(session.access_token);
+              setStatus("success");
+              router.replace(next);
+            }
+          },
+        );
 
         // Timeout safety
         const timeout = setTimeout(() => {
@@ -78,7 +86,9 @@ function CallbackHandler() {
           clearTimeout(timeout);
         };
       } catch (err) {
-        setError((err as Error).message || "Failed to complete authentication.");
+        setError(
+          (err as Error).message || "Failed to complete authentication.",
+        );
         setStatus("error");
       }
     };
@@ -137,7 +147,8 @@ function CallbackHandler() {
                 Authentication Failed
               </h2>
               <p className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 max-w-sm mx-auto leading-relaxed">
-                {error || "An unexpected error occurred during OAuth authorization."}
+                {error ||
+                  "An unexpected error occurred during OAuth authorization."}
               </p>
             </div>
             <div className="pt-2">
@@ -162,7 +173,9 @@ export default function AuthCallbackPage() {
       fallback={
         <div className="w-full max-w-md p-8 text-center bg-white dark:bg-[#111714] rounded-2xl border border-slate-200 dark:border-slate-800">
           <Loader2 className="h-6 w-6 text-[#107e65] animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 mt-2">Loading authentication handler...</p>
+          <p className="text-xs text-slate-500 mt-2">
+            Loading authentication handler...
+          </p>
         </div>
       }
     >

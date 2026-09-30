@@ -1,22 +1,44 @@
-import { z } from "zod";
 import { tool } from "ai";
-import { getServiceSupabase } from "@/lib/supabase";
+import { z } from "zod";
+
 import { checkPolicy, PolicyRule } from "@/lib/policy";
+import { getServiceSupabase } from "@/lib/supabase";
+
 import { logAgentAction } from "./audit";
 import { ToolContext } from "./types";
 
 export function buildPolicyTools(ctx: ToolContext) {
   // check_policy
   const check_policy = tool({
-    description: "Validate a proposed financial transaction or renewal against the organization's deterministic spending policy.",
+    description:
+      "Validate a proposed financial transaction or renewal against the organization's deterministic spending policy.",
     inputSchema: z.object({
-      action: z.string().describe("Proposed action, e.g. 'negotiate', 'renew', 'downsize'"),
-      amount: z.number().nonnegative().describe("Proposed new price or transaction amount in USDC"),
-      savings: z.number().nonnegative().optional().describe("Projected dollar savings in USDC"),
-      category: z.string().describe("Category of the contract, e.g. 'software', 'cloud', 'contractors'"),
-      businessId: z.string().optional().describe("Business ID for policy evaluation"),
+      action: z
+        .string()
+        .describe("Proposed action, e.g. 'negotiate', 'renew', 'downsize'"),
+      amount: z
+        .number()
+        .nonnegative()
+        .describe("Proposed new price or transaction amount in USDC"),
+      savings: z
+        .number()
+        .nonnegative()
+        .optional()
+        .describe("Projected dollar savings in USDC"),
+      category: z
+        .string()
+        .describe(
+          "Category of the contract, e.g. 'software', 'cloud', 'contractors'",
+        ),
+      businessId: z
+        .string()
+        .optional()
+        .describe("Business ID for policy evaluation"),
       contractId: z.string().optional().describe("Associated contract ID"),
-      negotiationId: z.string().optional().describe("Associated negotiation ID"),
+      negotiationId: z
+        .string()
+        .optional()
+        .describe("Associated negotiation ID"),
     }),
     execute: async ({
       action,
@@ -52,7 +74,9 @@ export function buildPolicyTools(ctx: ToolContext) {
           policy = {
             max_auto_transaction: Number(pData.max_auto_transaction),
             min_savings: Number(pData.min_savings),
-            human_approval_required_above: Number(pData.human_approval_required_above),
+            human_approval_required_above: Number(
+              pData.human_approval_required_above,
+            ),
             allowed_categories: pData.allowed_categories || [],
             category_budgets: pData.category_budgets,
           };
@@ -64,7 +88,11 @@ export function buildPolicyTools(ctx: ToolContext) {
           .select("treasury_balance")
           .eq("id", businessId)
           .maybeSingle();
-        if (bData && bData.treasury_balance !== null && bData.treasury_balance !== undefined) {
+        if (
+          bData &&
+          bData.treasury_balance !== null &&
+          bData.treasury_balance !== undefined
+        ) {
           treasuryBalance = Number(bData.treasury_balance);
         }
       }
@@ -121,7 +149,9 @@ export function buildPolicyTools(ctx: ToolContext) {
               business_id: businessId,
               negotiation_id: negId,
               status: "pending",
-              reason: evalResult.reasons.join("; ") || `Amount ($${amount.toLocaleString()}) requires human approval`,
+              reason:
+                evalResult.reasons.join("; ") ||
+                `Amount ($${amount.toLocaleString()}) requires human approval`,
             })
             .select("id")
             .single();
@@ -135,7 +165,8 @@ export function buildPolicyTools(ctx: ToolContext) {
       await logAgentAction({
         businessId,
         action: "check_policy",
-        reason: "Verify proposed transaction against deterministic policy rules",
+        reason:
+          "Verify proposed transaction against deterministic policy rules",
         confidence: 1.0,
         input: { action, amount, savings, category, contractId, negotiationId },
         result: {

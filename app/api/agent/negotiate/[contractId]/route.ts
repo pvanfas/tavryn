@@ -1,10 +1,11 @@
 import { z } from "zod";
+
 import { runNegotiationLoop } from "@/lib/agent/negotiate";
-import { get_negotiation_status, get_contract } from "@/lib/tools";
-import { get_vendor_history } from "@/lib/memory";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { get_vendor_history } from "@/lib/memory";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { get_contract, get_negotiation_status } from "@/lib/tools";
 
 interface RouteProps {
   params: Promise<{ contractId: string }>;
@@ -25,14 +26,18 @@ export async function GET(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
 
     const status = (await (get_negotiation_status as any).execute(
       { contractId },
-      { messages: [], toolCallId: `call-status-${Date.now()}` }
+      { messages: [], toolCallId: `call-status-${Date.now()}` },
     )) as { exists: boolean; negotiation: any };
 
     let contract = null;
@@ -40,13 +45,19 @@ export async function GET(req: Request, { params }: RouteProps) {
     try {
       contract = await (get_contract as any).execute(
         { contractId },
-        { messages: [], toolCallId: `call-contract-${Date.now()}` }
+        { messages: [], toolCallId: `call-contract-${Date.now()}` },
       );
       if (contract?.vendor?.id) {
-        memory = await get_vendor_history(contract.vendor.id, contract.business_id);
+        memory = await get_vendor_history(
+          contract.vendor.id,
+          contract.business_id,
+        );
       }
     } catch (e) {
-      logger.warn("Could not retrieve contract or vendor memory for route GET", e);
+      logger.warn(
+        "Could not retrieve contract or vendor memory for route GET",
+        e,
+      );
     }
 
     return apiSuccess({
@@ -66,7 +77,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
@@ -74,9 +89,13 @@ export async function POST(req: Request, { params }: RouteProps) {
     // Rate limit: 20 per minute per contract
     const rate = checkRateLimit(`negotiate_${contractId}`, 20, 60_000);
     if (!rate.success) {
-      return apiError("Negotiation rate limit exceeded for this contract", 429, {
-        resetMs: rate.resetMs,
-      });
+      return apiError(
+        "Negotiation rate limit exceeded for this contract",
+        429,
+        {
+          resetMs: rate.resetMs,
+        },
+      );
     }
 
     let rawBody = {};

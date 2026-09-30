@@ -1,8 +1,9 @@
 import { z } from "zod";
+
 import { runAgentAnalysis } from "@/lib/agent/run";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 interface RouteProps {
   params: Promise<{ contractId: string }>;
@@ -17,7 +18,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;

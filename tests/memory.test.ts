@@ -1,5 +1,6 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
+import { test } from "node:test";
+
 import {
   calculateNewReputationScore,
   get_vendor_history,
@@ -9,16 +10,48 @@ import { getServiceSupabase } from "../lib/supabase";
 
 test("calculateNewReputationScore calculates documented scoring formula accurately", () => {
   // Base 50 starting points
-  assert.equal(calculateNewReputationScore(50, "success", 2), 62, "Fast close (<=2 rounds) grants +12 points");
-  assert.equal(calculateNewReputationScore(50, "success", 3), 58, "Moderate close (3-4 rounds) grants +8 points");
-  assert.equal(calculateNewReputationScore(50, "success", 4), 58, "Moderate close (3-4 rounds) grants +8 points");
-  assert.equal(calculateNewReputationScore(50, "success", 5), 55, "Extended close (>=5 rounds) grants +5 points");
-  assert.equal(calculateNewReputationScore(50, "walked_away", 5), 45, "Walked away penalty is -5 points");
-  assert.equal(calculateNewReputationScore(50, "disputed", 2), 35, "Dispute penalty is -15 points");
+  assert.equal(
+    calculateNewReputationScore(50, "success", 2),
+    62,
+    "Fast close (<=2 rounds) grants +12 points",
+  );
+  assert.equal(
+    calculateNewReputationScore(50, "success", 3),
+    58,
+    "Moderate close (3-4 rounds) grants +8 points",
+  );
+  assert.equal(
+    calculateNewReputationScore(50, "success", 4),
+    58,
+    "Moderate close (3-4 rounds) grants +8 points",
+  );
+  assert.equal(
+    calculateNewReputationScore(50, "success", 5),
+    55,
+    "Extended close (>=5 rounds) grants +5 points",
+  );
+  assert.equal(
+    calculateNewReputationScore(50, "walked_away", 5),
+    45,
+    "Walked away penalty is -5 points",
+  );
+  assert.equal(
+    calculateNewReputationScore(50, "disputed", 2),
+    35,
+    "Dispute penalty is -15 points",
+  );
 
   // Clamping boundaries [10, 100]
-  assert.equal(calculateNewReputationScore(95, "success", 1), 100, "Maximum score clamps at 100");
-  assert.equal(calculateNewReputationScore(15, "disputed", 3), 10, "Minimum score clamps at 10");
+  assert.equal(
+    calculateNewReputationScore(95, "success", 1),
+    100,
+    "Maximum score clamps at 100",
+  );
+  assert.equal(
+    calculateNewReputationScore(15, "disputed", 3),
+    10,
+    "Minimum score clamps at 10",
+  );
 });
 
 test("get_vendor_history returns cold-start fallback when vendor has no prior memory", async () => {
@@ -50,7 +83,11 @@ test("record_vendor_memory stores deal and get_vendor_history recalls accurate b
   const initialReputation = vendor.reputation_score ?? 50;
 
   // Retrieve valid business ID
-  const { data: biz } = await supabase.from("businesses").select("id").limit(1).single();
+  const { data: biz } = await supabase
+    .from("businesses")
+    .select("id")
+    .limit(1)
+    .single();
   const businessId = biz?.id || "b655fb94-fc62-4e3c-8898-2c5f88068159";
 
   // Record initial deal outcome: $12,400 down to $9,600 in 3 rounds (22.58% discount)
@@ -68,7 +105,10 @@ test("record_vendor_memory stores deal and get_vendor_history recalls accurate b
   assert.equal(memoryResult.acceptedDiscountPct, 22.6);
 
   // Expected new score: initialReputation + 8 (moderate 3 rounds)
-  const expectedNewScore = Math.min(100, Math.max(10, Math.round(initialReputation + 8)));
+  const expectedNewScore = Math.min(
+    100,
+    Math.max(10, Math.round(initialReputation + 8)),
+  );
   assert.equal(memoryResult.newReputationScore, expectedNewScore);
 
   // Retrieve vendor memory via get_vendor_history
@@ -91,11 +131,21 @@ test("second renewal negotiation anchors target price and opening offer to past 
 
   // Anchor rule: target discount = accepted_discount_pct / 100
   const targetDiscount = pastDiscountPct / 100;
-  const anchoredTargetPrice = Math.round(currentContractBaseline * (1 - targetDiscount));
+  const anchoredTargetPrice = Math.round(
+    currentContractBaseline * (1 - targetDiscount),
+  );
   const anchoredOpeningOffer = Math.round(anchoredTargetPrice * 0.88);
 
-  assert.equal(anchoredTargetPrice, 9598, "Target price anchors around $9,598 based on 22.6% discount");
-  assert.equal(anchoredOpeningOffer, 8446, "Opening offer starts strictly below target price (~88%)");
+  assert.equal(
+    anchoredTargetPrice,
+    9598,
+    "Target price anchors around $9,598 based on 22.6% discount",
+  );
+  assert.equal(
+    anchoredOpeningOffer,
+    8446,
+    "Opening offer starts strictly below target price (~88%)",
+  );
 
   // In contrast, cold start without history would use default baseline 22% ($9,672) or telemetry adjustments
   const coldStartTarget = Math.round(currentContractBaseline * (1 - 0.22));

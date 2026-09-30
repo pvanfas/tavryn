@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle2, 
-  X, 
-  Copy, 
-  Check, 
+import {
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
   FileCode,
+  Search,
+  X,
 } from "lucide-react";
-import { H3, Caption } from "@/components/ui/text";
+import React, { useMemo, useState } from "react";
+
+import { Caption, H3 } from "@/components/ui/text";
 import { AuditBlock } from "@/lib/tools/audit";
 
 interface AuditTableClientProps {
@@ -76,7 +77,8 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
               Immutable Action Blocks
             </H3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Cryptographically chained append-only ledger ({blocks.length} total blocks loaded)
+              Cryptographically chained append-only ledger ({blocks.length}{" "}
+              total blocks loaded)
             </p>
           </div>
 
@@ -129,18 +131,57 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
           <table className="w-full text-left text-xs font-sans border-collapse">
             <thead>
               <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 w-12 text-center">#</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[160px]">Action &amp; Detail</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[150px]">Previous Hash</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[150px]">Block Hash</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[110px] text-center">Chain</Caption>
-                <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[90px] text-center">Inspect</Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 w-12 text-center"
+                >
+                  #
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 min-w-[160px]"
+                >
+                  Action &amp; Detail
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 min-w-[150px]"
+                >
+                  Previous Hash
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-4 min-w-[150px]"
+                >
+                  Block Hash
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 min-w-[110px] text-center"
+                >
+                  Chain
+                </Caption>
+                <Caption
+                  as="th"
+                  scope="col"
+                  className="py-3.5 px-3.5 min-w-[90px] text-center"
+                >
+                  Inspect
+                </Caption>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-xs text-slate-400 dark:text-slate-500"
+                  >
                     No matching action blocks found in audit ledger.
                   </td>
                 </tr>
@@ -166,11 +207,18 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                             {block.action}
                           </span>
                           <span className="text-[11px] text-slate-400">
-                            {new Date(block.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                            {new Date(block.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
                           </span>
                         </div>
                         {block.reason && (
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-sm truncate" title={block.reason}>
+                          <div
+                            className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-sm truncate"
+                            title={block.reason}
+                          >
                             {block.reason}
                           </div>
                         )}
@@ -180,7 +228,9 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                       <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         <div className="flex items-center gap-1.5">
                           <span title={block.prev_hash || "Genesis"}>
-                            {isGenesis ? "0000... (Genesis)" : formatHashShort(block.prev_hash)}
+                            {isGenesis
+                              ? "0000... (Genesis)"
+                              : formatHashShort(block.prev_hash)}
                           </span>
                           {block.prev_hash && (
                             <button
@@ -202,7 +252,9 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                       {/* Block Hash */}
                       <td className="py-3.5 px-4 font-mono text-[11px] font-bold text-slate-900 dark:text-white">
                         <div className="flex items-center gap-1.5">
-                          <span title={block.hash || ""}>{formatHashShort(block.hash)}</span>
+                          <span title={block.hash || ""}>
+                            {formatHashShort(block.hash)}
+                          </span>
                           {block.hash && (
                             <button
                               type="button"
@@ -249,8 +301,19 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs font-medium text-slate-600 dark:text-slate-400">
           <div>
-            Showing <span className="font-bold text-slate-900 dark:text-white">{totalRecords > 0 ? startIndex + 1 : 0}</span> to{" "}
-            <span className="font-bold text-slate-900 dark:text-white">{Math.min(startIndex + rowsPerPage, totalRecords)}</span> of <span className="font-bold text-slate-900 dark:text-white">{totalRecords}</span> action blocks
+            Showing{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {totalRecords > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            to{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {Math.min(startIndex + rowsPerPage, totalRecords)}
+            </span>{" "}
+            of{" "}
+            <span className="font-bold text-slate-900 dark:text-white">
+              {totalRecords}
+            </span>{" "}
+            action blocks
           </div>
 
           <div className="flex items-center gap-2">
@@ -298,28 +361,36 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
             {/* Modal Content */}
             <div className="p-5 overflow-y-auto space-y-4 text-xs font-mono">
               <div>
-                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">Block Hash</span>
+                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">
+                  Block Hash
+                </span>
                 <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white break-all">
                   {selectedBlock.hash}
                 </div>
               </div>
 
               <div>
-                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">Previous Hash</span>
+                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">
+                  Previous Hash
+                </span>
                 <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 break-all">
                   {selectedBlock.prev_hash}
                 </div>
               </div>
 
               <div>
-                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">Input Arguments</span>
+                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">
+                  Input Arguments
+                </span>
                 <pre className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 overflow-x-auto text-[11px] leading-relaxed">
                   {JSON.stringify(selectedBlock.input, null, 2) || "{}"}
                 </pre>
               </div>
 
               <div>
-                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">Result Output</span>
+                <span className="text-slate-400 block mb-1 uppercase font-bold text-[10px]">
+                  Result Output
+                </span>
                 <pre className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 overflow-x-auto text-[11px] leading-relaxed">
                   {JSON.stringify(selectedBlock.result, null, 2) || "{}"}
                 </pre>

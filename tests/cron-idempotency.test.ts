@@ -1,9 +1,10 @@
-import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
-import { getServiceSupabase } from "../lib/supabase";
-import { runDailyProcurementCron } from "../lib/agent/cron";
+import { before, describe, it } from "node:test";
+
 import { GET as cronGetRoute } from "../app/api/cron/daily/route";
+import { runDailyProcurementCron } from "../lib/agent/cron";
 import { getNotifications } from "../lib/notifications";
+import { getServiceSupabase } from "../lib/supabase";
 
 describe("Proactive Daily Procurement Cron & Idempotency", () => {
   let demoBusinessId: string;
@@ -43,12 +44,15 @@ describe("Proactive Daily Procurement Cron & Idempotency", () => {
   });
 
   it("2. Route accepts valid CRON_SECRET via Authorization: Bearer or x-cron-secret", async () => {
-    const reqBearer = new Request(`http://localhost:3000/api/cron/daily?businessId=${demoBusinessId}`, {
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${cronSecret}`,
+    const reqBearer = new Request(
+      `http://localhost:3000/api/cron/daily?businessId=${demoBusinessId}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${cronSecret}`,
+        },
       },
-    });
+    );
     const resBearer = await cronGetRoute(reqBearer);
     assert.equal(resBearer.status, 200);
     const dataBearer = await resBearer.json();
@@ -78,7 +82,10 @@ describe("Proactive Daily Procurement Cron & Idempotency", () => {
 
     const businessResult = cronResult.results[0];
     assert.equal(businessResult.businessId, demoBusinessId);
-    assert.ok(businessResult.contractsScanned > 0, "Should scan contracts renewing within 45 days");
+    assert.ok(
+      businessResult.contractsScanned > 0,
+      "Should scan contracts renewing within 45 days",
+    );
 
     // Verify agent_actions logged a summary
     const { count: actionsAfter } = await supabase
@@ -87,16 +94,23 @@ describe("Proactive Daily Procurement Cron & Idempotency", () => {
       .eq("business_id", demoBusinessId)
       .eq("action", "cron_daily_run");
 
-    assert.ok((actionsAfter || 0) > (actionsBefore || 0), "Summary must be appended to agent_actions");
+    assert.ok(
+      (actionsAfter || 0) > (actionsBefore || 0),
+      "Summary must be appended to agent_actions",
+    );
 
     // Verify notifications table has records
     const notifications = await getNotifications(demoBusinessId, 10);
     assert.ok(notifications.length > 0, "Notifications must have been created");
-    const renewalNotif = notifications.find((n) => n.category === "renewal" && n.message.includes("requested a revised quote"));
+    const renewalNotif = notifications.find(
+      (n) =>
+        n.category === "renewal" &&
+        n.message.includes("requested a revised quote"),
+    );
     assert.ok(renewalNotif, "At least one renewal notification must exist");
     assert.ok(
       renewalNotif.message.includes("requested a revised quote"),
-      `Message format check failed: ${renewalNotif.message}`
+      `Message format check failed: ${renewalNotif.message}`,
     );
   });
 
@@ -115,16 +129,26 @@ describe("Proactive Daily Procurement Cron & Idempotency", () => {
     });
 
     assert.equal(secondRun.success, true);
-    assert.equal(secondRun.totalNegotiationsStarted, 0, "Second run must start ZERO new negotiations");
+    assert.equal(
+      secondRun.totalNegotiationsStarted,
+      0,
+      "Second run must start ZERO new negotiations",
+    );
 
     const businessResult = secondRun.results[0];
-    assert.ok(businessResult.skippedContracts.length > 0, "Contracts must be skipped as idempotent");
+    assert.ok(
+      businessResult.skippedContracts.length > 0,
+      "Contracts must be skipped as idempotent",
+    );
     for (const skipped of businessResult.skippedContracts) {
       assert.ok(
-        ["active_negotiation", "recent_negotiation", "below_min_savings", "no_opportunity"].includes(
-          skipped.reason
-        ),
-        `Unexpected skip reason: ${skipped.reason}`
+        [
+          "active_negotiation",
+          "recent_negotiation",
+          "below_min_savings",
+          "no_opportunity",
+        ].includes(skipped.reason),
+        `Unexpected skip reason: ${skipped.reason}`,
       );
     }
 
@@ -132,6 +156,10 @@ describe("Proactive Daily Procurement Cron & Idempotency", () => {
       .from("negotiations")
       .select("id", { count: "exact", head: true });
 
-    assert.equal(negsAfter, negsBefore, "Negotiations table row count must NOT increase on idempotent second run");
+    assert.equal(
+      negsAfter,
+      negsBefore,
+      "Negotiations table row count must NOT increase on idempotent second run",
+    );
   });
 });

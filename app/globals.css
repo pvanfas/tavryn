@@ -6,8 +6,12 @@
 
 @theme {
   /* ─── Font families ──────────────────────────────────────────── */
-  --font-sans: 'Manrope', var(--font-manrope), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: 'Geist Mono', var(--font-geist-mono), ui-monospace, 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --font-sans:
+    "Manrope", var(--font-manrope), system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    "Geist Mono", var(--font-geist-mono), ui-monospace, "Cascadia Code",
+    "Fira Code", "Consolas", monospace;
 
   /* ─── Keep text-xs at 13px (many components rely on it) ─────── */
   --text-xs: 0.8125rem;
@@ -130,13 +134,29 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-html, body, button, input, select, textarea, table,
+html,
+body,
+button,
+input,
+select,
+textarea,
+table,
 *:not(pre):not(code):not(kbd):not(samp) {
-  font-family: 'Manrope', var(--font-manrope), system-ui, -apple-system, sans-serif;
+  font-family:
+    "Manrope",
+    var(--font-manrope),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
-pre, code, kbd, samp {
-  font-family: 'Geist Mono', var(--font-geist-mono), ui-monospace, 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+pre,
+code,
+kbd,
+samp {
+  font-family:
+    "Geist Mono", var(--font-geist-mono), ui-monospace, "Cascadia Code",
+    "Fira Code", "Consolas", monospace;
 }
 
 body {

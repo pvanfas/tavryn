@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { getServiceSupabase } from "@/lib/supabase";
-import { checkPolicy, PolicyRule } from "@/lib/policy";
-import { logAgentAction } from "@/lib/tools/audit";
+
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { checkPolicy, PolicyRule } from "@/lib/policy";
+import { getServiceSupabase } from "@/lib/supabase";
+import { logAgentAction } from "@/lib/tools/audit";
 
 interface RouteProps {
   params: Promise<{ contractId: string }>;
@@ -23,7 +24,11 @@ export async function GET(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
@@ -53,7 +58,9 @@ export async function GET(req: Request, { params }: RouteProps) {
       ? {
           max_auto_transaction: Number(pData.max_auto_transaction),
           min_savings: Number(pData.min_savings),
-          human_approval_required_above: Number(pData.human_approval_required_above),
+          human_approval_required_above: Number(
+            pData.human_approval_required_above,
+          ),
           allowed_categories: pData.allowed_categories || [],
           category_budgets: pData.category_budgets,
         }
@@ -75,11 +82,12 @@ export async function GET(req: Request, { params }: RouteProps) {
     const proposedPrice = negotiation?.final_price
       ? Number(negotiation.final_price)
       : negotiation?.current_offer
-      ? Number(negotiation.current_offer)
-      : Math.round(baselinePrice * 0.8); // 20% discount if not yet negotiated
+        ? Number(negotiation.current_offer)
+        : Math.round(baselinePrice * 0.8); // 20% discount if not yet negotiated
 
     const annualSavings = Math.max(0, baselinePrice - proposedPrice);
-    const savingsPct = baselinePrice > 0 ? Math.round((annualSavings / baselinePrice) * 100) : 0;
+    const savingsPct =
+      baselinePrice > 0 ? Math.round((annualSavings / baselinePrice) * 100) : 0;
     const treasuryBalance = contract.businesses?.treasury_balance
       ? Number(contract.businesses.treasury_balance)
       : undefined;
@@ -104,8 +112,11 @@ export async function GET(req: Request, { params }: RouteProps) {
       approvalQuery = approvalQuery.eq("negotiation_id", negotiation.id);
     }
 
-    const { data: approvals } = await approvalQuery.order("created_at", { ascending: false }).limit(1);
-    const existingApproval = approvals && approvals.length > 0 ? approvals[0] : null;
+    const { data: approvals } = await approvalQuery
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const existingApproval =
+      approvals && approvals.length > 0 ? approvals[0] : null;
 
     return apiSuccess({
       contract: {
@@ -141,7 +152,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
 
     const { contractId } = parsedParams.data;
@@ -182,7 +197,9 @@ export async function POST(req: Request, { params }: RouteProps) {
       .maybeSingle();
 
     const decidedStatus = action === "approve" ? "approved" : "rejected";
-    const decisionReason = userReason || `Human supervisor manually ${decidedStatus} the procurement renewal`;
+    const decisionReason =
+      userReason ||
+      `Human supervisor manually ${decidedStatus} the procurement renewal`;
     const decidedAt = new Date().toISOString();
 
     // 2. Query or create/update approvals row
@@ -196,7 +213,9 @@ export async function POST(req: Request, { params }: RouteProps) {
       approvalQuery = approvalQuery.eq("negotiation_id", negotiation.id);
     }
 
-    const { data: existingApp } = await approvalQuery.order("created_at", { ascending: false }).limit(1);
+    const { data: existingApp } = await approvalQuery
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     if (existingApp && existingApp.length > 0) {
       approvalId = existingApp[0].id;
@@ -238,7 +257,10 @@ export async function POST(req: Request, { params }: RouteProps) {
         status: decidedStatus,
         approvalId,
         decidedAt,
-        amount: negotiation?.final_price || negotiation?.current_offer || contract.current_price,
+        amount:
+          negotiation?.final_price ||
+          negotiation?.current_offer ||
+          contract.current_price,
       },
     });
 

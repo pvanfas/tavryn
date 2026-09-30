@@ -15,13 +15,15 @@
  *
  * Well-known private key: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
  */
-export const DEV_TREASURY_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+export const DEV_TREASURY_ADDRESS =
+  "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
 /**
  * Deterministic placeholder wallet used for simulated (non-real) vendors
  * that have no on-chain wallet configured.
  */
-export const SIMULATED_VENDOR_WALLET = "0x1111111111111111111111111111111111111111";
+export const SIMULATED_VENDOR_WALLET =
+  "0x1111111111111111111111111111111111111111";
 
 // ---------------------------------------------------------------------------
 // Reputation Scoring

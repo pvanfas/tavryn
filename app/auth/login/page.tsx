@@ -1,20 +1,21 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getBrowserSupabase, setAuthCookie, signInWithOtp } from "@/lib/auth";
-import { OAuthButtons } from "@/components/OAuthButtons";
 import {
+  AlertCircle,
+  CheckCircle2,
   Eye,
   EyeOff,
-  LogIn,
-  AlertCircle,
-  Loader2,
   KeyRound,
+  Loader2,
+  LogIn,
   Mail,
-  CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useState } from "react";
+
+import { OAuthButtons } from "@/components/OAuthButtons";
+import { getBrowserSupabase, setAuthCookie, signInWithOtp } from "@/lib/auth";
 
 function LoginForm() {
   const router = useRouter();

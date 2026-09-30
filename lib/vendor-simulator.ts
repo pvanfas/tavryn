@@ -1,9 +1,9 @@
 /**
  * Vendor Negotiation Simulator (/lib/vendor-simulator.ts)
- * 
+ *
  * Simulates enterprise SaaS account managers with realistic concession dynamics,
  * hidden reservation prices (floors), and seeded repeatability.
- * 
+ *
  * Strict architectural rule: The reservation floor is strictly internal and
  * NEVER leaked or returned in any API response or database client payload.
  */
@@ -57,7 +57,7 @@ export function createSeededRng(seedStr: string): () => number {
 export function getVendorSimulatorConfig(
   vendorId: string,
   vendorName: string,
-  category: string
+  category: string,
 ): VendorSimulatorConfig {
   const normName = vendorName.toLowerCase();
   const rng = createSeededRng(`vendor-cfg-${vendorId}-${vendorName}`);
@@ -66,15 +66,27 @@ export function getVendorSimulatorConfig(
   let floorPercentage = 0.78;
   let concessionRate = 0.35;
 
-  if (normName.includes("platform a") || normName.includes("support platform a") || normName.includes("stubborn")) {
+  if (
+    normName.includes("platform a") ||
+    normName.includes("support platform a") ||
+    normName.includes("stubborn")
+  ) {
     style = "stubborn";
     floorPercentage = 0.88;
     concessionRate = 0.18;
-  } else if (normName.includes("platform b") || normName.includes("support platform b") || normName.includes("moderate")) {
+  } else if (
+    normName.includes("platform b") ||
+    normName.includes("support platform b") ||
+    normName.includes("moderate")
+  ) {
     style = "moderate";
     floorPercentage = 0.78;
     concessionRate = 0.35;
-  } else if (normName.includes("platform c") || normName.includes("support platform c") || normName.includes("flexible")) {
+  } else if (
+    normName.includes("platform c") ||
+    normName.includes("support platform c") ||
+    normName.includes("flexible")
+  ) {
     style = "flexible";
     floorPercentage = 0.68;
     concessionRate = 0.55;
@@ -88,11 +100,11 @@ export function getVendorSimulatorConfig(
     } else if (roll < 0.67) {
       style = "moderate";
       floorPercentage = 0.75 + rng() * 0.05;
-      concessionRate = 0.30 + rng() * 0.08;
+      concessionRate = 0.3 + rng() * 0.08;
     } else {
       style = "flexible";
       floorPercentage = 0.65 + rng() * 0.05;
-      concessionRate = 0.50 + rng() * 0.10;
+      concessionRate = 0.5 + rng() * 0.1;
     }
   }
 
@@ -116,7 +128,7 @@ function generateAccountManagerMessage(
   offer: number,
   counterOffer: number,
   commitmentMonths: number,
-  rng: () => number
+  rng: () => number,
 ): string {
   const name = config.vendorName;
 
@@ -165,10 +177,10 @@ function generateAccountManagerMessage(
  */
 export function simulateVendorNegotiation(
   req: NegotiateRequest,
-  vendorConfig: VendorSimulatorConfig
+  vendorConfig: VendorSimulatorConfig,
 ): NegotiateResponse {
   const rng = createSeededRng(
-    `round-${req.contract_id}-${vendorConfig.vendorId}-${req.round}`
+    `round-${req.contract_id}-${vendorConfig.vendorId}-${req.round}`,
   );
 
   const originalPrice = req.original_price;
@@ -190,14 +202,18 @@ export function simulateVendorNegotiation(
         offer,
         offer,
         commitmentMonths,
-        rng
+        rng,
       ),
       accepted: true,
     };
   }
 
   // 2. Late round close: if round >= 3 and offer is at or above hidden floor and within 4% of counter
-  if (req.round >= 3 && offer >= hiddenFloor && (currentCounter - offer) / currentCounter <= 0.04) {
+  if (
+    req.round >= 3 &&
+    offer >= hiddenFloor &&
+    (currentCounter - offer) / currentCounter <= 0.04
+  ) {
     return {
       counter_offer: offer,
       message: generateAccountManagerMessage(
@@ -207,7 +223,7 @@ export function simulateVendorNegotiation(
         offer,
         offer,
         commitmentMonths,
-        rng
+        rng,
       ),
       accepted: true,
     };
@@ -222,7 +238,10 @@ export function simulateVendorNegotiation(
   if (gap > 0) {
     // Add small random variance (+/- 10%) around base concession rate
     const variance = (rng() - 0.5) * 0.1;
-    const effectiveRate = Math.min(0.9, Math.max(0.08, vendorConfig.concessionRate + variance));
+    const effectiveRate = Math.min(
+      0.9,
+      Math.max(0.08, vendorConfig.concessionRate + variance),
+    );
     concessionStep = Math.round(gap * effectiveRate);
   }
 
@@ -240,7 +259,7 @@ export function simulateVendorNegotiation(
         offer,
         offer,
         commitmentMonths,
-        rng
+        rng,
       ),
       accepted: true,
     };
@@ -258,7 +277,7 @@ export function simulateVendorNegotiation(
       offer,
       nextCounter,
       commitmentMonths,
-      rng
+      rng,
     ),
     accepted: false,
   };

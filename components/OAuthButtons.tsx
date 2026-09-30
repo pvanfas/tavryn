@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { signInWithOAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
+import React, { useState } from "react";
+
+import { signInWithOAuth } from "@/lib/auth";
 
 interface OAuthButtonsProps {
   next?: string;
@@ -17,7 +18,9 @@ export function OAuthButtons({
   showDivider = true,
   mode = "login",
 }: OAuthButtonsProps) {
-  const [loadingProvider, setLoadingProvider] = useState<"google" | "github" | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<
+    "google" | "github" | null
+  >(null);
 
   const handleOAuth = async (provider: "google" | "github") => {
     try {
@@ -31,7 +34,10 @@ export function OAuthButtons({
       }
     } catch (err) {
       if (onError) {
-        onError((err as Error).message || `Failed to initiate ${provider} authentication.`);
+        onError(
+          (err as Error).message ||
+            `Failed to initiate ${provider} authentication.`,
+        );
       }
       setLoadingProvider(null);
     }
@@ -72,7 +78,11 @@ export function OAuthButtons({
           ) : (
             <>
               <span>{actionText}</span>
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+              <svg
+                className="h-4 w-4 shrink-0"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -109,7 +119,11 @@ export function OAuthButtons({
           ) : (
             <>
               <span>{actionText}</span>
-              <svg className="h-4 w-4 fill-current shrink-0 text-slate-900 dark:text-white" viewBox="0 0 24 24" aria-hidden="true">
+              <svg
+                className="h-4 w-4 fill-current shrink-0 text-slate-900 dark:text-white"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"

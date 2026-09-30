@@ -1,15 +1,16 @@
 import { getServiceSupabase } from "@/lib/supabase";
-import { ToolContext } from "./types";
-import { buildContractTools } from "./contract";
+
 import { buildCalculationTools } from "./calculation";
-import { buildPolicyTools } from "./policy";
-import { buildNegotiationTools } from "./negotiation";
+import { buildContractTools } from "./contract";
 import { buildEscrowTools } from "./escrow";
+import { buildNegotiationTools } from "./negotiation";
+import { buildPolicyTools } from "./policy";
+import { ToolContext } from "./types";
 
 // Re-export types and individual utilities for consumer convenience
-export * from "./types";
-export { computeEscrowIdempotencyKey } from "./escrow";
 export { logAgentAction } from "./audit";
+export { computeEscrowIdempotencyKey } from "./escrow";
+export * from "./types";
 
 /**
  * Global or context-bound tool factory for the Business Money Agent.

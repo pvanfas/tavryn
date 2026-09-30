@@ -1,7 +1,9 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("Starting ArcEscrow deployment on Arc Testnet (Chain ID 5042002)...");
+  console.log(
+    "Starting ArcEscrow deployment on Arc Testnet (Chain ID 5042002)...",
+  );
 
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contract with account:", deployer.address);
@@ -12,8 +14,10 @@ async function main() {
     "0x3600000000000000000000000000000000000000";
 
   // Agent Wallet & Verifier Wallet (defaults to deployer or env config)
-  const AGENT_ADDRESS = process.env.NEXT_PUBLIC_AGENT_WALLET_ADDRESS || deployer.address;
-  const VERIFIER_ADDRESS = process.env.VERIFIER_WALLET_ADDRESS || deployer.address;
+  const AGENT_ADDRESS =
+    process.env.NEXT_PUBLIC_AGENT_WALLET_ADDRESS || deployer.address;
+  const VERIFIER_ADDRESS =
+    process.env.VERIFIER_WALLET_ADDRESS || deployer.address;
 
   // Max cap: 10,000 USDC (6 decimals)
   const MAX_PER_AGREEMENT = ethers.parseUnits("10000", 6);
@@ -29,22 +33,33 @@ async function main() {
     ARC_USDC_ADDRESS,
     AGENT_ADDRESS,
     VERIFIER_ADDRESS,
-    MAX_PER_AGREEMENT
+    MAX_PER_AGREEMENT,
   );
 
   await escrow.waitForDeployment();
   const contractAddress = await escrow.getAddress();
 
   console.log("ArcEscrow successfully deployed to:", contractAddress);
-  console.log("Explorer link: https://testnet.arcscan.app/address/" + contractAddress);
+  console.log(
+    "Explorer link: https://testnet.arcscan.app/address/" + contractAddress,
+  );
 
   // Set initial category budgets
   console.log("Configuring initial category budgets...");
-  const tx1 = await escrow.setCategoryBudget("software", ethers.parseUnits("50000", 6));
+  const tx1 = await escrow.setCategoryBudget(
+    "software",
+    ethers.parseUnits("50000", 6),
+  );
   await tx1.wait();
-  const tx2 = await escrow.setCategoryBudget("cloud", ethers.parseUnits("100000", 6));
+  const tx2 = await escrow.setCategoryBudget(
+    "cloud",
+    ethers.parseUnits("100000", 6),
+  );
   await tx2.wait();
-  const tx3 = await escrow.setCategoryBudget("contractors", ethers.parseUnits("30000", 6));
+  const tx3 = await escrow.setCategoryBudget(
+    "contractors",
+    ethers.parseUnits("30000", 6),
+  );
   await tx3.wait();
   console.log("Category budgets configured successfully.");
 }

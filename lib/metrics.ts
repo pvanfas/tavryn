@@ -88,9 +88,12 @@ export async function getTractionMetrics(options?: {
   if (realOnly) {
     bQuery = bQuery.eq("is_real", true);
   }
-  const { data: rawBusinesses, error: bErr } = await bQuery.order("created_at", {
-    ascending: false,
-  });
+  const { data: rawBusinesses, error: bErr } = await bQuery.order(
+    "created_at",
+    {
+      ascending: false,
+    },
+  );
 
   if (bErr) {
     throw new Error(`Failed to fetch businesses for metrics: ${bErr.message}`);
@@ -105,8 +108,21 @@ export async function getTractionMetrics(options?: {
       realOnly: true,
       generatedAt: new Date().toISOString(),
       businesses: { totalCount: 0, realCount: 0, demoCount: 0, list: [] },
-      usdcVolume: { escrowed: 0, released: 0, refunded: 0, inFlight: 0, failedOrDisputed: 0, currency: "USDC" },
-      savings: { negotiated: 0, realized: 0, offChainSavings: 0, totalSpendAnalyzed: 0, savingsRatePct: 0 },
+      usdcVolume: {
+        escrowed: 0,
+        released: 0,
+        refunded: 0,
+        inFlight: 0,
+        failedOrDisputed: 0,
+        currency: "USDC",
+      },
+      savings: {
+        negotiated: 0,
+        realized: 0,
+        offChainSavings: 0,
+        totalSpendAnalyzed: 0,
+        savingsRatePct: 0,
+      },
       contractsAndNegotiations: {
         contractsTotal: 0,
         contractsOptimized: 0,
@@ -151,7 +167,9 @@ export async function getTractionMetrics(options?: {
     .order("created_at", { ascending: false });
 
   if (nErr) {
-    throw new Error(`Failed to fetch negotiations for metrics: ${nErr.message}`);
+    throw new Error(
+      `Failed to fetch negotiations for metrics: ${nErr.message}`,
+    );
   }
   let negotiations = rawNegotiations || [];
   if (realOnly) {
@@ -165,7 +183,9 @@ export async function getTractionMetrics(options?: {
     .order("created_at", { ascending: false });
 
   if (tErr) {
-    throw new Error(`Failed to fetch transactions for metrics: ${tErr.message}`);
+    throw new Error(
+      `Failed to fetch transactions for metrics: ${tErr.message}`,
+    );
   }
   let transactions = rawTransactions || [];
   if (realOnly) {
@@ -178,7 +198,9 @@ export async function getTractionMetrics(options?: {
     .from("agent_actions")
     .select("id, business_id, action, created_at");
   if (aErr) {
-    throw new Error(`Failed to fetch agent_actions for metrics: ${aErr.message}`);
+    throw new Error(
+      `Failed to fetch agent_actions for metrics: ${aErr.message}`,
+    );
   }
   let agentActions = rawActions || [];
   if (realOnly) {
@@ -214,7 +236,16 @@ export async function getTractionMetrics(options?: {
     const amount = Number(t.amount) || 0;
     const st = String(t.status || "").toLowerCase();
 
-    if (["funded", "milestone_submitted", "verified", "released", "refunded", "disputed"].includes(st)) {
+    if (
+      [
+        "funded",
+        "milestone_submitted",
+        "verified",
+        "released",
+        "refunded",
+        "disputed",
+      ].includes(st)
+    ) {
       escrowed += amount;
     }
     if (st === "released") {
@@ -272,11 +303,29 @@ export async function getTractionMetrics(options?: {
     const st = String(n.status || "").toLowerCase();
     const rounds = Number(n.rounds) || 0;
 
-    if (["accepted", "completed", "agreed", "agreed_offchain", "savings_recorded_no_payment", "active"].includes(st) && s > 0) {
+    if (
+      [
+        "accepted",
+        "completed",
+        "agreed",
+        "agreed_offchain",
+        "savings_recorded_no_payment",
+        "active",
+      ].includes(st) &&
+      s > 0
+    ) {
       negotiatedSavings += s;
     }
 
-    if (["accepted", "completed", "agreed", "agreed_offchain", "savings_recorded_no_payment"].includes(st)) {
+    if (
+      [
+        "accepted",
+        "completed",
+        "agreed",
+        "agreed_offchain",
+        "savings_recorded_no_payment",
+      ].includes(st)
+    ) {
       acceptedCount++;
       closedNegotiationsCount++;
       totalRounds += rounds;
@@ -308,25 +357,35 @@ export async function getTractionMetrics(options?: {
       : 0;
 
   // Contracts Optimized: Count contracts with negotiations or non-active status
-  const contractIdsWithNegotiation = new Set(negotiations.map((n) => n.contract_id));
+  const contractIdsWithNegotiation = new Set(
+    negotiations.map((n) => n.contract_id),
+  );
   const contractsOptimized = contracts.filter(
-    (c) => contractIdsWithNegotiation.has(c.id) || ["negotiating", "renewed"].includes(c.status)
+    (c) =>
+      contractIdsWithNegotiation.has(c.id) ||
+      ["negotiating", "renewed"].includes(c.status),
   ).length;
 
   // Governance & Approvals
   const agentDecisionsCount = agentActions.length;
   const humanEscalationsCount = approvals.length;
-  const humanApprovedCount = approvals.filter((a) => a.status === "approved").length;
-  const humanRejectedCount = approvals.filter((a) => a.status === "rejected").length;
-  const humanPendingCount = approvals.filter((a) => a.status === "pending").length;
+  const humanApprovedCount = approvals.filter(
+    (a) => a.status === "approved",
+  ).length;
+  const humanRejectedCount = approvals.filter(
+    (a) => a.status === "rejected",
+  ).length;
+  const humanPendingCount = approvals.filter(
+    (a) => a.status === "pending",
+  ).length;
 
   const totalDecided = humanApprovedCount + humanRejectedCount;
   const humanApprovalRatePct =
     totalDecided > 0
       ? Math.round((humanApprovedCount / totalDecided) * 1000) / 10
       : humanEscalationsCount === 0
-      ? 100
-      : 0;
+        ? 100
+        : 0;
 
   // Efficiency / Velocity
   const avgRoundsToClose =
@@ -345,7 +404,10 @@ export async function getTractionMetrics(options?: {
       const startTimeStr = matchNeg?.created_at || matchContract?.created_at;
       if (startTimeStr) {
         const startTime = new Date(startTimeStr).getTime();
-        const diffMinutes = Math.max(1, Math.round((txTime - startTime) / (1000 * 60)));
+        const diffMinutes = Math.max(
+          1,
+          Math.round((txTime - startTime) / (1000 * 60)),
+        );
         if (diffMinutes < 43200) {
           totalCycleMinutes += diffMinutes;
           cycleCount++;
@@ -361,7 +423,9 @@ export async function getTractionMetrics(options?: {
   const businessMetricList: BusinessMetricItem[] = businesses.map((b) => {
     const bContracts = contracts.filter((c) => c.business_id === b.id);
     const bContractIds = new Set(bContracts.map((c) => c.id));
-    const bNegotiations = negotiations.filter((n) => bContractIds.has(n.contract_id));
+    const bNegotiations = negotiations.filter((n) =>
+      bContractIds.has(n.contract_id),
+    );
 
     let bSpend = 0;
     for (const c of bContracts) {
@@ -446,33 +510,67 @@ export function generateMetricsCsv(metrics: TractionMetricsResult): string {
   // Section 1: KPI Summary
   lines.push("=== TAVRYN TRACTION SUMMARY ===");
   lines.push(`Generated At,${metrics.generatedAt}`);
-  lines.push(`Dataset Scope,${metrics.realOnly ? "Real Businesses Only" : "All Businesses (Includes Demo)"}`);
+  lines.push(
+    `Dataset Scope,${metrics.realOnly ? "Real Businesses Only" : "All Businesses (Includes Demo)"}`,
+  );
   lines.push("");
   lines.push("Metric,Value,Unit");
-  lines.push(`Total Businesses Onboarded,${metrics.businesses.totalCount},organizations`);
-  lines.push(`Real Businesses Onboarded,${metrics.businesses.realCount},organizations`);
+  lines.push(
+    `Total Businesses Onboarded,${metrics.businesses.totalCount},organizations`,
+  );
+  lines.push(
+    `Real Businesses Onboarded,${metrics.businesses.realCount},organizations`,
+  );
   lines.push(`Demo Businesses,${metrics.businesses.demoCount},organizations`);
-  lines.push(`Total USDC Escrowed on Arc,${metrics.usdcVolume.escrowed.toFixed(2)},USDC`);
-  lines.push(`Total USDC Released to Vendors,${metrics.usdcVolume.released.toFixed(2)},USDC`);
-  lines.push(`Total USDC Refunded,${metrics.usdcVolume.refunded.toFixed(2)},USDC`);
-  lines.push(`Active In-Flight Escrow,${metrics.usdcVolume.inFlight.toFixed(2)},USDC`);
+  lines.push(
+    `Total USDC Escrowed on Arc,${metrics.usdcVolume.escrowed.toFixed(2)},USDC`,
+  );
+  lines.push(
+    `Total USDC Released to Vendors,${metrics.usdcVolume.released.toFixed(2)},USDC`,
+  );
+  lines.push(
+    `Total USDC Refunded,${metrics.usdcVolume.refunded.toFixed(2)},USDC`,
+  );
+  lines.push(
+    `Active In-Flight Escrow,${metrics.usdcVolume.inFlight.toFixed(2)},USDC`,
+  );
   lines.push(`Savings Negotiated,${metrics.savings.negotiated.toFixed(2)},USD`);
   lines.push(`Savings Realized,${metrics.savings.realized.toFixed(2)},USD`);
-  lines.push(`Off-Chain Savings (No Payment),${(metrics.savings.offChainSavings ?? 0).toFixed(2)},USD`);
+  lines.push(
+    `Off-Chain Savings (No Payment),${(metrics.savings.offChainSavings ?? 0).toFixed(2)},USD`,
+  );
   lines.push(`Annual Savings Rate,${metrics.savings.savingsRatePct}%,pct`);
-  lines.push(`Total Contracts Analyzed,${metrics.contractsAndNegotiations.contractsTotal},contracts`);
-  lines.push(`Contracts Optimized,${metrics.contractsAndNegotiations.contractsOptimized},contracts`);
-  lines.push(`Total Negotiations Run,${metrics.contractsAndNegotiations.negotiationsRun},sessions`);
-  lines.push(`Autonomous Decisions Logged,${metrics.governance.agentDecisionsCount},actions`);
-  lines.push(`Human Escalations,${metrics.governance.humanEscalationsCount},escalations`);
-  lines.push(`Human Approval Rate,${metrics.governance.humanApprovalRatePct}%,pct`);
-  lines.push(`Average Rounds to Close,${metrics.efficiency.avgRoundsToClose},rounds`);
-  lines.push(`Average Cycle Time,${metrics.efficiency.avgCycleTimeMinutes},minutes`);
+  lines.push(
+    `Total Contracts Analyzed,${metrics.contractsAndNegotiations.contractsTotal},contracts`,
+  );
+  lines.push(
+    `Contracts Optimized,${metrics.contractsAndNegotiations.contractsOptimized},contracts`,
+  );
+  lines.push(
+    `Total Negotiations Run,${metrics.contractsAndNegotiations.negotiationsRun},sessions`,
+  );
+  lines.push(
+    `Autonomous Decisions Logged,${metrics.governance.agentDecisionsCount},actions`,
+  );
+  lines.push(
+    `Human Escalations,${metrics.governance.humanEscalationsCount},escalations`,
+  );
+  lines.push(
+    `Human Approval Rate,${metrics.governance.humanApprovalRatePct}%,pct`,
+  );
+  lines.push(
+    `Average Rounds to Close,${metrics.efficiency.avgRoundsToClose},rounds`,
+  );
+  lines.push(
+    `Average Cycle Time,${metrics.efficiency.avgCycleTimeMinutes},minutes`,
+  );
   lines.push("");
 
   // Section 2: Onboarded Businesses
   lines.push("=== ONBOARDED ORGANIZATIONS ===");
-  lines.push("ID,Name,Type,Treasury USDC,Contracts Count,Total Annual Spend,Negotiated Savings,Onboarded Date,Wallet Address");
+  lines.push(
+    "ID,Name,Type,Treasury USDC,Contracts Count,Total Annual Spend,Negotiated Savings,Onboarded Date,Wallet Address",
+  );
   for (const b of metrics.businesses.list) {
     const row = [
       `"${b.id}"`,
@@ -491,7 +589,9 @@ export function generateMetricsCsv(metrics: TractionMetricsResult): string {
 
   // Section 3: Itemized Transactions Ledger
   lines.push("=== RECONCILED TRANSACTIONS LEDGER ===");
-  lines.push("Transaction ID,Business,Vendor,Amount USDC,Status,Escrow Address,Tx Hash,Date");
+  lines.push(
+    "Transaction ID,Business,Vendor,Amount USDC,Status,Escrow Address,Tx Hash,Date",
+  );
   for (const t of metrics.transactions) {
     const row = [
       `"${t.id}"`,
@@ -509,4 +609,5 @@ export function generateMetricsCsv(metrics: TractionMetricsResult): string {
   return lines.join("\n");
 }
 
-export const calculateTractionMetrics = (realOnly: boolean = false) => getTractionMetrics({ realOnly });
+export const calculateTractionMetrics = (realOnly: boolean = false) =>
+  getTractionMetrics({ realOnly });

@@ -1,25 +1,28 @@
-import { getServiceSupabase } from "@/lib/supabase";
-import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { logAgentAction } from "@/lib/tools/audit";
-import { sendWebhookNotification } from "@/lib/notifications";
-import { logger } from "@/lib/logger";
 import { z } from "zod";
+
+import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
+import { sendWebhookNotification } from "@/lib/notifications";
+import { getServiceSupabase } from "@/lib/supabase";
+import { logAgentAction } from "@/lib/tools/audit";
 
 const UpdateSettingsSchema = z.object({
   action: z.enum(["update", "test_webhook"]).default("update"),
   webhook_url: z.string().url().nullable().optional().or(z.literal("")),
-  policy: z.object({
-    max_auto_transaction: z.coerce.number().nonnegative(),
-    min_savings: z.coerce.number().nonnegative(),
-    human_approval_required_above: z.coerce.number().nonnegative(),
-    allowed_categories: z.array(z.string()).min(1),
-    category_budgets: z.record(z.string(), z.number()).optional(),
-  }).optional(),
+  policy: z
+    .object({
+      max_auto_transaction: z.coerce.number().nonnegative(),
+      min_savings: z.coerce.number().nonnegative(),
+      human_approval_required_above: z.coerce.number().nonnegative(),
+      allowed_categories: z.array(z.string()).min(1),
+      category_budgets: z.record(z.string(), z.number()).optional(),
+    })
+    .optional(),
 });
 
 export async function GET(
   req: Request,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: businessId } = await props.params;
@@ -31,7 +34,9 @@ export async function GET(
 
     const { data: business, error: bError } = await supabase
       .from("businesses")
-      .select("id, name, wallet_address, default_currency, is_real, treasury_balance, webhook_url, created_at")
+      .select(
+        "id, name, wallet_address, default_currency, is_real, treasury_balance, webhook_url, created_at",
+      )
       .eq("id", businessId)
       .maybeSingle();
 
@@ -41,7 +46,9 @@ export async function GET(
 
     const { data: policy } = await supabase
       .from("policies")
-      .select("id, max_auto_transaction, min_savings, human_approval_required_above, allowed_categories, category_budgets, created_at")
+      .select(
+        "id, max_auto_transaction, min_savings, human_approval_required_above, allowed_categories, category_budgets, created_at",
+      )
       .eq("business_id", businessId)
       .maybeSingle();
 
@@ -62,7 +69,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: businessId } = await props.params;
@@ -125,20 +132,18 @@ export async function PUT(
 
         if (pErr) throw pErr;
       } else {
-        const { error: pInsertErr } = await supabase
-          .from("policies")
-          .insert({
-            business_id: businessId,
-            max_auto_transaction: policy.max_auto_transaction,
-            min_savings: policy.min_savings,
-            human_approval_required_above: policy.human_approval_required_above,
-            allowed_categories: policy.allowed_categories,
-            category_budgets: policy.category_budgets || {
-              software: 25000,
-              cloud: 50000,
-              contractors: 25000,
-            },
-          });
+        const { error: pInsertErr } = await supabase.from("policies").insert({
+          business_id: businessId,
+          max_auto_transaction: policy.max_auto_transaction,
+          min_savings: policy.min_savings,
+          human_approval_required_above: policy.human_approval_required_above,
+          allowed_categories: policy.allowed_categories,
+          category_budgets: policy.category_budgets || {
+            software: 25000,
+            cloud: 50000,
+            contractors: 25000,
+          },
+        });
 
         if (pInsertErr) throw pInsertErr;
       }
@@ -148,7 +153,8 @@ export async function PUT(
     await logAgentAction({
       businessId,
       action: "settings_updated",
-      reason: "Updated deterministic procurement policy and notification settings",
+      reason:
+        "Updated deterministic procurement policy and notification settings",
       confidence: 1.0,
       input: { webhook_url, policy },
       result: { success: true },
@@ -165,7 +171,7 @@ export async function PUT(
 
 export async function POST(
   req: Request,
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: businessId } = await props.params;
@@ -184,7 +190,7 @@ export async function POST(
       "🔔 Tavryn Webhook Integration Test",
       `Successfully connected notification webhook for organization (${businessId}). The autonomous procurement agent will dispatch renewal and settlement alerts here.`,
       process.env.NEXT_PUBLIC_SITE_URL || "https://tavryn.network",
-      targetUrl
+      targetUrl,
     );
 
     return apiSuccess({

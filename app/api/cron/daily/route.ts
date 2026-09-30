@@ -1,8 +1,9 @@
 import { z } from "zod";
+
 import { runDailyProcurementCron } from "@/lib/agent/cron";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -10,14 +11,19 @@ const cronQuerySchema = z.object({
   renewalDays: z.coerce.number().int().min(1).max(365).optional(),
   idempotencyDays: z.coerce.number().int().min(1).max(90).optional(),
   businessId: z.string().uuid().optional(),
-  force: z.enum(["true", "false"]).transform((v) => v === "true").optional(),
+  force: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .optional(),
 });
 
 function isAuthorizedCronRequest(req: Request): boolean {
   const expectedSecret = process.env.CRON_SECRET;
 
   if (!expectedSecret) {
-    logger.error("CRON_SECRET environment variable is not set — all cron requests will be rejected");
+    logger.error(
+      "CRON_SECRET environment variable is not set — all cron requests will be rejected",
+    );
     return false;
   }
 
@@ -59,10 +65,15 @@ export async function GET(req: Request) {
     });
 
     if (!parsedQuery.success) {
-      return apiError("Invalid query parameters", 400, parsedQuery.error.issues);
+      return apiError(
+        "Invalid query parameters",
+        400,
+        parsedQuery.error.issues,
+      );
     }
 
-    const { renewalDays, idempotencyDays, businessId, force } = parsedQuery.data;
+    const { renewalDays, idempotencyDays, businessId, force } =
+      parsedQuery.data;
 
     const result = await runDailyProcurementCron({
       renewalWindowDays: renewalDays,

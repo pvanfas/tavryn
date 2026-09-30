@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { checkPolicy, PolicyRule, PolicyContext } from "../lib/policy";
+import { describe, expect, it } from "vitest";
+
+import { checkPolicy, PolicyContext, PolicyRule } from "../lib/policy";
 
 const basePolicy: PolicyRule = {
   max_auto_transaction: 2000,
@@ -26,10 +27,14 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       expect(result.approved).toBe(true);
       expect(result.requiresHumanApproval).toBe(false);
 
-      const autoCheck = result.checks.find((c) => c.name === "amount_within_auto_ceiling");
+      const autoCheck = result.checks.find(
+        (c) => c.name === "amount_within_auto_ceiling",
+      );
       expect(autoCheck?.passed).toBe(true);
 
-      const humanCheck = result.checks.find((c) => c.name === "human_approval_threshold");
+      const humanCheck = result.checks.find(
+        (c) => c.name === "human_approval_threshold",
+      );
       expect(humanCheck?.passed).toBe(true);
     });
 
@@ -45,7 +50,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       expect(result.approved).toBe(false);
       expect(result.requiresHumanApproval).toBe(true);
 
-      const autoCheck = result.checks.find((c) => c.name === "amount_within_auto_ceiling");
+      const autoCheck = result.checks.find(
+        (c) => c.name === "amount_within_auto_ceiling",
+      );
       expect(autoCheck?.passed).toBe(false);
     });
 
@@ -74,7 +81,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
 
       expect(result.decision).toBe("rejected");
       expect(result.approved).toBe(false);
-      const savingsCheck = result.checks.find((c) => c.name === "savings_threshold");
+      const savingsCheck = result.checks.find(
+        (c) => c.name === "savings_threshold",
+      );
       expect(savingsCheck?.passed).toBe(false);
     });
 
@@ -87,7 +96,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       });
 
       expect(result.decision).toBe("approved");
-      const savingsCheck = result.checks.find((c) => c.name === "savings_threshold");
+      const savingsCheck = result.checks.find(
+        (c) => c.name === "savings_threshold",
+      );
       expect(savingsCheck?.passed).toBe(true);
     });
   });
@@ -107,7 +118,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       });
 
       expect(result.decision).toBe("approved");
-      const budgetCheck = result.checks.find((c) => c.name === "category_budget");
+      const budgetCheck = result.checks.find(
+        (c) => c.name === "category_budget",
+      );
       expect(budgetCheck?.passed).toBe(true);
     });
 
@@ -120,7 +133,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       });
 
       expect(result.decision).toBe("rejected");
-      const budgetCheck = result.checks.find((c) => c.name === "category_budget");
+      const budgetCheck = result.checks.find(
+        (c) => c.name === "category_budget",
+      );
       expect(budgetCheck?.passed).toBe(false);
     });
   });
@@ -135,9 +150,13 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       });
 
       expect(result.decision).toBe("rejected");
-      const treasuryCheck = result.checks.find((c) => c.name === "treasury_balance");
+      const treasuryCheck = result.checks.find(
+        (c) => c.name === "treasury_balance",
+      );
       expect(treasuryCheck?.passed).toBe(false);
-      expect(treasuryCheck?.detail).toContain("exceeds organization treasury balance");
+      expect(treasuryCheck?.detail).toContain(
+        "exceeds organization treasury balance",
+      );
     });
 
     it("approves when amount exactly equals treasury balance", () => {
@@ -149,7 +168,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
       });
 
       expect(result.decision).toBe("approved");
-      const treasuryCheck = result.checks.find((c) => c.name === "treasury_balance");
+      const treasuryCheck = result.checks.find(
+        (c) => c.name === "treasury_balance",
+      );
       expect(treasuryCheck?.passed).toBe(true);
     });
   });

@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { ThemeToggle } from "./ThemeToggle";
 import { Bell, Menu } from "lucide-react";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+
+import { AgentIcon } from "@/components/AgentIcon";
+
 import { BusinessItem } from "./BusinessSwitcher";
 import { NotificationPanel } from "./NotificationPanel";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserDropdown } from "./UserDropdown";
 
 interface AppHeaderProps {
@@ -20,7 +23,10 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  breadcrumbs = [{ label: "Dashboard", href: "/dashboard" }, { label: "Contracts Ledger" }],
+  breadcrumbs = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Contracts Ledger" },
+  ],
   businesses = [],
   activeBusinessId,
   treasuryBalance: _treasuryBalance,
@@ -39,7 +45,9 @@ export function AppHeader({
     let isMounted = true;
     async function loadUnread() {
       try {
-        const res = await fetch(`/api/notifications?businessId=${encodeURIComponent(activeBusinessId!)}&limit=20`);
+        const res = await fetch(
+          `/api/notifications?businessId=${encodeURIComponent(activeBusinessId!)}&limit=20`,
+        );
         if (res.ok) {
           const data = await res.json();
           if (isMounted && typeof data.unreadCount === "number") {
@@ -76,12 +84,19 @@ export function AppHeader({
             </button>
           )}
 
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+          <nav
+            aria-label="Breadcrumb"
+            className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 truncate"
+          >
             {breadcrumbs.map((crumb, idx) => {
               const isLast = idx === breadcrumbs.length - 1;
               return (
                 <React.Fragment key={crumb.label}>
-                  {idx > 0 && <span className="text-slate-300 dark:text-slate-700 font-normal">/</span>}
+                  {idx > 0 && (
+                    <span className="text-slate-300 dark:text-slate-700 font-normal">
+                      /
+                    </span>
+                  )}
                   {crumb.href && !isLast ? (
                     <Link
                       href={crumb.href}
@@ -100,8 +115,30 @@ export function AppHeader({
           </nav>
         </div>
 
-        {/* Right Actions: Dark Mode, Bell, User Dropdown (with Org Switcher) */}
-        <div className="flex items-center gap-3">
+        {/* Right Actions: Run Agent Now, Dark Mode, Bell, User Dropdown */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Run Agent Now Button */}
+          <button
+            id="header-run-agent-btn"
+            type="button"
+            onClick={async () => {
+              try {
+                const targetUrl = activeBusinessId
+                  ? `/api/agent/run?businessId=${encodeURIComponent(activeBusinessId)}`
+                  : "/api/demo/reset-and-run";
+                await fetch(targetUrl, { method: "POST" });
+                window.location.reload();
+              } catch {
+                // ignore
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            title="Execute autonomous procurement run immediately"
+          >
+            <AgentIcon className="h-3.5 w-3.5 shrink-0" />
+            <span>Run agent now</span>
+          </button>
+
           {/* Theme Toggle */}
           <ThemeToggle />
 

@@ -1,10 +1,10 @@
-import { getServiceSupabase } from "@/lib/supabase";
-import { OnboardBusinessPayloadSchema } from "@/lib/schemas";
-import { logAgentAction } from "@/lib/tools/audit";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { logger } from "@/lib/logger";
-import { createTreasuryWallet, ARC_CONFIG } from "@/lib/circle";
+import { ARC_CONFIG, createTreasuryWallet } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
+import { OnboardBusinessPayloadSchema } from "@/lib/schemas";
+import { getServiceSupabase } from "@/lib/supabase";
+import { logAgentAction } from "@/lib/tools/audit";
 
 export async function POST(req: Request) {
   try {
@@ -52,16 +52,21 @@ export async function POST(req: Request) {
 
     if (businessError || !business) {
       logger.error("Failed to insert business", businessError);
-      return apiError(`Database error: ${businessError?.message || "Failed to create business"}`, 500);
+      return apiError(
+        `Database error: ${businessError?.message || "Failed to create business"}`,
+        500,
+      );
     }
 
     // 1b. Associate User with Business as Owner
     if (resolvedUserId) {
-      const { error: memberError } = await supabase.from("business_members").insert({
-        business_id: business.id,
-        user_id: resolvedUserId,
-        role: "owner",
-      });
+      const { error: memberError } = await supabase
+        .from("business_members")
+        .insert({
+          business_id: business.id,
+          user_id: resolvedUserId,
+          role: "owner",
+        });
       if (memberError) {
         logger.warn("Failed to map business member", memberError);
       }
@@ -86,7 +91,7 @@ export async function POST(req: Request) {
     // 2. Resolve Vendors (is_simulated = false for real onboarding)
     const vendorMap = new Map<string, string>();
     const uniqueVendors = Array.from(
-      new Set(payload.subscriptions.map((s) => s.vendor.trim()))
+      new Set(payload.subscriptions.map((s) => s.vendor.trim())),
     );
 
     for (const vendorName of uniqueVendors) {
@@ -100,7 +105,7 @@ export async function POST(req: Request) {
         vendorMap.set(vendorName.toLowerCase(), existingVendor.id);
       } else {
         const sampleSub = payload.subscriptions.find(
-          (s) => s.vendor.trim().toLowerCase() === vendorName.toLowerCase()
+          (s) => s.vendor.trim().toLowerCase() === vendorName.toLowerCase(),
         );
         const { data: newVendor, error: vendorError } = await supabase
           .from("vendors")
@@ -158,7 +163,8 @@ export async function POST(req: Request) {
       business_id: business.id,
       max_auto_transaction: payload.policy.max_auto_transaction,
       min_savings: payload.policy.min_savings,
-      human_approval_required_above: payload.policy.human_approval_required_above,
+      human_approval_required_above:
+        payload.policy.human_approval_required_above,
       allowed_categories: payload.policy.allowed_categories,
       category_budgets: {
         software: 25000,

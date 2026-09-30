@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { getServiceSupabase } from "@/lib/supabase";
+
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { getServiceSupabase } from "@/lib/supabase";
 
 const ParamSchema = z.object({
   id: z.string().min(1, "Vendor ID is required"),
@@ -18,13 +19,17 @@ const QuerySchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const rawParams = await params;
     const parsedParams = ParamSchema.safeParse(rawParams);
     if (!parsedParams.success) {
-      return apiError("Invalid route parameter", 400, parsedParams.error.issues);
+      return apiError(
+        "Invalid route parameter",
+        400,
+        parsedParams.error.issues,
+      );
     }
     const { id: vendorId } = parsedParams.data;
 
@@ -33,7 +38,11 @@ export async function POST(
       tamper: url.searchParams.get("tamper") || undefined,
     });
     if (!parsedQuery.success) {
-      return apiError("Invalid query parameters", 400, parsedQuery.error.issues);
+      return apiError(
+        "Invalid query parameters",
+        400,
+        parsedQuery.error.issues,
+      );
     }
     const tamper = parsedQuery.data.tamper;
 

@@ -1,9 +1,10 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
 import {
-  simulateVendorNegotiation,
   getVendorSimulatorConfig,
   NegotiateRequest,
+  simulateVendorNegotiation,
   VendorSimulatorConfig,
 } from "../lib/vendor-simulator";
 
@@ -29,14 +30,29 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
     const res = simulateVendorNegotiation(req, config);
 
     // Assert that the response object contains only public fields
-    assert.deepEqual(Object.keys(res).sort(), ["accepted", "counter_offer", "message"].sort());
-    
+    assert.deepEqual(
+      Object.keys(res).sort(),
+      ["accepted", "counter_offer", "message"].sort(),
+    );
+
     // Explicitly confirm floor, reservation, or private variables are undefined
     assert.equal((res as unknown as Record<string, unknown>).floor, undefined);
-    assert.equal((res as unknown as Record<string, unknown>).reservation_price, undefined);
-    assert.equal((res as unknown as Record<string, unknown>).hiddenFloor, undefined);
-    assert.equal((res as unknown as Record<string, unknown>).floorPercentage, undefined);
-    assert.equal((res as unknown as Record<string, unknown>).concessionRate, undefined);
+    assert.equal(
+      (res as unknown as Record<string, unknown>).reservation_price,
+      undefined,
+    );
+    assert.equal(
+      (res as unknown as Record<string, unknown>).hiddenFloor,
+      undefined,
+    );
+    assert.equal(
+      (res as unknown as Record<string, unknown>).floorPercentage,
+      undefined,
+    );
+    assert.equal(
+      (res as unknown as Record<string, unknown>).concessionRate,
+      undefined,
+    );
 
     // Confirm message text does not mention words like 'floor' or 'reservation price'
     assert.equal(res.message.toLowerCase().includes("floor"), false);
@@ -107,7 +123,7 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
         original_price: originalPrice,
         previous_counter: originalPrice,
       },
-      stubbornConfig
+      stubbornConfig,
     );
 
     const resModerate1 = simulateVendorNegotiation(
@@ -118,7 +134,7 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
         original_price: originalPrice,
         previous_counter: originalPrice,
       },
-      moderateConfig
+      moderateConfig,
     );
 
     const resFlexible1 = simulateVendorNegotiation(
@@ -129,7 +145,7 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
         original_price: originalPrice,
         previous_counter: originalPrice,
       },
-      flexibleConfig
+      flexibleConfig,
     );
 
     // Concession amounts: stubborn concedes least, flexible concedes most
@@ -139,11 +155,11 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
 
     assert.ok(
       concessionStubborn < concessionModerate,
-      `Expected stubborn concession (${concessionStubborn}) < moderate concession (${concessionModerate})`
+      `Expected stubborn concession (${concessionStubborn}) < moderate concession (${concessionModerate})`,
     );
     assert.ok(
       concessionModerate < concessionFlexible,
-      `Expected moderate concession (${concessionModerate}) < flexible concession (${concessionFlexible})`
+      `Expected moderate concession (${concessionModerate}) < flexible concession (${concessionFlexible})`,
     );
 
     // Counters must be monotonically ordered: stubborn > moderate > flexible
@@ -152,7 +168,11 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
   });
 
   it("seeded PRNG produces identical reproducible results for demos", () => {
-    const config = getVendorSimulatorConfig("vendor-repeat", "Support Platform B", "software");
+    const config = getVendorSimulatorConfig(
+      "vendor-repeat",
+      "Support Platform B",
+      "software",
+    );
     const req: NegotiateRequest = {
       contract_id: "contract-repeatable",
       offer: 7500,
@@ -192,12 +212,12 @@ describe("Vendor Simulator Concession & Secrecy Unit Tests", () => {
           original_price: originalPrice,
           previous_counter: counter,
         },
-        stubbornConfig
+        stubbornConfig,
       );
 
       assert.ok(
         res.counter_offer >= stubbornFloor,
-        `Round ${round}: counter ${res.counter_offer} went below hidden floor ${stubbornFloor}`
+        `Round ${round}: counter ${res.counter_offer} went below hidden floor ${stubbornFloor}`,
       );
       counter = res.counter_offer;
     }

@@ -1,13 +1,13 @@
 /**
  * Address Screening & Compliance Interface
- * 
+ *
  * Circle Documentation Findings:
  * Circle provides institutional Compliance and Travel Rule screening features (e.g. Circle Compliance Engine,
  * Verite credentials, and integrations with third-party screening engines such as TRM Labs, Chainalysis, and Elliptic).
  * However, the developer-controlled wallets SDK (@circle-fin/developer-controlled-wallets) does not expose a native
  * synchronous address screening endpoint out-of-the-box. In production, teams configure webhooks with Circle Compliance
  * Engine or invoke a dedicated AML API (e.g. TRM Labs / Chainalysis) prior to transaction submission.
- * 
+ *
  * The implementation below defines the typed `screenAddress` interface, performs EVM address format validation,
  * checks against known high-risk/OFAC test vectors, and returns structured audit metadata.
  */
@@ -40,7 +40,9 @@ export function isValidEVMAddress(address: string | null | undefined): boolean {
 /**
  * Screens a counterparty or vendor wallet address for compliance, sanctions, and AML risk.
  */
-export async function screenAddress(address: string): Promise<AddressScreeningResult> {
+export async function screenAddress(
+  address: string,
+): Promise<AddressScreeningResult> {
   const screenedAt = new Date().toISOString();
 
   if (!isValidEVMAddress(address)) {

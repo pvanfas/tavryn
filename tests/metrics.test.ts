@@ -1,12 +1,14 @@
-import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { describe, test } from "node:test";
+
+import { NextRequest } from "next/server";
+
+import { GET } from "../app/api/metrics/route";
 import {
-  getTractionMetrics,
   generateMetricsCsv,
+  getTractionMetrics,
   TractionMetricsResult,
 } from "../lib/metrics";
-import { GET } from "../app/api/metrics/route";
-import { NextRequest } from "next/server";
 
 describe("Traction Metrics Engine & Telemetry Reporting", () => {
   test("1. getTractionMetrics computes live aggregations for all businesses without synthetic mocks", async () => {
@@ -14,11 +16,14 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
 
     assert.equal(metrics.realOnly, false);
     assert.ok(typeof metrics.generatedAt === "string");
-    assert.ok(metrics.businesses.totalCount >= 1, "Should include at least Demo Co");
+    assert.ok(
+      metrics.businesses.totalCount >= 1,
+      "Should include at least Demo Co",
+    );
     assert.equal(
       metrics.businesses.totalCount,
       metrics.businesses.realCount + metrics.businesses.demoCount,
-      "Total count must equal realCount + demoCount"
+      "Total count must equal realCount + demoCount",
     );
 
     // USDC reconciliation
@@ -26,7 +31,7 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
     assert.ok(metrics.usdcVolume.released >= 0);
     assert.ok(
       metrics.usdcVolume.escrowed >= metrics.usdcVolume.released,
-      "Total escrowed must be >= total released"
+      "Total escrowed must be >= total released",
     );
 
     // Savings reconciliation
@@ -34,13 +39,16 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
     assert.ok(metrics.savings.realized >= 0);
     assert.ok(
       metrics.savings.negotiated >= metrics.savings.realized,
-      "Negotiated savings must be >= realized savings"
+      "Negotiated savings must be >= realized savings",
     );
 
     // Contracts and governance
     assert.ok(metrics.contractsAndNegotiations.contractsTotal >= 0);
     assert.ok(metrics.governance.agentDecisionsCount >= 0);
-    assert.ok(metrics.governance.humanApprovalRatePct >= 0 && metrics.governance.humanApprovalRatePct <= 100);
+    assert.ok(
+      metrics.governance.humanApprovalRatePct >= 0 &&
+        metrics.governance.humanApprovalRatePct <= 100,
+    );
 
     // Velocity
     assert.ok(metrics.efficiency.avgRoundsToClose >= 0);
@@ -51,8 +59,15 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
     const realMetrics = await getTractionMetrics({ realOnly: true });
 
     assert.equal(realMetrics.realOnly, true);
-    assert.equal(realMetrics.businesses.demoCount, 0, "Real-only scope must have 0 demo businesses");
-    assert.equal(realMetrics.businesses.totalCount, realMetrics.businesses.realCount);
+    assert.equal(
+      realMetrics.businesses.demoCount,
+      0,
+      "Real-only scope must have 0 demo businesses",
+    );
+    assert.equal(
+      realMetrics.businesses.totalCount,
+      realMetrics.businesses.realCount,
+    );
 
     // Every business in the list must be real
     for (const b of realMetrics.businesses.list) {
@@ -159,7 +174,9 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
 
   test("4. GET /api/metrics returns structured JSON and validates format parameter", async () => {
     // 4a. Default JSON request
-    const jsonReq = new NextRequest("http://localhost:3000/api/metrics?realOnly=false");
+    const jsonReq = new NextRequest(
+      "http://localhost:3000/api/metrics?realOnly=false",
+    );
     const jsonRes = await GET(jsonReq);
     assert.equal(jsonRes.status, 200);
 
@@ -168,17 +185,25 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
     assert.ok(jsonData.metrics);
 
     // 4b. CSV request
-    const csvReq = new NextRequest("http://localhost:3000/api/metrics?format=csv");
+    const csvReq = new NextRequest(
+      "http://localhost:3000/api/metrics?format=csv",
+    );
     const csvRes = await GET(csvReq);
     assert.equal(csvRes.status, 200);
     assert.ok(csvRes.headers.get("Content-Type")?.includes("text/csv"));
-    assert.ok(csvRes.headers.get("Content-Disposition")?.includes("attachment; filename="));
+    assert.ok(
+      csvRes.headers
+        .get("Content-Disposition")
+        ?.includes("attachment; filename="),
+    );
 
     const csvText = await csvRes.text();
     assert.ok(csvText.includes("=== TAVRYN TRACTION SUMMARY ==="));
 
     // 5c. Invalid query parameter validation
-    const badReq = new NextRequest("http://localhost:3000/api/metrics?format=unsupported");
+    const badReq = new NextRequest(
+      "http://localhost:3000/api/metrics?format=unsupported",
+    );
     const badRes = await GET(badReq);
     assert.equal(badRes.status, 400);
   });
