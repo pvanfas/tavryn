@@ -65,15 +65,19 @@ export async function logAgentAction(
     const supabase = getServiceSupabase();
     const createdAt = new Date().toISOString();
 
-    // 1. Fetch latest block hash to link the chain
+    // 1. Fetch latest block hash for this business (or global fallback) to link the chain
     let prevHash = GENESIS_HASH;
     try {
-      const { data: latestRow } = await supabase
+      let q = supabase
         .from("agent_actions")
         .select("hash")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
+
+      if (params.businessId) {
+        q = q.eq("business_id", params.businessId);
+      }
+
+      const { data: latestRow } = await q.limit(1).maybeSingle();
 
       if (latestRow?.hash) {
         prevHash = latestRow.hash;

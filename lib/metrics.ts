@@ -70,6 +70,7 @@ export interface TractionMetricsResult {
     avgRoundsToClose: number;
     avgCycleTimeMinutes: number;
   };
+  receiptsCount: number;
   transactions: TransactionMetricItem[];
 }
 
@@ -140,6 +141,7 @@ export async function getTractionMetrics(options?: {
         humanApprovalRatePct: 0,
       },
       efficiency: { avgRoundsToClose: 0, avgCycleTimeMinutes: 0 },
+      receiptsCount: 0,
       transactions: [],
     };
   }
@@ -219,6 +221,19 @@ export async function getTractionMetrics(options?: {
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     approvals = approvals.filter((ap) => bIdSet.has(ap.business_id));
+  }
+
+  // 7. Fetch receipts
+  const { data: rawReceipts } = await supabase
+    .from("receipts")
+    .select("id, business_id")
+    .is("revoked_at", null);
+  let receiptsCount = (rawReceipts || []).length;
+  if (realOnly) {
+    const bIdSet = new Set(businessIds);
+    receiptsCount = (rawReceipts || []).filter((r) =>
+      bIdSet.has(r.business_id),
+    ).length;
   }
 
   // ─── AGGREGATIONS & CALCULATIONS ─────────────────────────────────────────────
@@ -497,6 +512,7 @@ export async function getTractionMetrics(options?: {
       avgRoundsToClose,
       avgCycleTimeMinutes,
     },
+    receiptsCount,
     transactions: txItems,
   };
 }

@@ -1,4 +1,4 @@
-# Stage 0006: Sidebar and Navigation Rebuild
+# Stage 0005: Sidebar and Navigation Rebuild
 
 _Sep 30, 2026 · A single typed configuration in lib/nav.ts now powers the entire workspace, collapsible desktop sidebar, and mobile bottom tab bar with zero dead hash links._
 
@@ -47,7 +47,7 @@ When switching organizations in the mobile sheet or desktop sidebar, the entire 
 
 ## Next up
 
-Autonomous multi-agent orchestration, Slack/webhook real-time notification dispatch, and public hackathon showcase presentation.
+Stage 0006: Statement and Invoice Import (in-memory bank statement CSV and invoice PDF ingestion with deterministic recurrence math and card redaction).
 
 ---
 

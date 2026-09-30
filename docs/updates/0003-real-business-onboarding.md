@@ -103,9 +103,7 @@ All financial decisions pass through pure deterministic TypeScript functions (`c
 
 ## Next up
 
-- Production pilot onboardings with enterprise finance teams.
-- Automated bidirectional email integration with human approval gates.
-- Arc Mainnet settlement deployment and ERP integration (QuickBooks / NetSuite).
+Stage 0004: Periodic QA & Independent Verification (fresh clone audit, client secret isolation, and multi-suite test passes across Node, Vitest, Hardhat, and Playwright).
 
 ---
 

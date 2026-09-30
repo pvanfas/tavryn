@@ -113,19 +113,27 @@ export function UserDropdown({
     }
   };
 
+  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses
+  const allowedBusinesses = businesses.filter(
+    (b) => b.is_real || b.name === "Demo Co",
+  );
+
   // Deduplicate businesses by clean name, preferring the active business if matched
-  const uniqueBusinesses = businesses.reduce<BusinessItem[]>((acc, b) => {
-    const clean = formatBusinessName(b.name);
-    const existingIndex = acc.findIndex(
-      (item) => formatBusinessName(item.name) === clean,
-    );
-    if (existingIndex === -1) {
-      acc.push(b);
-    } else if (b.id === activeBusinessId) {
-      acc[existingIndex] = b;
-    }
-    return acc;
-  }, []);
+  const uniqueBusinesses = allowedBusinesses.reduce<BusinessItem[]>(
+    (acc, b) => {
+      const clean = formatBusinessName(b.name);
+      const existingIndex = acc.findIndex(
+        (item) => formatBusinessName(item.name) === clean,
+      );
+      if (existingIndex === -1) {
+        acc.push(b);
+      } else if (b.id === activeBusinessId) {
+        acc[existingIndex] = b;
+      }
+      return acc;
+    },
+    [],
+  );
 
   const handleSwitchBusiness = (id: string) => {
     setOpen(false);
@@ -154,7 +162,7 @@ export function UserDropdown({
         onClick={() => setOpen(!open)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-2 pl-2 border-l border-slate-200/70 dark:border-slate-800/70 group cursor-pointer"
+        className="flex items-center gap-2 pl-2 border-l border-slate-200/70 dark:border-slate-800/70 group cursor-pointer shrink-0"
       >
         {/* Avatar */}
         <div className="h-8 w-8 rounded-full bg-[#142620] text-emerald-300 font-bold text-xs flex items-center justify-center ring-2 ring-[#107e65]/25 border border-emerald-900/40 shadow-2xs select-none overflow-hidden">

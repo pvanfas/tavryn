@@ -27,11 +27,10 @@ const eslintConfig = defineConfig([
 
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "off",
 
-      // Remove unused imports automatically
       "unused-imports/no-unused-imports": "error",
 
-      // Detect unused variables
       "unused-imports/no-unused-vars": [
         "warn",
         {
@@ -42,7 +41,6 @@ const eslintConfig = defineConfig([
         },
       ],
 
-      // Sort imports
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
 

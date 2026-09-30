@@ -143,6 +143,7 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
         avgRoundsToClose: 2.7,
         avgCycleTimeMinutes: 5,
       },
+      receiptsCount: 3,
       transactions: [
         {
           id: "tx-1",

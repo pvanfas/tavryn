@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   Layers,
+  Receipt,
   ShieldCheck,
   TrendingDown,
   Wallet,
@@ -223,6 +224,22 @@ export function TractionMetricsClient({
               <p className="text-[10px] text-slate-400 mt-1">
                 Above ceiling or category threshold
               </p>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0c120f] border border-slate-100 dark:border-slate-800/60 col-span-2 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Public Savings Receipts Generated
+                </p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
+                  {metrics.receiptsCount}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Allow-listed public cryptographic proofs on /r/[token]
+                </p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Receipt className="h-5 w-5" />
+              </div>
             </div>
           </div>
 

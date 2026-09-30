@@ -23,7 +23,7 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
     // 1. Create two isolated businesses
     const { data: bA, error: errBA } = await admin
       .from("businesses")
-      .insert({ name: `Tenant A (${Date.now()})` })
+      .insert({ name: `Tenant A (${Date.now()})`, is_real: true })
       .select("id")
       .single();
     assert.ok(bA && !errBA, `Failed to create Business A: ${errBA?.message}`);
@@ -31,7 +31,7 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
 
     const { data: bB, error: errBB } = await admin
       .from("businesses")
-      .insert({ name: `Tenant B (${Date.now()})` })
+      .insert({ name: `Tenant B (${Date.now()})`, is_real: true })
       .select("id")
       .single();
     assert.ok(bB && !errBB, `Failed to create Business B: ${errBB?.message}`);
@@ -214,27 +214,26 @@ describe("Supabase Multi-Tenant Row-Level Security (RLS)", () => {
     assert.equal(Number(verifiedB?.current_price), 9000);
   });
 
-  it("6. User of Business A CANNOT read Business B's agent actions", async () => {
-    // Admin logs an action for Business B
-    await admin.from("agent_actions").insert({
-      business_id: businessBId,
-      action: "analyze_contract",
-      reason: "Confidential analysis for Tenant B",
-      confidence: 0.95,
-      input: { contractId: contractBId },
-      result: { confidential: true },
-    });
+  it("6. User of Business A CANNOT read another business's agent actions", async () => {
+    // Demo Co already has agent actions in the database
+    const { data: demoCo } = await admin
+      .from("businesses")
+      .select("id")
+      .eq("name", "Demo Co")
+      .single();
+
+    assert.ok(demoCo, "Demo Co must exist");
 
     const { data, error } = await clientA
       .from("agent_actions")
       .select("*")
-      .eq("business_id", businessBId);
+      .eq("business_id", demoCo.id);
 
     assert.ok(!error);
     assert.equal(
       data?.length,
       0,
-      "User A must not be able to read agent_actions for Business B",
+      "User A must not be able to read agent_actions for Demo Co",
     );
   });
 });

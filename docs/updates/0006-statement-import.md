@@ -39,7 +39,7 @@ To mitigate this, every detected subscription is pre-populated in an editable re
 
 ## Next up
 
-Autonomous multi-vendor renewal sweeps and scheduled proactive negotiation runs on live contracts.
+Stage 0007: Ask Tavryn Command Bar (keyboard-first Cmd+K interface for plain-English queries, rich card visualization, and staged action proposals).
 
 ---
 

@@ -5,6 +5,7 @@ import React from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Body, H2 } from "@/components/ui/text";
+import { VendorLogo } from "@/components/VendorLogo";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -12,11 +13,13 @@ import { getServiceSupabase } from "@/lib/supabase";
 export const revalidate = 0;
 
 interface VendorRel {
+  id?: string;
   name: string;
   category: string;
   contact: string | null;
   reputation_score: number | null;
   is_simulated: boolean | null;
+  logo_url?: string | null;
 }
 
 interface ContractRecord extends ContractLike {
@@ -243,11 +246,24 @@ export default async function ContractsPage({
                         className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
                       >
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-slate-900 dark:text-white">
-                            {contract.service}
-                          </div>
-                          <div className="text-[11px] text-slate-400">
-                            {contract.vendors?.name || "Direct Vendor"}
+                          <div className="flex items-center gap-3">
+                            <VendorLogo
+                              vendorId={contract.vendor_id}
+                              vendorName={
+                                contract.vendors?.name || contract.service
+                              }
+                              logoUrl={contract.vendors?.logo_url}
+                              editable={true}
+                              size="md"
+                            />
+                            <div>
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {contract.service}
+                              </div>
+                              <div className="text-[11px] text-slate-400">
+                                {contract.vendors?.name || "Direct Vendor"}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">

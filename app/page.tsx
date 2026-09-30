@@ -7,6 +7,7 @@ import {
   Layers,
   Lock,
   PlayCircle,
+  Receipt,
   ShieldCheck,
   TrendingDown,
   Zap,
@@ -19,6 +20,7 @@ import { AgentIcon } from "@/components/AgentIcon";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ARC_CONFIG } from "@/lib/circle";
 import { FOOTER_NAV_LINKS, LANDING_NAV_LINKS } from "@/lib/nav";
+import { getServiceSupabase } from "@/lib/supabase";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -55,10 +57,23 @@ export default async function Page(props: {
     return <DashboardPage searchParams={props.searchParams} />;
   }
 
-  return <LandingPage />;
+  const supabase = getServiceSupabase();
+  const { data: featuredReceipt } = await supabase
+    .from("receipts")
+    .select("token")
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return <LandingPage featuredReceiptToken={featuredReceipt?.token} />;
 }
 
-function LandingPage() {
+function LandingPage({
+  featuredReceiptToken,
+}: {
+  featuredReceiptToken?: string;
+}) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f7f9f8] dark:bg-[#0b100e] text-slate-900 dark:text-slate-100 selection:bg-emerald-500/20 selection:text-[#107e65] dark:selection:text-[#34d399]">
       {/* Top Navbar */}
@@ -189,6 +204,18 @@ function LandingPage() {
                 <GithubIcon className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                 <span>GitHub Repo</span>
               </a>
+
+              {featuredReceiptToken && (
+                <Link
+                  id="hero-receipt-cta"
+                  href={`/r/${featuredReceiptToken}`}
+                  target="_blank"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
+                >
+                  <Receipt className="h-5 w-5" />
+                  <span>Public Proof</span>
+                </Link>
+              )}
             </div>
 
             {/* Live Interactive Demo Pill */}

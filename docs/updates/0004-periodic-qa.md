@@ -1,4 +1,4 @@
-# Stage 0004: QA & Independent Verification
+# Stage 0004: Periodic QA & Independent Verification
 
 _Sep 30, 2026 · 104 tests passing across Node, Vitest, Hardhat, and Playwright, zero secrets in the client bundle, and verified Arc testnet escrow on glass._
 

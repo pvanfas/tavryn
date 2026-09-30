@@ -8,13 +8,13 @@ Tavryn can now model real-world enterprise SaaS spend, mathematically spot renew
 
 ## What actually got built
 
-- **8-Table Relational Schema** in [0001_init.sql](file:///supabase/migrations/0001_init.sql) covering `businesses`, `vendors`, `contracts`, `negotiations`, `policies`, `transactions`, `agent_actions`, and `approvals`
+- **8-Table Relational Schema** in [0001_init.sql](../../supabase/migrations/0001_init.sql) covering `businesses`, `vendors`, `contracts`, `negotiations`, `policies`, `transactions`, `agent_actions`, and `approvals`
 - **Immutable Agent Audit Log** with append-only database enforcement on `agent_actions` to maintain complete auditability
-- **Server and Client Supabase Wrappers** in [lib/supabase.ts](file:///lib/supabase.ts) with service-role security isolation
-- **Deterministic Savings Engine** in [lib/heuristics.ts](file:///lib/heuristics.ts) calculating exact unallocated seat waste and telemetry-based usage drop savings
-- **Automated Test Suite** in [tests/heuristics.test.ts](file:///tests/heuristics.test.ts) verifying mathematical edge cases and formulas
-- **Idempotent Seed Runner** in [scripts/seed.ts](file:///scripts/seed.ts) establishing `Demo Co`, spending policies, and 6 vendors (spanning simulated support and real providers like Slack, Datadog, AWS)
-- **Live Executive Dashboard** in [app/page.tsx](file:///app/page.tsx) rendering real-time metrics with zero client mocks, dynamic theme switching ([components/ThemeToggle.tsx](file:///components/ThemeToggle.tsx)), and brand assets ([public/logo.png](file:///public/logo.png))
+- **Server and Client Supabase Wrappers** in [lib/supabase.ts](../../lib/supabase.ts) with service-role security isolation
+- **Deterministic Savings Engine** in [lib/heuristics.ts](../../lib/heuristics.ts) calculating exact unallocated seat waste and telemetry-based usage drop savings
+- **Automated Test Suite** in [tests/heuristics.test.ts](../../tests/heuristics.test.ts) verifying mathematical edge cases and formulas
+- **Idempotent Seed Runner** in [scripts/seed.ts](../../scripts/seed.ts) establishing `Demo Co`, spending policies, and 6 vendors (spanning simulated support and real providers like Slack, Datadog, AWS)
+- **Live Executive Dashboard** in [app/page.tsx](../../app/page.tsx) rendering real-time metrics with zero client mocks, dynamic theme switching ([components/ThemeToggle.tsx](../../components/ThemeToggle.tsx)), and brand assets ([public/logo.png](../../public/logo.png))
 
 ## One decision worth explaining
 

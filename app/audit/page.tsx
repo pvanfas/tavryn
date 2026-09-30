@@ -33,7 +33,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
   }
 
   // 2. Perform server-side cryptographic audit chain verification
-  const verification = await verifyAuditChain(undefined, 100);
+  const verification = await verifyAuditChain(business?.id, 1000);
 
   return (
     <AppShell

@@ -9,9 +9,9 @@ Tavryn now has a concrete, working Next.js App Router workspace configured with 
 ## What actually got built
 
 - Next.js 16 (App Router) initialized with TypeScript 5 and Tailwind CSS v4
-- Non-negotiable architectural constraints formalized in [.agent/rules/project.md](file:///.agent/rules/project.md)
-- Environment variable contracts specified in [.env.example](file:///.env.example)
-- Architectural decisions tracking initialized in [docs/DECISIONS.md](file:///docs/DECISIONS.md)
+- Non-negotiable architectural constraints formalized in [.agent/rules/project.md](../../.agent/rules/project.md)
+- Environment variable contracts specified in [.env.example](../../.env.example)
+- Architectural decisions tracking initialized in [docs/DECISIONS.md](../DECISIONS.md)
 - Standardized stage changelog and update log protocol established
 
 ## One decision worth explaining

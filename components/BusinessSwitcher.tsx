@@ -34,7 +34,14 @@ export function BusinessSwitcher({
     }
   };
 
-  const activeBusiness = businesses.find((b) => b.id === activeBusinessId);
+  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses
+  const displayBusinesses = businesses.filter(
+    (b) => b.is_real || b.name === "Demo Co",
+  );
+
+  const activeBusiness =
+    displayBusinesses.find((b) => b.id === activeBusinessId) ||
+    displayBusinesses[0];
 
   return (
     <div className="flex items-center gap-2">
@@ -49,7 +56,7 @@ export function BusinessSwitcher({
             onChange={handleChange}
             className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-1 text-xs"
           >
-            {businesses.map((b) => (
+            {displayBusinesses.map((b) => (
               <option
                 key={b.id}
                 value={b.id}
