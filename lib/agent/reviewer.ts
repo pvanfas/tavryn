@@ -173,12 +173,25 @@ export async function runReviewerAgent(
   );
 
   let output: ReviewerOutput;
+  const reviewerProvider =
+    process.env.REVIEWER_LLM_PROVIDER ||
+    (provider === "openai" && process.env.ANTHROPIC_API_KEY
+      ? "anthropic"
+      : provider === "anthropic" && process.env.OPENAI_API_KEY
+        ? "openai"
+        : provider);
   const reviewerModelName =
-    process.env.REVIEWER_LLM_MODEL || process.env.LLM_MODEL || "gpt-4o-mini";
+    process.env.REVIEWER_LLM_MODEL ||
+    (reviewerProvider === "anthropic"
+      ? "claude-3-5-sonnet-20241022"
+      : process.env.LLM_MODEL || "gpt-4o");
 
   if (hasKey && provider !== "mock") {
     try {
-      const model = getAgentLanguageModel();
+      const model = getAgentLanguageModel({
+        provider: reviewerProvider,
+        modelName: reviewerModelName,
+      });
       const prompt = `You are an adversarial procurement auditor and Chief Commercial Officer reviewing a proposed contract renewal before policy check.
 Your job is to catch weak deals, unaddressed seat waste, and rushed concessions. You can only make decisions STRICTER.
 

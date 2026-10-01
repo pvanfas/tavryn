@@ -443,7 +443,7 @@ export default function NegotiationDetailPage({
       currency="USDC"
     >
       {/* Top Actions Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           href="/negotiations"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -454,7 +454,7 @@ export default function NegotiationDetailPage({
 
         <Link
           href={`/decision/${contractId}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs w-full sm:w-auto"
         >
           <span>Inspect Policy Checklist</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -496,32 +496,32 @@ export default function NegotiationDetailPage({
           </div>
 
           {/* Price Stats */}
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-400 dark:text-slate-500 block">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-slate-400 dark:text-slate-500 block text-[10px] sm:text-xs">
                 Original Rate
               </Caption>
-              <Mono as="p" className="text-base text-slate-400 line-through">
+              <Mono as="p" className="text-xs sm:text-base text-slate-400 line-through">
                 ${baselinePrice.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-500 dark:text-slate-400 block">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-slate-500 dark:text-slate-400 block text-[10px] sm:text-xs">
                 Current Counter
               </Caption>
-              <Mono as="p" className="text-base text-slate-900 dark:text-white">
+              <Mono as="p" className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold">
                 ${currentOffer.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block">
+            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block text-[10px] sm:text-xs">
                 Achieved Cut
               </Caption>
               <Mono
                 as="p"
-                className="text-base text-[#107e65] dark:text-[#34d399]"
+                className="text-xs sm:text-base text-[#107e65] dark:text-[#34d399] font-bold"
               >
                 ${Math.max(0, savings).toLocaleString()}
               </Mono>
@@ -550,55 +550,57 @@ export default function NegotiationDetailPage({
 
         {/* Mode Switcher & Status Bar */}
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Mode:
             </span>
-            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-800">
+            <div className="grid grid-cols-2 sm:inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-800 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setMode("real")}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-bold transition-all text-center ${
                   mode === "real"
                     ? "bg-[#107e65] text-white shadow-2xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                Real Vendor (Human-in-the-Loop)
+                Real Vendor
               </button>
               <button
                 type="button"
                 onClick={() => setMode("simulated")}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-bold transition-all text-center ${
                   mode === "simulated"
                     ? "bg-[#107e65] text-white shadow-2xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                Autonomous Simulated
+                Autonomous
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Status:
-            </span>
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                negotiation?.status === "agreed"
-                  ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
-                  : negotiation?.status === "savings_recorded_no_payment"
-                    ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
-                    : negotiation?.status === "walked_away"
-                      ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
-                      : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
-              }`}
-            >
-              {negotiation?.status === "savings_recorded_no_payment"
-                ? "Savings Recorded (Off-Chain)"
-                : negotiation?.status || "Ready to Negotiate"}
-            </span>
+          <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-800/60">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Status:
+              </span>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                  negotiation?.status === "agreed"
+                    ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
+                    : negotiation?.status === "savings_recorded_no_payment"
+                      ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
+                      : negotiation?.status === "walked_away"
+                        ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
+                        : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                }`}
+              >
+                {negotiation?.status === "savings_recorded_no_payment"
+                  ? "Savings Recorded (Off-Chain)"
+                  : negotiation?.status || "Ready to Negotiate"}
+              </span>
+            </div>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium ml-2">
               Rounds: {negotiation?.rounds || 0} / 5
             </span>
@@ -610,13 +612,13 @@ export default function NegotiationDetailPage({
           <div className="mt-6 space-y-6">
             {/* Step 1: Draft Outreach Email */}
             <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 dark:from-[#111714] dark:to-[#0f1412] p-5 shadow-2xs">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/70">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/70">
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0 mt-0.5 sm:mt-0">
                     <Mail className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span>Step 1: Agent Draft Outreach Email</span>
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
                         Human-in-the-Loop Guardrail
@@ -634,7 +636,7 @@ export default function NegotiationDetailPage({
                   type="button"
                   onClick={handleDraftEmail}
                   disabled={draftingEmail}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0 cursor-pointer"
                 >
                   {draftingEmail ? (
                     <>
@@ -657,18 +659,18 @@ export default function NegotiationDetailPage({
               {draftEmail ? (
                 <div className="mt-4 space-y-3">
                   <div className="rounded-lg border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900/60 p-4 space-y-2 text-xs">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                      <div className="truncate">
                         <span className="font-semibold text-slate-900 dark:text-white">
                           To:{" "}
                         </span>
                         <Mono as="span">{draftEmail.to}</Mono>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button
                           type="button"
                           onClick={handleCopyEmail}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+                          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                         >
                           {copiedEmail ? (
                             <Check className="h-3 w-3 text-emerald-600" />
@@ -681,7 +683,7 @@ export default function NegotiationDetailPage({
                         <button
                           type="button"
                           onClick={() => setEmailApproved(true)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-semibold text-xs transition-colors ${
+                          className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 sm:py-1 rounded font-semibold text-xs transition-colors cursor-pointer ${
                             emailApproved
                               ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                               : "bg-[#107e65] text-white hover:bg-[#0d6b55]"
@@ -690,7 +692,7 @@ export default function NegotiationDetailPage({
                           <CheckCircle2 className="h-3 w-3" />
                           <span>
                             {emailApproved
-                              ? "Approved & Dispatched"
+                              ? "Approved"
                               : "Approve & Mark Sent"}
                           </span>
                         </button>
@@ -776,7 +778,7 @@ export default function NegotiationDetailPage({
                   className="w-full text-xs font-mono p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-[#107e65] resize-y"
                 />
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <span className="text-[11px] text-slate-500">
                     Extracts price, seat constraints, commitment duration, and
                     USDC acceptability.
@@ -786,17 +788,17 @@ export default function NegotiationDetailPage({
                     type="button"
                     onClick={handleProcessReply}
                     disabled={processingReply || !replyText.trim()}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0 cursor-pointer"
                   >
                     {processingReply ? (
                       <>
                         <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Extracting & Evaluating...</span>
+                        <span>Extracting &amp; Evaluating...</span>
                       </>
                     ) : (
                       <>
                         <AgentIcon className="h-3.5 w-3.5" />
-                        <span>Process & Extract Terms</span>
+                        <span>Process &amp; Extract Terms</span>
                       </>
                     )}
                   </button>
@@ -964,7 +966,7 @@ export default function NegotiationDetailPage({
           </div>
         ) : (
           /* Simulated Autonomous Mode Action Bar */
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-xs text-slate-500">
               Agent will simulate multi-round counter-offers deterministically
               based on market benchmarks.
@@ -977,7 +979,7 @@ export default function NegotiationDetailPage({
                 type="button"
                 onClick={handleStartNegotiation}
                 disabled={running}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0 cursor-pointer"
               >
                 {running ? (
                   <>

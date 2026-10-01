@@ -12,6 +12,12 @@ describe("Wrong-Vendor & Wallet Mutation Defenses", () => {
   before(async () => {
     const supabase = getServiceSupabase();
 
+    // Ensure Slack contract has baseline current_price = 9600 for clean test isolation
+    await supabase
+      .from("contracts")
+      .update({ current_price: 9600 })
+      .eq("service", "Slack");
+
     // 1. Get Slack contract and vendor
     const { data: contract } = await supabase
       .from("contracts")

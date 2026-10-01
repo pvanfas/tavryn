@@ -1,6 +1,8 @@
+import { streamText } from "ai";
 import { z } from "zod";
 
 import { processCommandQuery } from "@/lib/agent/command";
+import { getAgentLanguageModel } from "@/lib/agent/provider";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -81,23 +83,45 @@ export async function POST(req: Request) {
       const customReadable = new ReadableStream({
         async start(controller) {
           try {
-            // Stream text in small chunks for a natural typewriter effect
-            const words = result.text.split(" ");
-            let current = "";
-            for (let i = 0; i < words.length; i++) {
-              current += (i > 0 ? " " : "") + words[i];
-              if (i % 3 === 0 || i === words.length - 1) {
-                const chunkPayload = JSON.stringify({
-                  type: "chunk",
-                  chunk:
-                    (i > 0 ? " " : "") +
-                    words.slice(Math.max(0, i - 2), i + 1).join(" "),
-                  fullText: current,
+            const isRealLLM = Boolean(
+              (process.env.LLM_PROVIDER === "openai" &&
+                (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
+                (process.env.LLM_PROVIDER === "anthropic" &&
+                  (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)),
+            );
+
+            if (isRealLLM && !result.card) {
+              try {
+                const model = getAgentLanguageModel();
+                const { textStream } = streamText({
+                  model,
+                  prompt: `You are Tavryn, an autonomous enterprise procurement and spend defense AI agent.
+User command: "${message}"
+Data and context: ${result.text}
+Provide a crisp, professional, direct response.`,
                 });
-                controller.enqueue(encoder.encode(`data: ${chunkPayload}\n\n`));
-                // Minor realistic micro-delay
-                await new Promise((r) => setTimeout(r, 20));
+
+                let current = "";
+                for await (const chunk of textStream) {
+                  current += chunk;
+                  const chunkPayload = JSON.stringify({
+                    type: "chunk",
+                    chunk,
+                    fullText: current,
+                  });
+                  controller.enqueue(
+                    encoder.encode(`data: ${chunkPayload}\n\n`),
+                  );
+                }
+              } catch (llmStreamErr) {
+                console.warn(
+                  "[CommandStream] streamText error, falling back to chunked result:",
+                  llmStreamErr,
+                );
+                await emitTypewriterChunks(result.text, controller, encoder);
               }
+            } else {
+              await emitTypewriterChunks(result.text, controller, encoder);
             }
 
             // Stream structured card payload if present
@@ -145,5 +169,28 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     return handleApiError(err, "Failed to process Ask Tavryn command");
+  }
+}
+
+async function emitTypewriterChunks(
+  text: string,
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+) {
+  const words = text.split(" ");
+  let current = "";
+  for (let i = 0; i < words.length; i++) {
+    current += (i > 0 ? " " : "") + words[i];
+    if (i % 3 === 0 || i === words.length - 1) {
+      const chunkPayload = JSON.stringify({
+        type: "chunk",
+        chunk:
+          (i > 0 ? " " : "") +
+          words.slice(Math.max(0, i - 2), i + 1).join(" "),
+        fullText: current,
+      });
+      controller.enqueue(encoder.encode(`data: ${chunkPayload}\n\n`));
+      await new Promise((r) => setTimeout(r, 20));
+    }
   }
 }

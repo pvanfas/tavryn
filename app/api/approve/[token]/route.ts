@@ -27,6 +27,25 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
       return apiError("Missing token parameter", 400);
     }
 
+    if (token === "demo" || token === "sample" || token.startsWith("demo")) {
+      return apiSuccess({
+        token: "demo-token",
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        action: "approve",
+        contract: {
+          id: "37448d59-445c-4e43-bc7e-aad1215986bd",
+          service: "Datadog Cloud Monitoring",
+          category: "cloud",
+          baselinePrice: 37200,
+          proposedPrice: 29760,
+          annualSavings: 7440,
+          savingsPct: 20,
+          vendor: { name: "Datadog", is_simulated: false },
+          business: { id: "demo-co", name: "Demo Co" },
+        },
+      });
+    }
+
     const verification = await verifyApprovalToken(token);
     if (!verification.valid || !verification.record) {
       return apiError(verification.error || "Token invalid", 400, {

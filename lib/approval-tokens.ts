@@ -198,11 +198,18 @@ export async function consumeApprovalToken(
     supervisorNote ||
     `One-tap supervisor ${decidedStatus} via signed HMAC link (Token ID: ${record.id})`;
 
-  // 1. Mark token as consumed
-  await supabase
+  // 1. Mark token as consumed atomically
+  const { data: consumedToken, error: tokenErr } = await supabase
     .from("approval_tokens")
     .update({ used_at: decidedAt })
-    .eq("id", record.id);
+    .eq("id", record.id)
+    .is("used_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (!consumedToken && !tokenErr) {
+    throw new Error("This approval link has already been used or consumed concurrently.");
+  }
 
   // 2. Query or insert/update approvals row
   let approvalQuery = supabase

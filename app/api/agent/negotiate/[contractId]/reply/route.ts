@@ -38,17 +38,44 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       return apiError("Rate limit exceeded for vendor reply ingestion", 429);
     }
 
-    const json = await req.json().catch(() => null);
-    const parsedBody = replyBodySchema.safeParse(json);
-    if (!parsedBody.success) {
-      return apiError("Invalid request body", 400, parsedBody.error.issues);
+    let rawReply = "";
+    let acceptsUsdcOverride: boolean | undefined = undefined;
+
+    const contentType = req.headers.get("content-type") || "";
+    if (
+      contentType.includes("multipart/form-data") ||
+      contentType.includes("application/x-www-form-urlencoded")
+    ) {
+      const formData = await req.formData();
+      rawReply =
+        (formData.get("text") as string) ||
+        (formData.get("body") as string) ||
+        (formData.get("html") as string) ||
+        (formData.get("rawReply") as string) ||
+        "";
+    } else {
+      const json = await req.json().catch(() => null);
+      if (json) {
+        rawReply =
+          json.rawReply ||
+          json.text ||
+          json.body ||
+          json.message ||
+          "";
+        acceptsUsdcOverride = json.acceptsUsdcOverride;
+      }
     }
 
-    const { rawReply, acceptsUsdcOverride } = parsedBody.data;
+    if (!rawReply || rawReply.trim().length === 0) {
+      return apiError(
+        "Vendor reply text cannot be empty (provide rawReply, text, or body)",
+        400,
+      );
+    }
 
     const result = await processVendorReply({
       contractId,
-      rawReply,
+      rawReply: rawReply.trim(),
       acceptsUsdcOverride,
     });
 

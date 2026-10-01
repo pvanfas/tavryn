@@ -120,7 +120,7 @@ Tavryn deeply integrates Circle's developer infrastructure and the Arc Network:
 | **Chain ID**           | `5042002` (Arc Layer-1 Testnet)                                                                                                |
 | **Native RPC**         | `https://rpc.testnet.arc.network`                                                                                              |
 | **Block Explorer**     | [https://testnet.arcscan.app](https://testnet.arcscan.app)                                                                     |
-| **ArcEscrow Contract** | [`0x880eF868be5484852086eA9d424b94D673752e50`](https://testnet.arcscan.app/address/0x880eF868be5484852086eA9d424b94D673752e50) |
+| **ArcEscrow Contract** | [`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`](https://testnet.arcscan.app/address/0x78e61ae7e8EeF34Add911FA3e41F3408a819c047) |
 | **USDC Precompile**    | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
 
 ---
@@ -204,7 +204,7 @@ CIRCLE_BLOCKCHAIN=ARC-TESTNET
 NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.network
 NEXT_PUBLIC_ARC_CHAIN_ID=5042002
 NEXT_PUBLIC_USDC_CONTRACT_ADDRESS=0x3600000000000000000000000000000000000000
-NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS=0x880eF868be5484852086eA9d424b94D673752e50
+NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS=0x78e61ae7e8EeF34Add911FA3e41F3408a819c047
 
 CRON_SECRET=tavryn_cron_secret_2026
 RENEWAL_WINDOW_DAYS=45
@@ -271,7 +271,7 @@ Tavryn is architected as a standard Next.js App Router application ready for 1-c
 - [x] `NEXT_PUBLIC_ARC_RPC_URL` (`https://rpc.testnet.arc.network`)
 - [x] `NEXT_PUBLIC_ARC_CHAIN_ID` (`5042002`)
 - [x] `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` (`0x3600000000000000000000000000000000000000`)
-- [x] `NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS` (`0x880eF868be5484852086eA9d424b94D673752e50`)
+- [x] `NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS` (`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`)
 - [x] `CRON_SECRET` (used by Vercel Cron to authenticate `GET /api/cron/daily`)
 - [x] `RENEWAL_WINDOW_DAYS` (`45`)
 - [x] `IDEMPOTENCY_WINDOW_DAYS` (`14`)

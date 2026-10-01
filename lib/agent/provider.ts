@@ -10,14 +10,28 @@ import {
   MOCK_VENDOR_BENCHMARKS,
 } from "../constants";
 
+export interface AgentModelOptions {
+  contractIdHint?: string;
+  modelName?: string;
+  provider?: string;
+}
+
 /**
- * Returns a configured LanguageModel based on environment variables.
+ * Returns a configured LanguageModel based on environment variables or options.
  * Supported LLM_PROVIDER: 'openai', 'anthropic', 'mock'.
  * Fallback to intelligent mock model if no provider API key is present.
  */
-export function getAgentLanguageModel(contractIdHint?: string) {
-  const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const modelName = process.env.LLM_MODEL;
+export function getAgentLanguageModel(
+  optionsOrHint?: string | AgentModelOptions,
+) {
+  const opts: AgentModelOptions =
+    typeof optionsOrHint === "string"
+      ? { contractIdHint: optionsOrHint }
+      : optionsOrHint || {};
+
+  const defaultProvider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
+  const provider = (opts.provider || defaultProvider).toLowerCase();
+  const modelName = opts.modelName || process.env.LLM_MODEL;
 
   const openaiKey = process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY;
@@ -32,9 +46,21 @@ export function getAgentLanguageModel(contractIdHint?: string) {
     return anthropic(modelName || DEFAULT_ANTHROPIC_MODEL);
   }
 
+  // Cross-provider fallback if specific provider requested but key absent
+  if (provider !== "mock") {
+    if (openaiKey) {
+      const openai = createOpenAI({ apiKey: openaiKey });
+      return openai(modelName || DEFAULT_OPENAI_MODEL);
+    }
+    if (anthropicKey) {
+      const anthropic = createAnthropic({ apiKey: anthropicKey });
+      return anthropic(modelName || DEFAULT_ANTHROPIC_MODEL);
+    }
+  }
+
   // Fallback / Mock Language Model for deterministic test & dev execution
   let stepIndex = 0;
-  let targetContractId = contractIdHint || "";
+  let targetContractId = opts.contractIdHint || "";
   let serviceName = "Contract";
   let currentPrice: number = MOCK_VENDOR_BENCHMARKS.default.currentPrice;
   let targetPrice: number = MOCK_VENDOR_BENCHMARKS.default.targetPrice;

@@ -110,6 +110,9 @@ contract ArcEscrow {
         uint256 _maxPerAgreement
     ) {
         require(_usdcToken != address(0), "Invalid USDC address");
+        require(_agent != address(0), "Invalid agent address");
+        require(_verifier != address(0), "Invalid verifier address");
+        require(_verifier != _agent, "ArcEscrow: Verifier cannot be agent");
         usdcToken = IERC20(_usdcToken);
         owner = msg.sender;
         agent = _agent;
@@ -123,6 +126,7 @@ contract ArcEscrow {
         if (_owner != address(0)) owner = _owner;
         if (_agent != address(0)) agent = _agent;
         if (_verifier != address(0)) verifier = _verifier;
+        require(verifier != agent, "ArcEscrow: Verifier cannot be agent");
         emit RolesUpdated(owner, agent, verifier);
     }
 
@@ -170,8 +174,8 @@ contract ArcEscrow {
             : 0;
         uint256 totalDeposit = amount + feeAmount;
 
-        // Policy rule: If initiated by agent, total deposit cannot exceed maxPerAgreement
-        if (msg.sender == agent) {
+        // Policy rule: If initiated by agent or any non-owner, total deposit cannot exceed maxPerAgreement
+        if (msg.sender != owner) {
             require(totalDeposit <= maxPerAgreement, "ArcEscrow: Amount exceeds agent policy cap");
             if (categoryBudgets[category] > 0) {
                 require(

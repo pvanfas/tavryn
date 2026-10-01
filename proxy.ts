@@ -16,6 +16,7 @@ export function proxy(request: NextRequest) {
   const isPublic =
     pathname === "/" ||
     pathname.startsWith("/r/") ||
+    pathname.startsWith("/approve/") ||
     pathname.startsWith("/verify-labeling") ||
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/") ||

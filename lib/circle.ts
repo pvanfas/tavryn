@@ -387,6 +387,7 @@ export async function getArcUsdcBalance(address: string): Promise<number> {
     const res = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(1000),
       body: JSON.stringify({
         jsonrpc: "2.0",
         id: 1,
@@ -408,7 +409,9 @@ export async function getArcUsdcBalance(address: string): Promise<number> {
     const rawVal = BigInt(json.result);
     return Number(rawVal) / 1e6;
   } catch (err) {
-    console.warn("[Circle/Arc] Failed to query live Arc USDC balance:", err);
+    if (process.env.NODE_ENV !== "test") {
+      console.warn("[Circle/Arc] Failed to query live Arc USDC balance:", err);
+    }
     return 0;
   }
 }
@@ -562,6 +565,7 @@ export async function createArcEscrowAgreement(params: {
   durationSeconds?: bigint;
   idempotencyKey?: string;
   privateKey?: Hex;
+  walletId?: string;
   forceRealChain?: boolean;
 }): Promise<{
   isSimulation: boolean;
@@ -576,7 +580,6 @@ export async function createArcEscrowAgreement(params: {
     };
   }
 
-  const { walletClient, publicClient } = getArcWalletClient(params.privateKey);
   const escrowAddress = ARC_CONFIG.escrowContractAddress as `0x${string}`;
   const amountUnits = parseUnits(params.amount.toFixed(6), 6);
   const baselineUnits =
@@ -587,6 +590,48 @@ export async function createArcEscrowAgreement(params: {
   const idKey = params.idempotencyKey
     ? keccak256(toHex(params.idempotencyKey))
     : keccak256(toHex(`agreement-${Date.now()}`));
+
+  const targetWalletId = params.walletId || process.env.CIRCLE_WALLET_ID;
+
+  // Prefer Circle Developer-Controlled Wallets contract execution
+  if (isCircleConfigured() && targetWalletId && !params.privateKey) {
+    try {
+      const circleRes = await executeCircleContractCall({
+        walletId: targetWalletId,
+        contractAddress: escrowAddress,
+        abiFunctionSignature:
+          "createAgreementWithSavings(address,uint256,uint256,string,uint256,bytes32)",
+        abiParameters: [
+          params.vendorWallet,
+          amountUnits.toString(),
+          baselineUnits.toString(),
+          params.category,
+          duration.toString(),
+          idKey,
+        ],
+        idempotencyKey: params.idempotencyKey,
+        refId: `create-ag-${Date.now()}`,
+      });
+
+      if (circleRes.txHash) {
+        const publicClient = getArcPublicClient();
+        const nextId = await publicClient.readContract({
+          address: escrowAddress,
+          abi: ARC_ESCROW_ABI,
+          functionName: "nextAgreementId",
+        });
+        const agreementId = (nextId - BigInt(1)).toString();
+        return { isSimulation: false, agreementId, txHash: circleRes.txHash };
+      }
+    } catch (circleErr) {
+      console.warn(
+        "[Circle] SDK createAgreement fallback to Viem client:",
+        circleErr,
+      );
+    }
+  }
+
+  const { walletClient, publicClient } = getArcWalletClient(params.privateKey);
 
   const txHash = await walletClient.writeContract({
     address: escrowAddress,
@@ -629,6 +674,7 @@ export async function fundArcEscrowAgreement(params: {
   agreementId: string | number | bigint;
   amount: number;
   privateKey?: Hex;
+  walletId?: string;
   forceRealChain?: boolean;
 }): Promise<{ isSimulation: boolean; txHash: string | null }> {
   if (isSimulationMode(params.forceRealChain)) {
@@ -636,6 +682,30 @@ export async function fundArcEscrowAgreement(params: {
   }
 
   const escrowAddress = ARC_CONFIG.escrowContractAddress as `0x${string}`;
+  const agId = BigInt(params.agreementId);
+  const targetWalletId = params.walletId || process.env.CIRCLE_WALLET_ID;
+
+  // Prefer Circle Developer-Controlled Wallets contract execution
+  if (isCircleConfigured() && targetWalletId && !params.privateKey) {
+    try {
+      const circleRes = await executeCircleContractCall({
+        walletId: targetWalletId,
+        contractAddress: escrowAddress,
+        abiFunctionSignature: "fundAgreement(uint256)",
+        abiParameters: [agId.toString()],
+        refId: `fund-ag-${agId}`,
+      });
+      if (circleRes.txHash) {
+        return { isSimulation: false, txHash: circleRes.txHash };
+      }
+    } catch (circleErr) {
+      console.warn(
+        "[Circle] SDK fundAgreement fallback to Viem client:",
+        circleErr,
+      );
+    }
+  }
+
   const requiredAmount = parseUnits(params.amount.toFixed(6), 6);
 
   await ensureUsdcAllowance({
@@ -649,7 +719,7 @@ export async function fundArcEscrowAgreement(params: {
     address: escrowAddress,
     abi: ARC_ESCROW_ABI,
     functionName: "fundAgreement",
-    args: [BigInt(params.agreementId)],
+    args: [agId],
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({

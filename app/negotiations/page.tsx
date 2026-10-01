@@ -203,7 +203,8 @@ export default async function NegotiationsPage({
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#121915]/90 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -294,6 +295,79 @@ export default async function NegotiationsPage({
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredNegotiations.map((neg) => {
+                const baseline = Number(neg.original_price);
+                const currentPrice = Number(
+                  neg.final_price || neg.current_offer || baseline,
+                );
+                const savings = Number(
+                  neg.savings || baseline - currentPrice,
+                );
+                const isSuccess = [
+                  "agreed",
+                  "succeeded",
+                  "completed",
+                ].includes(neg.status);
+
+                return (
+                  <div key={neg.id} className="p-4 space-y-3">
+                    {/* Header: Service + Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                          {neg.contracts?.service || "Vendor Agreement"}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {neg.contracts?.vendors?.name || "Direct Vendor"} · {neg.rounds ?? 1}/3 rounds
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                          isSuccess
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                            : neg.status === "walked_away"
+                              ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20"
+                              : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
+                        }`}
+                      >
+                        {neg.status}
+                      </span>
+                    </div>
+
+                    {/* Metrics Row */}
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Baseline</div>
+                        <div className="font-mono font-medium text-slate-600 dark:text-slate-300">${baseline.toLocaleString()}</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Agreed</div>
+                        <div className="font-mono font-bold text-slate-900 dark:text-white">${currentPrice.toLocaleString()}</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Savings</div>
+                        {savings > 0 ? (
+                          <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">+${savings.toLocaleString()}</div>
+                        ) : (
+                          <div className="text-slate-400">—</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <Link
+                      href={`/decision/${neg.contract_id}`}
+                      className="block w-full text-center px-3 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors"
+                    >
+                      Inspect Policy →
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

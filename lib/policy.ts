@@ -22,6 +22,8 @@ export interface PolicyContext {
   savings?: number;
   category: string;
   treasuryBalance?: number;
+  currentPeriodSpent?: number;
+  allowHumanOverrideOnLowSavings?: boolean;
   contract_id?: string;
   contractId?: string;
   vendor_id?: string;
@@ -136,7 +138,11 @@ export function checkPolicy(
     reasons.push(
       `Projected savings ($${savings.toLocaleString()}) does not meet minimum policy threshold ($${minSavings.toLocaleString()})`,
     );
-    isRejected = true;
+    if (context.allowHumanOverrideOnLowSavings) {
+      needsHuman = true;
+    } else {
+      isRejected = true;
+    }
   } else {
     checks.push({
       name: "savings_threshold",
@@ -145,27 +151,33 @@ export function checkPolicy(
     });
   }
 
-  // 4. Category budget remaining (if defined)
+  // 4. Cumulative category budget remaining (if defined)
   if (
     policy.category_budgets &&
     policy.category_budgets[category] !== undefined
   ) {
     const budget = Number(policy.category_budgets[category]);
-    if (amount > budget) {
+    const priorSpent = Number(context.currentPeriodSpent || 0);
+    const totalProjected = priorSpent + amount;
+    if (totalProjected > budget) {
       checks.push({
         name: "category_budget",
         passed: false,
-        detail: `Amount ($${amount.toLocaleString()}) exceeds defined budget limit for category '${context.category}' ($${budget.toLocaleString()})`,
+        detail: `Projected spend ($${totalProjected.toLocaleString()} = $${priorSpent.toLocaleString()} prior + $${amount.toLocaleString()}) exceeds defined budget limit for category '${context.category}' ($${budget.toLocaleString()})`,
       });
       reasons.push(
-        `Amount ($${amount.toLocaleString()}) exceeds defined budget for category '${context.category}' ($${budget.toLocaleString()})`,
+        `Cumulative category spend ($${totalProjected.toLocaleString()}) exceeds defined budget for category '${context.category}' ($${budget.toLocaleString()})`,
       );
-      isRejected = true;
+      if (amount > budget) {
+        isRejected = true;
+      } else {
+        needsHuman = true;
+      }
     } else {
       checks.push({
         name: "category_budget",
         passed: true,
-        detail: `Amount ($${amount.toLocaleString()}) is within remaining budget for category '${context.category}' ($${budget.toLocaleString()})`,
+        detail: `Projected cumulative spend ($${totalProjected.toLocaleString()}) is within remaining budget for category '${context.category}' ($${budget.toLocaleString()})`,
       });
     }
   } else {
@@ -321,24 +333,117 @@ export async function verifyPolicyExecutionAuthorization(
         allowed_categories: ["software", "cloud", "contractors"],
       };
 
-  // 2. Fetch business treasury balance
+  // 2. Fetch business treasury balance (attempt on-chain ground truth if wallet configured, fallback to DB)
   const { data: bData } = await supabase
     .from("businesses")
-    .select("treasury_balance")
+    .select("treasury_balance, wallet_address")
     .eq("id", businessId)
     .maybeSingle();
 
-  const treasuryBalance =
+  let treasuryBalance =
     bData?.treasury_balance !== null && bData?.treasury_balance !== undefined
       ? Number(bData.treasury_balance)
       : undefined;
 
-  // 3. Re-evaluate policy purely deterministically
+  if (bData?.wallet_address && bData.wallet_address.startsWith("0x")) {
+    try {
+      const { getArcUsdcBalance } = await import("@/lib/circle");
+      const liveBal = await getArcUsdcBalance(bData.wallet_address);
+      if (liveBal > 0) {
+        treasuryBalance = liveBal;
+      }
+    } catch {
+      // Continue with DB fallback
+    }
+  }
+
+  // Query cumulative period spend for this category to enforce real cumulative budgets
+  let currentPeriodSpent = 0;
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const { data: periodTxs } = await supabase
+      .from("transactions")
+      .select("amount, contracts(category)")
+      .eq("business_id", businessId)
+      .in("status", ["funded", "escrowed", "released", "completed"])
+      .gte("created_at", startOfMonth);
+
+    if (periodTxs) {
+      for (const tx of periodTxs) {
+        const txCategory = (tx.contracts as any)?.category || context.category;
+        if (txCategory && txCategory.toLowerCase() === (context.category || "").toLowerCase()) {
+          currentPeriodSpent += Number(tx.amount || 0);
+        }
+      }
+    }
+  } catch {
+    // Non-fatal, use 0
+  }
+
+  // 3. Check for human approval record first if negotiationId is present
+  let hasValidApprovalRecord = false;
+  let approvedRecord: any = null;
+
+  if (context.negotiationId) {
+    const scopedQuery = supabase
+      .from("approvals")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("negotiation_id", context.negotiationId)
+      .eq("status", "approved")
+      .is("used_at", null)
+      .gte("amount", context.amount)
+      .order("created_at", { ascending: false });
+
+    const { data: dbData, error: dbErr } = await scopedQuery;
+
+    if (!dbErr && dbData && dbData.length > 0) {
+      approvedRecord = dbData[0];
+      hasValidApprovalRecord = true;
+    } else if (dbErr && (dbErr.code === "42703" || dbErr.code === "PGRST204")) {
+      const { data: allApproved } = await supabase
+        .from("approvals")
+        .select("*")
+        .eq("business_id", businessId)
+        .eq("negotiation_id", context.negotiationId)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (allApproved) {
+        approvedRecord = allApproved.find((r: any) => {
+          if (
+            r.used_at ||
+            (typeof r.reason === "string" && r.reason.startsWith("[USED"))
+          ) {
+            return false;
+          }
+          let appAmount = 0;
+          if (
+            r.amount !== undefined &&
+            r.amount !== null &&
+            !isNaN(Number(r.amount))
+          ) {
+            appAmount = Number(r.amount);
+          } else if (typeof r.reason === "string") {
+            const m = r.reason.match(/\[AMOUNT:\s*(\d+(?:\.\d+)?)\]/);
+            if (m) appAmount = Number(m[1]);
+          }
+          return appAmount >= context.amount;
+        });
+        if (approvedRecord) hasValidApprovalRecord = true;
+      }
+    }
+  }
+
+  // 4. Re-evaluate policy purely deterministically
   const evalResult = checkPolicy(context.action || "payment", policy, {
     amount: context.amount,
     savings: context.savings ?? 0,
     category: context.category,
     treasuryBalance,
+    currentPeriodSpent,
+    allowHumanOverrideOnLowSavings: hasValidApprovalRecord,
     contractId: context.contractId,
     negotiationId: context.negotiationId,
   });
@@ -353,13 +458,23 @@ export async function verifyPolicyExecutionAuthorization(
     };
   }
 
-  // If rejected by deterministic rules (e.g. unauthorized category, negative numbers), refuse
+  // If rejected by deterministic hard rules (e.g. unauthorized category, negative numbers, empty treasury), refuse.
+  // Note: If the failure was category_budget overrun or thresholds, escalate to human supervisor as permitted by Item 3.
   if (evalResult.decision === "rejected") {
-    return {
-      authorized: false,
-      decision: "rejected",
-      reason: `Transaction rejected by policy: ${evalResult.reasons.join("; ")}`,
-    };
+    const hardRejections = evalResult.checks.filter(
+      (c) =>
+        !c.passed &&
+        c.name !== "category_budget" &&
+        c.name !== "human_approval_threshold" &&
+        c.name !== "amount_within_auto_ceiling",
+    );
+    if (hardRejections.length > 0) {
+      return {
+        authorized: false,
+        decision: "rejected",
+        reason: `Transaction rejected by policy: ${evalResult.reasons.join("; ")}`,
+      };
+    }
   }
 
   // If decision is 'needs_human', inspect the approvals table
@@ -372,64 +487,16 @@ export async function verifyPolicyExecutionAuthorization(
     };
   }
 
-  // Look up unused approvals matching business, negotiationId, and amount >= context.amount
-  let approvedRecord: any = null;
-
-  const scopedQuery = supabase
-    .from("approvals")
-    .select("*")
-    .eq("business_id", businessId)
-    .eq("negotiation_id", context.negotiationId)
-    .eq("status", "approved")
-    .is("used_at", null)
-    .gte("amount", context.amount)
-    .order("created_at", { ascending: false });
-
-  const { data: dbData, error: dbErr } = await scopedQuery;
-
-  if (!dbErr && dbData && dbData.length > 0) {
-    approvedRecord = dbData[0];
-  } else if (dbErr && (dbErr.code === "42703" || dbErr.code === "PGRST204")) {
-    // Schema fallback if remote DB columns (amount, used_at) have not yet been migrated
-    const { data: allApproved } = await supabase
-      .from("approvals")
-      .select("*")
-      .eq("business_id", businessId)
-      .eq("negotiation_id", context.negotiationId)
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
-
-    if (allApproved) {
-      approvedRecord = allApproved.find((r: any) => {
-        if (
-          r.used_at ||
-          (typeof r.reason === "string" && r.reason.startsWith("[USED"))
-        ) {
-          return false;
-        }
-        let appAmount = 0;
-        if (
-          r.amount !== undefined &&
-          r.amount !== null &&
-          !isNaN(Number(r.amount))
-        ) {
-          appAmount = Number(r.amount);
-        } else if (typeof r.reason === "string") {
-          const m = r.reason.match(/\[AMOUNT:\s*(\d+(?:\.\d+)?)\]/);
-          if (m) appAmount = Number(m[1]);
-        }
-        return appAmount >= context.amount;
-      });
-    }
-  }
-
   if (approvedRecord) {
-    // Single-use enforcement: mark used_at = now() immediately upon authorization
+    // Single-use enforcement: atomic compare-and-swap CAS update to eliminate race conditions
     const usedAt = new Date().toISOString();
-    const { error: updErr } = await supabase
+    const { data: updatedApp, error: updErr } = await supabase
       .from("approvals")
       .update({ used_at: usedAt })
-      .eq("id", approvedRecord.id);
+      .eq("id", approvedRecord.id)
+      .is("used_at", null)
+      .select("id")
+      .maybeSingle();
 
     if (updErr && (updErr.code === "42703" || updErr.code === "PGRST204")) {
       // Fallback marking if used_at column does not exist on remote DB yet
@@ -439,6 +506,13 @@ export async function verifyPolicyExecutionAuthorization(
           reason: `[USED ${usedAt}] ${approvedRecord.reason || ""}`.trim(),
         })
         .eq("id", approvedRecord.id);
+    } else if (!updatedApp && !updErr) {
+      // Concurrency race: another process consumed this approval concurrently
+      return {
+        authorized: false,
+        decision: "needs_human",
+        reason: "Transaction approval was already consumed concurrently by another transaction.",
+      };
     }
 
     return {
@@ -504,5 +578,32 @@ export async function createApprovalRecord(
     return { id: fallbackRes.data?.id, error: fallbackRes.error };
   }
 
-  return { id: data?.id, error };
+  const resId = data?.id;
+
+  if (!error && payload.status === "pending") {
+    // Asynchronously dispatch rich notification and live Discord/Slack webhook
+    (async () => {
+      try {
+        const { createNotification } = await import("@/lib/notifications");
+        await createNotification({
+          businessId: payload.businessId,
+          negotiationId: payload.negotiationId,
+          category: "policy",
+          title: "Supervisor Approval Required",
+          message:
+            payload.reason ||
+            `Transaction${payload.amount ? ` ($${payload.amount.toLocaleString()})` : ""} requires supervisor authorization.`,
+          link: "/approvals",
+          linkLabel: "Review & Authorize",
+        });
+      } catch (notifErr) {
+        console.warn(
+          "[createApprovalRecord] Failed to dispatch webhook notification:",
+          notifErr,
+        );
+      }
+    })();
+  }
+
+  return { id: resId, error };
 }

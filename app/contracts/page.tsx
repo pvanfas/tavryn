@@ -5,6 +5,7 @@ import React from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Body, H2 } from "@/components/ui/text";
+import { QuickInvoiceDropzone } from "@/components/QuickInvoiceDropzone";
 import { VendorLogo } from "@/components/VendorLogo";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
@@ -131,13 +132,16 @@ export default async function ContractsPage({
           title="Contracts Ledger"
           description="All tracked vendor agreements, renewal cliffs, and calculated waste reduction potential."
         >
-          <Link
-            href="/onboard"
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Onboard Subscription</span>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            {business?.id && <QuickInvoiceDropzone businessId={business.id} />}
+            <Link
+              href="/onboard"
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Onboard Subscription</span>
+            </Link>
+          </div>
         </PageHeader>
 
         {/* Status Filters */}
@@ -214,7 +218,8 @@ export default async function ContractsPage({
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#121915]/90 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -334,6 +339,99 @@ export default async function ContractsPage({
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+              {rawContracts.map((contract) => {
+                const opp = evaluateContractOpportunity(contract);
+                const renewalDate = new Date(contract.renewal_date);
+                const formattedDate = renewalDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+
+                return (
+                  <div key={contract.id} className="p-4 space-y-3">
+                    {/* Header: Logo + Name + Status */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <VendorLogo
+                          vendorId={contract.vendor_id}
+                          vendorName={
+                            contract.vendors?.name || contract.service
+                          }
+                          logoUrl={contract.vendors?.logo_url}
+                          editable={true}
+                          size="md"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                            {contract.service}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {contract.vendors?.name || "Direct Vendor"}
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                          contract.status === "negotiating"
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
+                            : contract.status === "renewed"
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                              : contract.status === "cancelled"
+                                ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20"
+                                : "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20"
+                        }`}
+                      >
+                        {contract.status}
+                      </span>
+                    </div>
+
+                    {/* 2×2 Metrics Grid */}
+                    <div className="grid grid-cols-2 gap-2.5 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Category</div>
+                        <div className="font-medium text-slate-700 dark:text-slate-200 capitalize">{contract.category}</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Renewal</div>
+                        <div className="font-mono font-medium text-slate-700 dark:text-slate-200">{formattedDate}</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Spend</div>
+                        <div className="font-mono font-bold text-slate-900 dark:text-white">${Number(contract.current_price).toLocaleString()}</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Savings</div>
+                        {opp.saving > 0 ? (
+                          <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">${opp.saving.toLocaleString()}</div>
+                        ) : (
+                          <div className="text-slate-400">—</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/negotiate/${contract.id}`}
+                        className="flex-1 text-center px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors"
+                      >
+                        Negotiate
+                      </Link>
+                      <Link
+                        href={`/decision/${contract.id}`}
+                        className="flex-1 text-center px-3 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors"
+                      >
+                        Inspect →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

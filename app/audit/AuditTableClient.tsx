@@ -126,8 +126,8 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
           </div>
         </div>
 
-        {/* Ledger Table */}
-        <div className="overflow-x-auto mt-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
+        {/* Desktop Ledger Table */}
+        <div className="hidden sm:block overflow-x-auto mt-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
           <table className="w-full text-left text-xs font-sans border-collapse">
             <thead>
               <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -296,6 +296,88 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="sm:hidden mt-4 space-y-2.5">
+          {paginatedRows.length === 0 ? (
+            <div className="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
+              No matching action blocks found in audit ledger.
+            </div>
+          ) : (
+            paginatedRows.map((block, idx) => {
+              const absoluteIndex = startIndex + idx;
+              const isGenesis = absoluteIndex === 0;
+
+              return (
+                <div
+                  key={block.id}
+                  className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/80 dark:bg-[#111714]/80 p-4 space-y-2.5"
+                >
+                  {/* Header: Block # + Action + Chain Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono text-xs font-bold text-slate-400 shrink-0">#{absoluteIndex + 1}</span>
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
+                        {block.action}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Linked
+                    </span>
+                  </div>
+
+                  {/* Timestamp & Reason */}
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <span>
+                      {new Date(block.created_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
+                    </span>
+                    {block.reason && (
+                      <span className="ml-2 truncate">{block.reason}</span>
+                    )}
+                  </div>
+
+                  {/* Block Hash (monospace, truncated, with copy) */}
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold">Block Hash</span>
+                      {block.hash && (
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(block.hash!)}
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                          title="Copy Block Hash"
+                        >
+                          {copiedHash === block.hash ? (
+                            <Check className="h-3 w-3 text-emerald-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="font-mono text-[11px] font-bold text-slate-900 dark:text-white break-all">
+                      {block.hash || "null"}
+                    </div>
+                  </div>
+
+                  {/* Inspect Button */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBlock(block)}
+                    className="w-full text-center px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                  >
+                    Inspect Block Payload
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination Footer */}

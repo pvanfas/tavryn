@@ -460,7 +460,7 @@ export default function DecisionDetailPage({
       currency="USDC"
     >
       {/* Top Actions Row */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           href="/negotiations"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -471,7 +471,7 @@ export default function DecisionDetailPage({
 
         <Link
           href={`/negotiate/${contractId}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs w-full sm:w-auto"
         >
           <span>View Negotiation Transcript</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -512,32 +512,32 @@ export default function DecisionDetailPage({
           </div>
 
           {/* Price Delta Stats */}
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-400 dark:text-slate-500 block">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-slate-400 dark:text-slate-500 block text-[10px] sm:text-xs">
                 Baseline
               </Caption>
-              <Mono as="p" className="text-base text-slate-400 line-through">
+              <Mono as="p" className="text-xs sm:text-base text-slate-400 line-through">
                 ${contract?.baselinePrice.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-slate-500 dark:text-slate-400 block">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-slate-500 dark:text-slate-400 block text-[10px] sm:text-xs">
                 Negotiated
               </Caption>
-              <Mono as="p" className="text-base text-slate-900 dark:text-white">
+              <Mono as="p" className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold">
                 ${contract?.proposedPrice.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-4 py-2.5 text-right">
-              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block">
+            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+              <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block text-[10px] sm:text-xs">
                 Annual Cut
               </Caption>
               <Mono
                 as="p"
-                className="text-base text-[#107e65] dark:text-[#34d399]"
+                className="text-xs sm:text-base text-[#107e65] dark:text-[#34d399] font-bold"
               >
                 ${contract?.annualSavings.toLocaleString()}
               </Mono>
@@ -631,12 +631,12 @@ export default function DecisionDetailPage({
                   className="w-full text-xs font-medium px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#107e65]"
                 />
 
-                <div className="flex items-center justify-end gap-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-2.5 w-full">
                   <button
                     type="button"
                     onClick={() => handleDecision("reject")}
                     disabled={submitting}
-                    className="px-4 py-2 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold disabled:opacity-50 cursor-pointer text-center"
                   >
                     Reject Proposal
                   </button>
@@ -645,7 +645,7 @@ export default function DecisionDetailPage({
                     type="button"
                     onClick={() => handleDecision("approve")}
                     disabled={submitting}
-                    className="px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs disabled:opacity-50 cursor-pointer text-center"
                   >
                     Approve Transaction
                   </button>
@@ -879,8 +879,132 @@ export default function DecisionDetailPage({
                 </div>
               </div>
 
-              {/* Competitors & Incumbent Comparison Table */}
-              <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
+              {/* Mobile Card View (sm:hidden) */}
+              <div className="sm:hidden space-y-3">
+                {/* Incumbent Card */}
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-slate-900 dark:text-white">
+                        {contract?.vendor?.name || contract?.service}
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                        Incumbent
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      Immediate
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] uppercase text-slate-500 block">Annual Cost</span>
+                      <Mono as="span" className="font-bold text-slate-900 dark:text-white">
+                        ${switchingMatrix.renegotiatedPrice.toLocaleString()}
+                      </Mono>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] uppercase text-slate-500 block">Migration Friction</span>
+                      <Mono as="span" className="text-slate-400">$0 (None)</Mono>
+                    </div>
+                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <span className="text-[10px] uppercase text-emerald-600 dark:text-emerald-400 block">Year 1 Yield</span>
+                      <Mono as="span" className="font-bold text-[#107e65] dark:text-[#34d399]">
+                        +${switchingMatrix.renegotiatedSavings.toLocaleString()}
+                      </Mono>
+                    </div>
+                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <span className="text-[10px] uppercase text-emerald-600 dark:text-emerald-400 block">2-Year NPV</span>
+                      <Mono as="span" className="font-bold text-[#107e65] dark:text-[#34d399]">
+                        +${(switchingMatrix.renegotiatedSavings * 2).toLocaleString()}
+                      </Mono>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Competitor Alternative Cards */}
+                {switchingMatrix.competitors.map((comp, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#141b18]/80 space-y-3 shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900 dark:text-white">
+                          {comp.vendorName}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          ★ {comp.reputationScore}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        {comp.paybackMonths < 99 ? `${comp.paybackMonths} mo payback` : "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <span className="text-[10px] uppercase text-slate-500 block">Annual Cost</span>
+                        <Mono as="span" className="font-bold text-slate-900 dark:text-white">
+                          ${comp.estimatedPrice.toLocaleString()}
+                        </Mono>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <span className="text-[10px] uppercase text-slate-500 block">Switching Friction</span>
+                        <Mono as="span" className="text-rose-600 dark:text-rose-400 font-semibold">
+                          -${comp.switchingCosts.totalSwitchingCost.toLocaleString()}
+                        </Mono>
+                      </div>
+                      <div
+                        className={`p-2 rounded-lg border ${
+                          comp.netYear1Savings > 0
+                            ? "bg-emerald-500/10 border-emerald-500/20"
+                            : "bg-rose-500/10 border-rose-500/20"
+                        }`}
+                      >
+                        <span
+                          className={`text-[10px] uppercase block ${
+                            comp.netYear1Savings > 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400"
+                          }`}
+                        >
+                          Year 1 Yield
+                        </span>
+                        <Mono
+                          as="span"
+                          className={`font-bold ${
+                            comp.netYear1Savings > 0
+                              ? "text-[#107e65] dark:text-[#34d399]"
+                              : "text-rose-600 dark:text-rose-400"
+                          }`}
+                        >
+                          {comp.netYear1Savings > 0 ? "+" : ""}$
+                          {comp.netYear1Savings.toLocaleString()}
+                        </Mono>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <span className="text-[10px] uppercase text-slate-500 block">2-Year NPV</span>
+                        <Mono
+                          as="span"
+                          className={`font-bold ${
+                            comp.netYear2Savings > switchingMatrix.renegotiatedSavings * 2
+                              ? "text-purple-600 dark:text-purple-400"
+                              : "text-slate-800 dark:text-slate-200"
+                          }`}
+                        >
+                          {comp.netYear2Savings > 0 ? "+" : ""}$
+                          {comp.netYear2Savings.toLocaleString()}
+                        </Mono>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Competitors & Incumbent Comparison Table */}
+              <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
                 <table className="w-full text-left text-xs font-sans border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1005,7 +1129,8 @@ export default function DecisionDetailPage({
             Deterministic Policy Checklist
           </H2>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
             <table className="w-full text-left text-xs font-sans border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1050,6 +1175,36 @@ export default function DecisionDetailPage({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden space-y-2.5">
+            {evaluation?.checks.map((chk, i) => (
+              <div
+                key={i}
+                className="p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/70 dark:bg-[#111714]/70 shadow-2xs flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-xs text-slate-900 dark:text-white">
+                    {getCheckTitle(chk.name)}
+                  </span>
+                  {chk.passed ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                      <Check className="h-3 w-3 stroke-[2.5]" />
+                      <span>Passed</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 shrink-0">
+                      <X className="h-3 w-3 stroke-[2.5]" />
+                      <span>Refused</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  {chk.detail}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Vendor Confirmation Verification & Escrow Release Section */}
@@ -1067,14 +1222,14 @@ export default function DecisionDetailPage({
             </div>
 
             {/* Tamper Simulator Selector */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => {
                   setSelectedTamper(null);
                   handleRunVerification(null, "verify");
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
                   selectedTamper === null
                     ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1088,7 +1243,7 @@ export default function DecisionDetailPage({
                   setSelectedTamper("price");
                   handleRunVerification("price", "verify");
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
                   selectedTamper === "price"
                     ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1102,7 +1257,7 @@ export default function DecisionDetailPage({
                   setSelectedTamper("seats");
                   handleRunVerification("seats", "verify");
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
                   selectedTamper === "seats"
                     ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1128,8 +1283,8 @@ export default function DecisionDetailPage({
             </div>
           )}
 
-          {/* Verification Checklist Table */}
-          <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
+          {/* Desktop Verification Checklist Table */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
             <table className="w-full text-left text-xs font-sans border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1209,6 +1364,74 @@ export default function DecisionDetailPage({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Verification Checklist Cards */}
+          <div className="sm:hidden space-y-2.5">
+            {verification?.checks && verification.checks.length > 0 ? (
+              verification.checks.map((chk, i) => (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/70 dark:bg-[#111714]/70 shadow-2xs flex flex-col gap-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs text-slate-900 dark:text-white">
+                      {chk.name}
+                    </span>
+                    {chk.passed ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                        <Check className="h-3 w-3 stroke-[2.5]" />
+                        <span>Match</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 shrink-0">
+                        <X className="h-3 w-3 stroke-[2.5]" />
+                        <span>Mismatch</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-slate-50/70 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 text-xs">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
+                        Negotiated
+                      </div>
+                      <div className="font-mono font-semibold text-slate-700 dark:text-slate-300 truncate">
+                        {chk.field === "price"
+                          ? `$${Number(chk.expected).toLocaleString()}`
+                          : chk.field === "seats"
+                            ? `${chk.expected} seats`
+                            : chk.field === "term_months"
+                              ? `${chk.expected} months`
+                              : String(chk.expected)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
+                        Vendor Actual
+                      </div>
+                      <div className="font-mono font-semibold text-slate-900 dark:text-white truncate">
+                        {chk.field === "price"
+                          ? `$${Number(chk.actual).toLocaleString()}`
+                          : chk.field === "seats"
+                            ? `${chk.actual} seats`
+                            : chk.field === "term_months"
+                              ? `${chk.actual} months`
+                              : String(chk.actual)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                    {chk.message}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 font-medium">
+                Click &quot;Verify Vendor Confirmation&quot; below to trigger extraction and comparison.
+              </div>
+            )}
           </div>
 
           {/* Bottom Release / Dispute Action Bar */}

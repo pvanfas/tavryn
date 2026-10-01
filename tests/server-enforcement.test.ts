@@ -14,7 +14,7 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
     const { data: business } = await supabase
       .from("businesses")
       .select("id")
-      .limit(1)
+      .eq("name", "Demo Co")
       .single();
     assert.ok(business, "Business must exist");
 
@@ -34,7 +34,7 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
     const { data: business } = await supabase
       .from("businesses")
       .select("id")
-      .limit(1)
+      .eq("name", "Demo Co")
       .single();
     assert.ok(business, "Business must exist");
 
@@ -57,7 +57,7 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
     const { data: business } = await supabase
       .from("businesses")
       .select("id")
-      .limit(1)
+      .eq("name", "Demo Co")
       .single();
     assert.ok(business, "Business must exist");
 

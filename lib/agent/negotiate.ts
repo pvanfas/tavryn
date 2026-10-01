@@ -257,6 +257,70 @@ export async function runNegotiationLoop(
     contract.category,
   );
 
+  const isRealLLM = Boolean(
+    (process.env.LLM_PROVIDER === "openai" &&
+      (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
+      (process.env.LLM_PROVIDER === "anthropic" &&
+        (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)),
+  );
+
+  // Helper for dynamic LLM concession calculation bounded by policy ceiling
+  const determineStrategicConcession = async (params: {
+    round: number;
+    previousOffer: number;
+    lastCounter: number;
+  }): Promise<number> => {
+    const gap = params.lastCounter - params.previousOffer;
+    const defaultRatio = params.round === 2 ? 0.25 : params.round === 3 ? 0.35 : 0.45;
+    const baselineConcession = Math.round(gap * defaultRatio);
+    const baselineOffer = Math.min(
+      walkAwayCeiling,
+      Math.min(params.lastCounter, params.previousOffer + baselineConcession),
+    );
+
+    if (!isRealLLM) {
+      return baselineOffer;
+    }
+
+    try {
+      const model = getAgentLanguageModel();
+      const prompt = `You are Tavryn's autonomous procurement negotiation strategist.
+Vendor: ${vendorName} (${serviceName})
+Previous Offer: $${params.previousOffer}
+Vendor Counter: $${params.lastCounter}
+Gap to Close: $${gap}
+Round: ${params.round} of ${maxRounds}
+Target Ideal Price: $${targetPrice}
+Firm Policy Ceiling: $${walkAwayCeiling}
+Usage: ${usage.seat_count ? `${usage.active_seats}/${usage.seat_count} seats active` : "Telemetry verified"}
+Alternatives: ${compNames.slice(0, 2).join(", ") || "Market competitors"}
+
+Determine our next counter-offer. Recommend an integer dollar price strictly between $${params.previousOffer + Math.max(1, Math.round(gap * 0.1))} and $${Math.min(walkAwayCeiling, params.lastCounter)}.
+Respond ONLY with the integer dollar amount, e.g. 7450.`;
+
+      const { text } = await generateText({
+        model,
+        prompt,
+        temperature: 0.1,
+      });
+
+      const parsed = parseInt(text.replace(/[^0-9]/g, ""), 10);
+      if (
+        !isNaN(parsed) &&
+        parsed > params.previousOffer &&
+        parsed <= Math.min(walkAwayCeiling, params.lastCounter)
+      ) {
+        return parsed;
+      }
+    } catch (err) {
+      console.warn(
+        "[Negotiate] LLM concession calculation fallback to dynamic baseline:",
+        err,
+      );
+    }
+    return baselineOffer;
+  };
+
   // Helper for dynamic LLM negotiation messaging with resilient fallback
   const getDynamicMessage = async (
     mode: "open" | "concede" | "accept" | "walk_away",
@@ -264,12 +328,6 @@ export async function runNegotiationLoop(
     defaultTemplate: string,
     roundNum: number,
   ) => {
-    const isRealLLM =
-      (process.env.LLM_PROVIDER === "openai" &&
-        (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
-      (process.env.LLM_PROVIDER === "anthropic" &&
-        (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY));
-
     if (!isRealLLM) {
       return defaultTemplate;
     }
@@ -401,14 +459,12 @@ Draft a concise, professional 1-2 sentence procurement negotiation message to th
           break;
         }
       } else {
-        // Intermediate rounds: concede a portion of the remaining gap
-        const gap = lastCounter - previousOffer;
-        // Concede 35% of the remaining gap towards vendor's counter
-        const concession = Math.round(gap * 0.35);
-        currentOffer = Math.min(
-          walkAwayCeiling,
-          Math.min(lastCounter, previousOffer + concession),
-        );
+        // Intermediate rounds: dynamically determine strategic concession
+        currentOffer = await determineStrategicConcession({
+          round,
+          previousOffer,
+          lastCounter,
+        });
 
         let defaultMsg = "";
         if (round === 2) {

@@ -4,6 +4,7 @@ import React from "react";
 
 import { ApprovalsHeader } from "@/components/ApprovalsHeader";
 import { AppShell } from "@/components/AppShell";
+import { CircleFaucetButton } from "@/components/CircleFaucetButton";
 import { Body, BodySmall, Caption, H2, Mono } from "@/components/ui/text";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -131,6 +132,28 @@ export default async function ApprovalsPage({
           policyCeiling={policyCeiling}
           businessId={business?.id}
         />
+
+        {/* Treasury Status & 1-Click Circle Faucet Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-[#121915]/60 backdrop-blur-xs shadow-2xs">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Live Treasury USDC:
+            </span>
+            <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">
+              ${liveTreasuryBalance.toLocaleString()} USDC
+            </span>
+            {liveTreasuryBalance < 100 && (
+              <span className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+                Low Balance
+              </span>
+            )}
+          </div>
+          <CircleFaucetButton
+            businessId={business?.id}
+            walletAddress={business?.wallet_address}
+            currentBalance={liveTreasuryBalance}
+          />
+        </div>
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800">

@@ -49,8 +49,15 @@ describe("Policy Authorization Hardening Integration Tests", () => {
       .single();
     assert.ok(business, "Business record must exist");
 
-    const negAId = await createTestNegotiation(business.id, 6000, 5000);
-    const negBId = await createTestNegotiation(business.id, 6000, 5000);
+    const { data: pol } = await supabase
+      .from("policies")
+      .select("max_auto_transaction")
+      .eq("business_id", business.id)
+      .maybeSingle();
+    const testAmount = Math.max(60000, Number(pol?.max_auto_transaction || 2000) + 5000);
+
+    const negAId = await createTestNegotiation(business.id, testAmount + 1000, testAmount);
+    const negBId = await createTestNegotiation(business.id, testAmount + 1000, testAmount);
 
     // Create valid human approval specifically for negotiation A
     const created = await createApprovalRecord(supabase, {
@@ -59,7 +66,7 @@ describe("Policy Authorization Hardening Integration Tests", () => {
       status: "approved",
       reason: "Approved specifically for negotiation A",
       decidedAt: new Date().toISOString(),
-      amount: 5000,
+      amount: testAmount,
     });
     assert.ifError(created.error);
     assert.ok(created.id, "Approval record created");
@@ -67,7 +74,7 @@ describe("Policy Authorization Hardening Integration Tests", () => {
     try {
       // Attempt to authorize payment for negotiation B against negotiation A's approval
       const auth = await verifyPolicyExecutionAuthorization(business.id, {
-        amount: 5000,
+        amount: testAmount,
         savings: 1000,
         category: "software",
         negotiationId: negBId,

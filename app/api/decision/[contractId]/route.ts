@@ -193,13 +193,9 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
         (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
       )?.value;
     const authHeader = req.headers.get("authorization");
-    const demoHeader = req.headers.get("x-demo-role");
-    const isTestOrDemo =
-      process.env.NODE_ENV === "test" ||
-      Boolean(authCookie) ||
-      demoHeader === "operator";
+    const isTest = process.env.NODE_ENV === "test";
 
-    if (!authCookie && !authHeader && !isTestOrDemo) {
+    if (!authCookie && !authHeader && !isTest) {
       return apiError(
         "Unauthorized: Authentication required to approve or reject decisions",
         401,

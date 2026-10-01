@@ -70,7 +70,7 @@ Similarly, rejecting contracts that lack a category—rather than silently defau
 
 ## Next up
 
-Autonomous agent negotiation resilience and multi-vendor benchmark evaluation.
+Adversarial skepticism review and hackathon hardening → [Stage 0012](./0012-skepticism-review-and-hackathon-hardening.md).
 
 ---
 

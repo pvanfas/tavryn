@@ -30,8 +30,11 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
     business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
   }
 
-  // 2. Fetch comprehensive protocol metrics
-  const metricsAll = await getTractionMetrics({ realOnly: false });
+  // 2. Fetch comprehensive protocol metrics (both all activity and real-only verified)
+  const [metricsAll, metricsReal] = await Promise.all([
+    getTractionMetrics({ realOnly: false }),
+    getTractionMetrics({ realOnly: true }),
+  ]);
 
   return (
     <AppShell
@@ -46,7 +49,10 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
       treasuryBalance={Number(business?.treasury_balance ?? 0)}
       currency={business?.default_currency || "USDC"}
     >
-      <TractionMetricsClient initialMetricsAll={metricsAll} />
+      <TractionMetricsClient
+        initialMetricsAll={metricsAll}
+        initialMetricsReal={metricsReal}
+      />
     </AppShell>
   );
 }

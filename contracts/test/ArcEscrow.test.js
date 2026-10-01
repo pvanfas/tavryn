@@ -322,4 +322,10 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
 
     expect(agentAfter - agentBefore).to.equal(totalFunded);
   });
+
+  it("12. Role separation: Cannot set verifier equal to agent address", async function () {
+    await expect(
+      arcEscrow.connect(owner).setRoles(owner.address, agent.address, agent.address),
+    ).to.be.revertedWith("ArcEscrow: Verifier cannot be agent");
+  });
 });

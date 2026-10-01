@@ -475,7 +475,7 @@ export function buildEscrowTools(ctx: ToolContext) {
         throw new Error(`Policy refusal: ${reason}`);
       }
 
-      // 2. Mandatory server-side policy re-verification (deterministic code gatekeeper)
+      // Mandatory server-side policy re-verification (deterministic code gatekeeper)
       // Check input.category if specified: caller category must strictly match contract category
       if (input.category && input.category !== resolvedCategory) {
         const mismatchErr = `Policy refusal: Caller category '${input.category}' does not match authoritative contract category '${resolvedCategory}'.`;
@@ -508,7 +508,7 @@ export function buildEscrowTools(ctx: ToolContext) {
         throw new Error(`Policy refusal: ${auth.reason}`);
       }
 
-      // 3. Vendor wallet mutation check (Wrong-vendor defense): escalate to human approval if changed
+      // Vendor wallet mutation check (Wrong-vendor defense): escalate to human approval if changed
       if (vendorId) {
         // Check registered address in vendors table
         const { data: registeredVendor } = await supabase
@@ -567,7 +567,7 @@ export function buildEscrowTools(ctx: ToolContext) {
             result: { status: "escalated_to_human", reason },
           });
 
-          throw new Error(reason);
+          throw new Error(`Policy refusal: ${reason}`);
         }
       }
 
@@ -667,6 +667,41 @@ export function buildEscrowTools(ctx: ToolContext) {
         }
       }
 
+      // Contract-level active funded/escrowed lock defense: prevent double funding of same contract
+      if (input.contractId) {
+        const { data: activeFundedTx } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("business_id", businessId)
+          .eq("contract_id", input.contractId)
+          .in("status", ["funded", "escrowed"])
+          .maybeSingle();
+
+        if (activeFundedTx && activeFundedTx.negotiation_id !== negId) {
+          const isSim =
+            activeFundedTx.is_simulated === true ||
+            activeFundedTx.status === "simulation-only";
+          return {
+            success: true,
+            transactionId: activeFundedTx.id,
+            status: activeFundedTx.status,
+            amount: Number(activeFundedTx.amount),
+            escrowAddress: activeFundedTx.escrow_address,
+            txHash: activeFundedTx.tx_hash,
+            explorerUrl:
+              !isSim && activeFundedTx.tx_hash
+                ? `${ARC_CONFIG.explorerUrl}/tx/${activeFundedTx.tx_hash}`
+                : undefined,
+            idempotencyKey: activeFundedTx.idempotency_key,
+            idempotentHit: true,
+            isSimulation: isSim,
+            isSimulated: isSim,
+            message:
+              "Idempotent hit: contract already has an active funded escrow; duplicate funding prohibited",
+          };
+        }
+      }
+
       // 6. Check Idempotency Key in transactions table (UNIQUE constraint)
       const { data: existingTx } = await supabase
         .from("transactions")
@@ -753,6 +788,7 @@ export function buildEscrowTools(ctx: ToolContext) {
             txError.message?.includes("unique") ||
             txError.message?.includes("idempotency_key") ||
             txError.message?.includes("idx_transactions_unique_negotiation") ||
+            txError.message?.includes("idx_transactions_active_contract") ||
             txError.message?.includes(
               "idx_transactions_unique_contract_unlinked",
             ))
@@ -1338,6 +1374,24 @@ export function buildEscrowTools(ctx: ToolContext) {
           throw new Error(
             "Cannot release escrow: unable to locate on-chain agreementId for this transaction on ArcEscrow",
           );
+        }
+
+        // Cross-check agreement on-chain amount matches authorized transaction amount
+        const { getArcEscrowAgreement } = await import("@/lib/circle");
+        try {
+          const onChainAg = await getArcEscrowAgreement(agreementId);
+          if (onChainAg && onChainAg.amount) {
+            const onChainAmt = Number(onChainAg.amount) / 1e6;
+            const expectedAmt = Number(existingTx?.amount || finalPrice);
+            if (expectedAmt > 0 && Math.abs(onChainAmt - expectedAmt) > 0.05) {
+              throw new Error(
+                `Escrow release blocked: On-chain agreement amount ($${onChainAmt}) does not match authorized transaction amount ($${expectedAmt})`,
+              );
+            }
+          }
+        } catch (agErr: any) {
+          if (agErr.message?.includes("Escrow release blocked")) throw agErr;
+          console.warn("Could not pre-verify agreement amount on-chain (non-fatal):", agErr);
         }
 
         // Step A: Approve milestone on ArcEscrow (submits milestone if needed first, verifier approves)

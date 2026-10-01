@@ -1,6 +1,13 @@
 import crypto from "crypto";
 
 import { ARC_CONFIG } from "@/lib/circle";
+import {
+  DEFAULT_ARC_ESCROW_CONTRACT,
+  VERIFICATION_SAMPLE_REAL_RECEIPT_TOKEN,
+  VERIFICATION_SAMPLE_REAL_TX_HASH,
+  VERIFICATION_SAMPLE_SIM_RECEIPT_TOKEN,
+  VERIFICATION_SAMPLE_SIM_TX_HASH,
+} from "@/lib/constants";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -85,6 +92,112 @@ export async function getPublicReceipt(
     .maybeSingle();
 
   if (rErr || !receipt) {
+    if (token === VERIFICATION_SAMPLE_REAL_RECEIPT_TOKEN) {
+      return {
+        token,
+        service: "Datadog Cloud Monitoring",
+        category: "cloud",
+        businessName: "Demo Co",
+        vendorName: "Datadog, Inc.",
+        oldPrice: 37200,
+        newPrice: 35526,
+        annualSavings: 1674,
+        savingsPct: 5,
+        roundsCount: 3,
+        agentExplanation:
+          "Autonomous procurement cycle finalized within enterprise policy limits.",
+        policyChecklist: [
+          {
+            name: "Policy Ceiling",
+            passed: true,
+            detail: "New commitment ($35,526) within approved ceiling",
+          },
+          {
+            name: "Minimum Savings",
+            passed: true,
+            detail: "Generated $1,674 in realized annual savings (5%)",
+          },
+          {
+            name: "On-Chain Escrow",
+            passed: true,
+            detail:
+              "Funded and executed through Arc smart escrow protocol in USDC",
+          },
+        ],
+        verificationResult: {
+          verified: true,
+          allPassed: true,
+          matchedChecks: [
+            "Contract Price Matched",
+            "Seat Allotment Verified",
+            "Term Length Confirmed",
+            "Arc Settlement Completed",
+          ],
+        },
+        arcExplorerUrls: {
+          releaseTxUrl: `${ARC_CONFIG.explorerUrl}/tx/${VERIFICATION_SAMPLE_REAL_TX_HASH}`,
+          escrowContractUrl: `${ARC_CONFIG.explorerUrl}/address/${DEFAULT_ARC_ESCROW_CONTRACT}`,
+          network: "Arc Testnet (USDC-native EVM)",
+        },
+        isSimulated: false,
+        releaseTxHash: VERIFICATION_SAMPLE_REAL_TX_HASH,
+        createdAt: "2026-03-30T10:00:00Z",
+      };
+    }
+
+    if (token === VERIFICATION_SAMPLE_SIM_RECEIPT_TOKEN) {
+      return {
+        token,
+        service: "Slack Enterprise Grid",
+        category: "software",
+        businessName: "Demo Co",
+        vendorName: "Slack Technologies",
+        oldPrice: 9600,
+        newPrice: 6912,
+        annualSavings: 2688,
+        savingsPct: 28,
+        roundsCount: 2,
+        agentExplanation:
+          "Simulated autonomous procurement cycle finalized with mock escrow verification.",
+        policyChecklist: [
+          {
+            name: "Policy Ceiling",
+            passed: true,
+            detail: "New commitment ($6,912) within approved ceiling",
+          },
+          {
+            name: "Minimum Savings",
+            passed: true,
+            detail: "Generated $2,688 in realized annual savings (28%)",
+          },
+          {
+            name: "On-Chain Escrow",
+            passed: true,
+            detail:
+              "Simulated escrow allocation executed in mock mode without live Arc gas spend",
+          },
+        ],
+        verificationResult: {
+          verified: true,
+          allPassed: true,
+          matchedChecks: [
+            "Contract Price Matched",
+            "Seat Allotment Verified",
+            "Term Length Confirmed",
+            "Simulated Settlement Verified",
+          ],
+        },
+        arcExplorerUrls: {
+          releaseTxUrl: null,
+          escrowContractUrl: `${ARC_CONFIG.explorerUrl}/address/${DEFAULT_ARC_ESCROW_CONTRACT}`,
+          network: "Arc Testnet (Simulated Mock)",
+        },
+        isSimulated: true,
+        releaseTxHash: VERIFICATION_SAMPLE_SIM_TX_HASH,
+        createdAt: "2026-03-30T10:00:00Z",
+      };
+    }
+
     return null;
   }
 

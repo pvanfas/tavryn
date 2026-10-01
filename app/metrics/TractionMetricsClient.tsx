@@ -27,10 +27,15 @@ interface TractionMetricsClientProps {
 
 export function TractionMetricsClient({
   initialMetricsAll,
+  initialMetricsReal,
 }: TractionMetricsClientProps) {
+  const [viewMode, setViewMode] = useState<"all" | "real">("all");
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
 
-  const metrics = initialMetricsAll;
+  const metrics =
+    viewMode === "real" && initialMetricsReal
+      ? initialMetricsReal
+      : initialMetricsAll;
 
   const handleCopyTx = async (id: string, hash: string) => {
     try {
@@ -44,14 +49,53 @@ export function TractionMetricsClient({
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Minimal Reusable Page Header */}
+      {/* Minimal Reusable Page Header with Live Verified vs Demo Toggle */}
       <PageHeader
-        badge="Live Protocol Metrics"
+        badge={viewMode === "real" ? "Production Businesses Only" : "Live Protocol Metrics"}
         caption="Arc Testnet (Chain ID 5042002)"
         title="Traction & Settlement Metrics"
         description="Auditable Postgres telemetry reconciled with on-chain settlements."
         className="border-b border-slate-200/80 dark:border-slate-800/80 pb-6"
-      />
+      >
+        <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs shadow-2xs">
+          <button
+            onClick={() => setViewMode("all")}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+              viewMode === "all"
+                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            All Activity ({initialMetricsAll.businesses.totalCount} orgs)
+          </button>
+          <button
+            onClick={() => setViewMode("real")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+              viewMode === "real"
+                ? "bg-emerald-600 text-white shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Live Verified Only ({initialMetricsReal?.businesses.realCount || initialMetricsAll.businesses.realCount} orgs)</span>
+          </button>
+        </div>
+      </PageHeader>
+
+      {viewMode === "real" && (
+        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span><strong>Filtered for Verified Production Workspaces</strong> — Showing only real onboarded businesses with live Arc Testnet USDC contracts. Simulated demo accounts are excluded.</span>
+          </div>
+          <button
+            onClick={() => setViewMode("all")}
+            className="underline font-semibold hover:text-emerald-950 dark:hover:text-white cursor-pointer ml-4"
+          >
+            Show All
+          </button>
+        </div>
+      )}
 
       {/* Hero Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -456,7 +500,8 @@ export function TractionMetricsClient({
         </div>
 
         <div className="bg-white dark:bg-[#111714] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#0c120f] border-b border-slate-200/80 dark:border-slate-800 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
                 <tr>
@@ -543,6 +588,43 @@ export function TractionMetricsClient({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+            {metrics.businesses.list.map((b) => (
+              <div key={b.id} className="p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm text-slate-900 dark:text-white truncate">{b.name}</div>
+                    <div className="text-[10px] font-mono text-slate-400 truncate">{b.id}</div>
+                  </div>
+                  {b.isReal ? (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">Real</span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shrink-0">Demo</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Treasury</div>
+                    <div className="font-mono font-bold text-slate-900 dark:text-white">${b.treasuryBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Savings</div>
+                    <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">+${b.totalSavings.toLocaleString()}</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Contracts</div>
+                    <div className="font-medium text-slate-700 dark:text-slate-200">{b.contractsCount}</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Spend</div>
+                    <div className="font-mono font-medium text-slate-600 dark:text-slate-300">${b.totalSpend.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -561,7 +643,8 @@ export function TractionMetricsClient({
         </div>
 
         <div className="bg-white dark:bg-[#111714] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#0c120f] border-b border-slate-200/80 dark:border-slate-800 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
                 <tr>
@@ -630,6 +713,47 @@ export function TractionMetricsClient({
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+            {metrics.transactions.map((t) => (
+              <div key={t.id} className="p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm text-slate-900 dark:text-white truncate">{t.businessName}</div>
+                    <div className="text-[11px] text-slate-500">→ {t.vendorName}</div>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                      t.status === "released"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                        : t.status === "funded"
+                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                          : t.status === "refunded"
+                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    {t.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <div className="font-mono font-bold text-slate-900 dark:text-white">
+                    ${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t.currency}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {new Date(t.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+                <TransactionHashBadge
+                  txHash={t.txHash}
+                  isSimulated={t.isSimulated}
+                  status={t.status}
+                  compact={true}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>
