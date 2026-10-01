@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import { NextRequest } from "next/server";
 
 import { POST as resetAndRunHandler } from "../app/api/demo/reset-and-run/route";
 import { getServiceSupabase } from "../lib/supabase";
 
-describe("Stage 0035: Real One-Click Demo Pipeline", () => {
+describe("Real One-Click Demo Pipeline", () => {
   it("executes full real pipeline twice and produces different negotiation numbers with reviewer verdicts", async () => {
     const supabase = getServiceSupabase();
 
@@ -107,11 +108,19 @@ describe("Stage 0035: Real One-Click Demo Pipeline", () => {
     // VERIFICATION: Run 1 vs Run 2 Dynamic Comparison
     // ----------------------------------------------------
     console.log("\n=======================================================");
-    console.log("STAGE 0035 VERIFICATION RESULTS:");
-    console.log(`Run 1 Agreed Price: $${data1.finalPrice.toLocaleString()} (Savings: $${data1.savingsRealized.toLocaleString()}, Rounds: ${data1.rounds})`);
-    console.log(`Run 1 Reviewer Verdict: ${data1.reviewer.verdict.toUpperCase()} — "${data1.reviewer.reasoning}"`);
-    console.log(`Run 2 Agreed Price: $${data2.finalPrice.toLocaleString()} (Savings: $${data2.savingsRealized.toLocaleString()}, Rounds: ${data2.rounds})`);
-    console.log(`Run 2 Reviewer Verdict: ${data2.reviewer.verdict.toUpperCase()} — "${data2.reviewer.reasoning}"`);
+    console.log("DEMO PIPELINE VERIFICATION RESULTS:");
+    console.log(
+      `Run 1 Agreed Price: $${data1.finalPrice.toLocaleString()} (Savings: $${data1.savingsRealized.toLocaleString()}, Rounds: ${data1.rounds})`,
+    );
+    console.log(
+      `Run 1 Reviewer Verdict: ${data1.reviewer.verdict.toUpperCase()} — "${data1.reviewer.reasoning}"`,
+    );
+    console.log(
+      `Run 2 Agreed Price: $${data2.finalPrice.toLocaleString()} (Savings: $${data2.savingsRealized.toLocaleString()}, Rounds: ${data2.rounds})`,
+    );
+    console.log(
+      `Run 2 Reviewer Verdict: ${data2.reviewer.verdict.toUpperCase()} — "${data2.reviewer.reasoning}"`,
+    );
     console.log("=======================================================\n");
 
     assert.notEqual(

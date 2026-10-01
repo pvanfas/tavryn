@@ -20,7 +20,8 @@ import { getBrowserSupabase, setAuthCookie, signInWithOtp } from "@/lib/auth";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/";
+  const rawNext = searchParams.get("next");
+  const next = rawNext && rawNext !== "/" ? rawNext : "/dashboard";
 
   const [authMode, setAuthMode] = useState<"password" | "magic_link">(
     "password",

@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
+import { ARC_CONFIG } from "@/lib/circle";
 import {
   BOTTOM_NAV_ITEMS,
   isRouteActive,
@@ -118,8 +119,8 @@ export function MobileTabBar({
   const activeBusiness =
     businesses.find((b) => b.id === activeBusinessId) || businesses[0];
   const arcscanUrl = walletAddress
-    ? `https://testnet.arcscan.app/address/${walletAddress}`
-    : "https://testnet.arcscan.app";
+    ? `${ARC_CONFIG.explorerUrl}/address/${walletAddress}`
+    : ARC_CONFIG.explorerUrl;
 
   return (
     <>

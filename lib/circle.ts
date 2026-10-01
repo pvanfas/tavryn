@@ -7,14 +7,23 @@ import crypto from "crypto";
 import {
   createPublicClient,
   createWalletClient,
+  type Hex,
   http,
   keccak256,
   parseUnits,
   toHex,
-  type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
+import {
+  DEFAULT_ARC_CHAIN_ID,
+  DEFAULT_ARC_ESCROW_CONTRACT,
+  DEFAULT_ARC_EXPLORER_URL,
+  DEFAULT_ARC_FAUCET_URL,
+  DEFAULT_ARC_RPC_URL,
+  DEFAULT_ARC_USDC_CONTRACT,
+  DEFAULT_CIRCLE_BLOCKCHAIN,
+} from "./constants";
 import { ARC_ESCROW_ABI, arcTestnet, USDC_ABI } from "./contracts/arc-escrow";
 
 /**
@@ -22,20 +31,18 @@ import { ARC_ESCROW_ABI, arcTestnet, USDC_ABI } from "./contracts/arc-escrow";
  * All values are configurable via environment variables with safe defaults for Arc Testnet.
  */
 export const ARC_CONFIG = {
-  blockchain: (process.env.CIRCLE_BLOCKCHAIN || "ARC-TESTNET") as Blockchain,
-  rpcUrl:
-    process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network",
-  chainId: Number(process.env.NEXT_PUBLIC_ARC_CHAIN_ID || 5042002),
+  blockchain: (process.env.CIRCLE_BLOCKCHAIN ||
+    DEFAULT_CIRCLE_BLOCKCHAIN) as Blockchain,
+  rpcUrl: process.env.NEXT_PUBLIC_ARC_RPC_URL || DEFAULT_ARC_RPC_URL,
+  chainId: Number(process.env.NEXT_PUBLIC_ARC_CHAIN_ID || DEFAULT_ARC_CHAIN_ID),
   usdcContractAddress:
-    process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS ||
-    "0x3600000000000000000000000000000000000000",
+    process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS || DEFAULT_ARC_USDC_CONTRACT,
   escrowContractAddress:
     process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS ||
-    "0x78e61ae7e8EeF34Add911FA3e41F3408a819c047",
-  faucetUrl:
-    process.env.NEXT_PUBLIC_ARC_FAUCET_URL || "https://faucet.circle.com",
+    DEFAULT_ARC_ESCROW_CONTRACT,
+  faucetUrl: process.env.NEXT_PUBLIC_ARC_FAUCET_URL || DEFAULT_ARC_FAUCET_URL,
   explorerUrl:
-    process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app",
+    process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || DEFAULT_ARC_EXPLORER_URL,
 };
 
 let cachedClient: CircleDeveloperControlledWalletsClient | null = null;
@@ -872,4 +879,3 @@ export async function getArcEscrowAgreement(
     args: [BigInt(agreementId)],
   });
 }
-

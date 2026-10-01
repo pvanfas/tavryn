@@ -352,10 +352,7 @@ export default async function DashboardPage({
             ${savingsRealized.toLocaleString()}
           </H2>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5">
-            <BodySmall
-              as="div"
-              className="text-slate-500 dark:text-slate-400"
-            >
+            <BodySmall as="div" className="text-slate-500 dark:text-slate-400">
               {negotiationsCount} settled
             </BodySmall>
             {latestTx?.tx_hash && (

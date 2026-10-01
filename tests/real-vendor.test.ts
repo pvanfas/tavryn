@@ -11,7 +11,7 @@ import {
 import { calculateTractionMetrics } from "../lib/metrics";
 import { getServiceSupabase } from "../lib/supabase";
 
-describe("Stage 0018: Real-Vendor Mode with Human in the Loop", () => {
+describe("Real-Vendor Mode with Human in the Loop", () => {
   it("drafts outreach email citing usage telemetry and target price without auto-sending", async () => {
     const supabase = getServiceSupabase();
     const { data: contract } = await supabase
@@ -107,12 +107,25 @@ We can agree to $7,800 annually for your team. However, please note our billing 
 
   it("processes real-vendor reply, logs raw reply in agent_actions, and manages negotiation state", async () => {
     const supabase = getServiceSupabase();
-    // Create or select a dedicated contract for real-mode testing
+    // Create a dedicated contract for real-mode testing to avoid polluted negotiation state
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
+    assert.ok(business, "Business must exist");
+
     const { data: contract } = await supabase
       .from("contracts")
+      .insert({
+        business_id: business.id,
+        service: `Real Vendor Test ${Date.now()}`,
+        category: "software",
+        current_price: 10000,
+        renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+        status: "active",
+      })
       .select("id, current_price, service")
-      .order("created_at", { ascending: false })
-      .limit(1)
       .single();
 
     assert.ok(contract, "Contract must exist");

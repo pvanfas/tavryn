@@ -170,10 +170,14 @@ export async function consumeApprovalToken(
           allowed_categories: ["software", "cloud", "contractors"],
         };
 
+    if (!contract?.category || contract.category.trim() === "") {
+      throw new Error("Contract has no category set, cannot evaluate policy.");
+    }
+
     const policyEval = checkPolicy("one_tap_approval", policy, {
       amount: proposedPrice,
       savings: annualSavings,
-      category: contract?.category || "software",
+      category: contract.category,
       treasuryBalance: contract?.businesses?.treasury_balance
         ? Number(contract.businesses.treasury_balance)
         : undefined,

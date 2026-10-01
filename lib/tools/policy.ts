@@ -20,11 +20,6 @@ export function buildPolicyTools(ctx: ToolContext) {
         .number()
         .nonnegative()
         .describe("Proposed new price or transaction amount in USDC"),
-      savings: z
-        .number()
-        .nonnegative()
-        .optional()
-        .describe("Projected dollar savings in USDC"),
       category: z
         .string()
         .describe(
@@ -43,7 +38,6 @@ export function buildPolicyTools(ctx: ToolContext) {
     execute: async ({
       action,
       amount,
-      savings,
       category,
       businessId: bId,
       contractId,
@@ -51,7 +45,6 @@ export function buildPolicyTools(ctx: ToolContext) {
     }: {
       action: string;
       amount: number;
-      savings?: number;
       category: string;
       businessId?: string;
       contractId?: string;
@@ -107,10 +100,41 @@ export function buildPolicyTools(ctx: ToolContext) {
         };
       }
 
+      // Server-side derivation: if contractId is present, derive savings from contract.current_price - amount
+      // and enforce contract.category. If contractId is absent, savings is strictly 0.
+      let resolvedCategory = category;
+      let derivedSavings = 0;
+
+      if (contractId) {
+        const { data: contract } = await supabase
+          .from("contracts")
+          .select("category, current_price")
+          .eq("id", contractId)
+          .maybeSingle();
+
+        if (contract) {
+          if (!contract.category || contract.category.trim() === "") {
+            throw new Error(
+              "Policy refusal: Contract has no category set, cannot evaluate policy.",
+            );
+          }
+          resolvedCategory = contract.category;
+          if (
+            contract.current_price !== null &&
+            contract.current_price !== undefined
+          ) {
+            derivedSavings = Math.max(
+              0,
+              Number(contract.current_price) - amount,
+            );
+          }
+        }
+      }
+
       const evalResult = checkPolicy(action, policy, {
         amount,
-        savings: savings ?? 0,
-        category,
+        savings: derivedSavings,
+        category: resolvedCategory,
         treasuryBalance,
         contractId,
         negotiationId,
@@ -165,7 +189,14 @@ export function buildPolicyTools(ctx: ToolContext) {
         reason:
           "Verify proposed transaction against deterministic policy rules",
         confidence: 1.0,
-        input: { action, amount, savings, category, contractId, negotiationId },
+        input: {
+          action,
+          amount,
+          savings: derivedSavings,
+          category: resolvedCategory,
+          contractId,
+          negotiationId,
+        },
         result: {
           decision: evalResult.decision,
           approved: evalResult.approved,
@@ -179,8 +210,8 @@ export function buildPolicyTools(ctx: ToolContext) {
       return {
         action,
         amount,
-        savings: savings ?? 0,
-        category,
+        savings: derivedSavings,
+        category: resolvedCategory,
         decision: evalResult.decision,
         checks: evalResult.checks,
         reasons: evalResult.reasons,

@@ -3,8 +3,8 @@ import crypto from "crypto";
 import { z } from "zod";
 
 import {
-  ARC_CONFIG,
   approveArcEscrowMilestone,
+  ARC_CONFIG,
   createArcEscrowAgreement,
   fundArcEscrowAgreement,
   getAgreementIdForTransaction,
@@ -191,7 +191,9 @@ export async function reconcilePendingEscrow(params: {
           },
         });
 
-        const isSimTx = existingTx.is_simulated === true || existingTx.status === "simulation-only";
+        const isSimTx =
+          existingTx.is_simulated === true ||
+          existingTx.status === "simulation-only";
         return {
           success: true,
           transactionId: existingTx.id,
@@ -199,9 +201,10 @@ export async function reconcilePendingEscrow(params: {
           amount: Number(existingTx.amount),
           escrowAddress: ARC_CONFIG.escrowContractAddress,
           txHash: existingTx.tx_hash || null,
-          explorerUrl: (!isSimTx && existingTx.tx_hash)
-            ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
-            : undefined,
+          explorerUrl:
+            !isSimTx && existingTx.tx_hash
+              ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
+              : undefined,
           idempotencyKey,
           agreementId: agreementId.toString(),
           idempotentHit: true,
@@ -244,7 +247,6 @@ export function buildEscrowTools(ctx: ToolContext) {
         .optional()
         .describe("Associated negotiation UUID"),
       category: z.string().optional().describe("Contract category"),
-      savings: z.number().optional().describe("Annual dollar savings"),
       forceFailSimulation: z
         .boolean()
         .optional()
@@ -261,19 +263,48 @@ export function buildEscrowTools(ctx: ToolContext) {
       contractId?: string;
       negotiationId?: string;
       category?: string;
-      savings?: number;
       forceFailSimulation?: boolean;
       forceRealChain?: boolean;
     }) => {
       const businessId = await ctx.resolveBusinessId(input.contractId);
       const supabase = getServiceSupabase();
 
-      let savings = input.savings;
+      // Resolve contractId from negotiationId if contractId is omitted
+      if (!input.contractId && input.negotiationId) {
+        const { data: neg } = await supabase
+          .from("negotiations")
+          .select("contract_id")
+          .eq("id", input.negotiationId)
+          .maybeSingle();
+        if (neg?.contract_id) {
+          input.contractId = neg.contract_id;
+        }
+      }
+
+      // Reject arbitrary payments lacking both contractId and negotiationId
+      if (!input.contractId && !input.negotiationId) {
+        const reason =
+          "Transaction rejected: create_escrow requires a contractId or negotiationId. Unlinked arbitrary payments are not permitted.";
+        await logAgentAction({
+          businessId,
+          action: "create_escrow",
+          reason,
+          confidence: 1.0,
+          input: {
+            amount: input.amount,
+            vendor: input.vendor,
+            vendorWallet: input.vendorWallet,
+          },
+          result: { status: "rejected", reason },
+        });
+        throw new Error(`Policy refusal: ${reason}`);
+      }
+
       let vendorId: string | null = null;
-      let resolvedCategory = input.category || "software";
+      let resolvedCategory: string = "";
       let resolvedWallet =
         input.vendorWallet !== undefined ? input.vendorWallet : null;
-      let negId = input.negotiationId || null;
+      const negId = input.negotiationId || null;
       let contractRecord: any = null;
 
       if (input.contractId) {
@@ -288,8 +319,30 @@ export function buildEscrowTools(ctx: ToolContext) {
         if (contract) {
           contractRecord = contract;
           vendorId = contract.vendor_id || null;
-          // Security fix: contract category is authoritative; input.category cannot spoof unauthorized categories
-          resolvedCategory = contract.category || input.category || "software";
+
+          // Authoritative contract category verification:
+          // If contract.category is null/missing, do not evaluate policy against caller inputs.
+          if (!contract.category || contract.category.trim() === "") {
+            const reason =
+              "Contract has no category set, cannot evaluate policy.";
+            await logAgentAction({
+              businessId,
+              action: "create_escrow",
+              reason,
+              confidence: 1.0,
+              input: {
+                contractId: input.contractId,
+                amount: input.amount,
+                vendor: input.vendor,
+                vendorWallet: input.vendorWallet,
+                inputCategory: input.category,
+              },
+              result: { status: "rejected", reason },
+            });
+            throw new Error(`Policy refusal: ${reason}`);
+          }
+
+          resolvedCategory = contract.category;
           if (resolvedWallet === null) {
             if (
               contract.vendors &&
@@ -314,36 +367,6 @@ export function buildEscrowTools(ctx: ToolContext) {
               .eq("id", negId)
               .maybeSingle();
             negRecord = neg;
-          } else {
-            const { data: neg } = await supabase
-              .from("negotiations")
-              .select("id, savings, original_price")
-              .eq("contract_id", input.contractId)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (neg) {
-              negId = neg.id;
-              negRecord = neg;
-            }
-          }
-
-          if (negRecord && savings === undefined) {
-            if (negRecord.savings) {
-              savings = Number(negRecord.savings);
-            } else if (negRecord.original_price) {
-              savings = Math.max(
-                0,
-                Number(negRecord.original_price) - input.amount,
-              );
-            }
-          }
-
-          if (savings === undefined && contract.current_price) {
-            savings = Math.max(
-              0,
-              Number(contract.current_price) - input.amount,
-            );
           }
         }
       }
@@ -423,52 +446,53 @@ export function buildEscrowTools(ctx: ToolContext) {
         throw new Error(`Invalid vendor wallet EVM address: ${resolvedWallet}`);
       }
 
-      // Security fix (Stage 0032): If contractId is omitted, effectiveSavings must be 0, not input.amount.
-      // A transaction with no linked contract cannot claim savings for policy purposes.
+      // Authoritative savings derivation:
+      // If contractId is present, derive it from contract.current_price - input.amount (never negative).
+      // If contractId is absent, effectiveSavings is strictly 0 (unlinked transactions cannot claim savings).
       const effectiveSavings =
-        savings !== undefined
-          ? savings
-          : input.contractId && contractRecord?.current_price
-            ? Math.max(0, Number(contractRecord.current_price) - input.amount)
-            : 0;
+        input.contractId &&
+        contractRecord?.current_price !== null &&
+        contractRecord?.current_price !== undefined
+          ? Math.max(0, Number(contractRecord.current_price) - input.amount)
+          : 0;
 
-      // 2. Mandatory server-side policy re-verification (deterministic code gatekeeper)
-      // Check input.category if specified
-      if (input.category) {
-        const inputAuth = await verifyPolicyExecutionAuthorization(businessId, {
-          amount: input.amount,
-          savings: effectiveSavings,
-          category: input.category,
-          contractId: input.contractId,
-          negotiationId: negId || undefined,
+      if (!resolvedCategory || resolvedCategory.trim() === "") {
+        const reason = "Contract has no category set, cannot evaluate policy.";
+        await logAgentAction({
+          businessId,
           action: "create_escrow",
+          reason,
+          confidence: 1.0,
+          input: {
+            contractId: input.contractId,
+            amount: input.amount,
+            vendor: input.vendor,
+            vendorWallet: input.vendorWallet,
+            inputCategory: input.category,
+          },
+          result: { status: "rejected", reason },
         });
-        if (!inputAuth.authorized) {
-          throw new Error(`Policy refusal: ${inputAuth.reason}`);
-        }
+        throw new Error(`Policy refusal: ${reason}`);
       }
 
-      // Check contract stored category to prevent category spoofing bypass
-      if (
-        contractRecord?.category &&
-        contractRecord.category !== input.category
-      ) {
-        const contractAuth = await verifyPolicyExecutionAuthorization(
+      // 2. Mandatory server-side policy re-verification (deterministic code gatekeeper)
+      // Check input.category if specified: caller category must strictly match contract category
+      if (input.category && input.category !== resolvedCategory) {
+        const mismatchErr = `Policy refusal: Caller category '${input.category}' does not match authoritative contract category '${resolvedCategory}'.`;
+        await logAgentAction({
           businessId,
-          {
-            amount: input.amount,
-            savings: effectiveSavings,
-            category: contractRecord.category,
+          action: "create_escrow",
+          reason: mismatchErr,
+          confidence: 1.0,
+          input: {
             contractId: input.contractId,
-            negotiationId: negId || undefined,
-            action: "create_escrow",
+            amount: input.amount,
+            inputCategory: input.category,
+            contractCategory: resolvedCategory,
           },
-        );
-        if (!contractAuth.authorized) {
-          throw new Error(
-            `Policy refusal: Contract category '${contractRecord.category}' is not authorized: ${contractAuth.reason}`,
-          );
-        }
+          result: { status: "rejected_category_mismatch", error: mismatchErr },
+        });
+        throw new Error(mismatchErr);
       }
 
       const auth = await verifyPolicyExecutionAuthorization(businessId, {
@@ -576,7 +600,9 @@ export function buildEscrowTools(ctx: ToolContext) {
               forceRealChain: input.forceRealChain,
             });
           }
-          const isSim = existingNegTx.is_simulated === true || existingNegTx.status === "simulation-only";
+          const isSim =
+            existingNegTx.is_simulated === true ||
+            existingNegTx.status === "simulation-only";
           return {
             success: true,
             transactionId: existingNegTx.id,
@@ -584,9 +610,10 @@ export function buildEscrowTools(ctx: ToolContext) {
             amount: Number(existingNegTx.amount),
             escrowAddress: existingNegTx.escrow_address,
             txHash: existingNegTx.tx_hash,
-            explorerUrl: (!isSim && existingNegTx.tx_hash)
-              ? `${ARC_CONFIG.explorerUrl}/tx/${existingNegTx.tx_hash}`
-              : undefined,
+            explorerUrl:
+              !isSim && existingNegTx.tx_hash
+                ? `${ARC_CONFIG.explorerUrl}/tx/${existingNegTx.tx_hash}`
+                : undefined,
             idempotencyKey: existingNegTx.idempotency_key,
             idempotentHit: true,
             isSimulation: isSim,
@@ -600,6 +627,7 @@ export function buildEscrowTools(ctx: ToolContext) {
         const { data: existingContractTx } = await supabase
           .from("transactions")
           .select("*")
+          .eq("business_id", businessId)
           .eq("contract_id", input.contractId)
           .is("negotiation_id", null)
           .not("status", "eq", "failed")
@@ -615,7 +643,9 @@ export function buildEscrowTools(ctx: ToolContext) {
               forceRealChain: input.forceRealChain,
             });
           }
-          const isSim = existingContractTx.is_simulated === true || existingContractTx.status === "simulation-only";
+          const isSim =
+            existingContractTx.is_simulated === true ||
+            existingContractTx.status === "simulation-only";
           return {
             success: true,
             transactionId: existingContractTx.id,
@@ -623,9 +653,10 @@ export function buildEscrowTools(ctx: ToolContext) {
             amount: Number(existingContractTx.amount),
             escrowAddress: existingContractTx.escrow_address,
             txHash: existingContractTx.tx_hash,
-            explorerUrl: (!isSim && existingContractTx.tx_hash)
-              ? `${ARC_CONFIG.explorerUrl}/tx/${existingContractTx.tx_hash}`
-              : undefined,
+            explorerUrl:
+              !isSim && existingContractTx.tx_hash
+                ? `${ARC_CONFIG.explorerUrl}/tx/${existingContractTx.tx_hash}`
+                : undefined,
             idempotencyKey: existingContractTx.idempotency_key,
             idempotentHit: true,
             isSimulation: isSim,
@@ -653,7 +684,9 @@ export function buildEscrowTools(ctx: ToolContext) {
             forceRealChain: input.forceRealChain,
           });
         }
-        const isSim = existingTx.is_simulated === true || existingTx.status === "simulation-only";
+        const isSim =
+          existingTx.is_simulated === true ||
+          existingTx.status === "simulation-only";
         return {
           success: true,
           transactionId: existingTx.id,
@@ -661,9 +694,10 @@ export function buildEscrowTools(ctx: ToolContext) {
           amount: Number(existingTx.amount),
           escrowAddress: existingTx.escrow_address,
           txHash: existingTx.tx_hash,
-          explorerUrl: (!isSim && existingTx.tx_hash)
-            ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
-            : undefined,
+          explorerUrl:
+            !isSim && existingTx.tx_hash
+              ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
+              : undefined,
           idempotencyKey,
           idempotentHit: true,
           isSimulation: isSim,
@@ -718,12 +752,21 @@ export function buildEscrowTools(ctx: ToolContext) {
           (txError.code === "23505" ||
             txError.message?.includes("unique") ||
             txError.message?.includes("idempotency_key") ||
-            txError.message?.includes("idx_transactions_unique_negotiation"))
+            txError.message?.includes("idx_transactions_unique_negotiation") ||
+            txError.message?.includes(
+              "idx_transactions_unique_contract_unlinked",
+            ))
         ) {
           let winnerQuery = supabase.from("transactions").select("*");
           if (negId) {
             winnerQuery = winnerQuery
               .eq("negotiation_id", negId)
+              .not("status", "eq", "failed");
+          } else if (input.contractId) {
+            winnerQuery = winnerQuery
+              .eq("business_id", businessId)
+              .eq("contract_id", input.contractId)
+              .is("negotiation_id", null)
               .not("status", "eq", "failed");
           } else {
             winnerQuery = winnerQuery.eq("idempotency_key", idempotencyKey);
@@ -742,7 +785,9 @@ export function buildEscrowTools(ctx: ToolContext) {
                 forceRealChain: input.forceRealChain,
               });
             }
-            const isSimTx = winnerTx.is_simulated === true || winnerTx.status === "simulation-only";
+            const isSimTx =
+              winnerTx.is_simulated === true ||
+              winnerTx.status === "simulation-only";
             return {
               success: true,
               transactionId: winnerTx.id,
@@ -750,9 +795,10 @@ export function buildEscrowTools(ctx: ToolContext) {
               amount: Number(winnerTx.amount),
               escrowAddress: winnerTx.escrow_address,
               txHash: winnerTx.tx_hash,
-              explorerUrl: (!isSimTx && winnerTx.tx_hash)
-                ? `${ARC_CONFIG.explorerUrl}/tx/${winnerTx.tx_hash}`
-                : null,
+              explorerUrl:
+                !isSimTx && winnerTx.tx_hash
+                  ? `${ARC_CONFIG.explorerUrl}/tx/${winnerTx.tx_hash}`
+                  : null,
               idempotencyKey: winnerTx.idempotency_key,
               idempotentHit: true,
               isSimulation: isSimTx,
@@ -821,6 +867,7 @@ export function buildEscrowTools(ctx: ToolContext) {
             contractId: input.contractId,
             negotiationId: negId,
             amount: input.amount,
+            savings: effectiveSavings,
             idempotencyKey,
             vendorWallet: resolvedWallet,
           },
@@ -839,6 +886,7 @@ export function buildEscrowTools(ctx: ToolContext) {
           transactionId: newTx.id,
           status: "simulation-only",
           amount: input.amount,
+          savings: effectiveSavings,
           escrowAddress: ARC_CONFIG.escrowContractAddress,
           txHash: null,
           explorerUrl: null,
@@ -861,10 +909,9 @@ export function buildEscrowTools(ctx: ToolContext) {
         }
 
         // Create Agreement on ArcEscrow.sol (funds move into contract, not vendor)
-        const baselinePrice =
-          contractRecord?.current_price
-            ? Number(contractRecord.current_price)
-            : input.amount;
+        const baselinePrice = contractRecord?.current_price
+          ? Number(contractRecord.current_price)
+          : input.amount;
 
         const createRes = await createArcEscrowAgreement({
           vendorWallet: resolvedWallet,
@@ -917,6 +964,7 @@ export function buildEscrowTools(ctx: ToolContext) {
             contractId: input.contractId,
             negotiationId: negId,
             amount: input.amount,
+            savings: effectiveSavings,
             idempotencyKey,
             vendorWallet: resolvedWallet,
             agreementId: createRes.agreementId,
@@ -937,6 +985,7 @@ export function buildEscrowTools(ctx: ToolContext) {
           transactionId: newTx.id,
           status: "funded",
           amount: input.amount,
+          savings: effectiveSavings,
           escrowAddress: ARC_CONFIG.escrowContractAddress,
           txHash: fundingTxHash,
           explorerUrl: `${ARC_CONFIG.explorerUrl}/tx/${fundingTxHash}`,
@@ -1030,7 +1079,6 @@ export function buildEscrowTools(ctx: ToolContext) {
         .string()
         .optional()
         .describe("Associated negotiation UUID"),
-      savings: z.number().optional().describe("Optional savings in USDC"),
       verificationPassed: z
         .boolean()
         .optional()
@@ -1046,7 +1094,6 @@ export function buildEscrowTools(ctx: ToolContext) {
       transactionId?: string;
       idempotencyKey?: string;
       negotiationId?: string;
-      savings?: number;
       verificationPassed?: boolean;
       forceRealChain?: boolean;
     }) => {
@@ -1108,18 +1155,26 @@ export function buildEscrowTools(ctx: ToolContext) {
       const finalPrice = Number(
         neg?.final_price || neg?.current_offer || contract?.current_price || 0,
       );
+      // Authoritative savings derivation: derived server-side from contract or negotiation records.
       const savings =
-        input.savings !== undefined
-          ? input.savings
+        contract?.current_price !== null &&
+        contract?.current_price !== undefined
+          ? Math.max(0, Number(contract.current_price) - finalPrice)
           : neg?.savings
-            ? Number(neg.savings)
-            : 500;
+            ? Math.max(0, Number(neg.savings))
+            : 0;
+
+      if (!contract?.category || contract.category.trim() === "") {
+        throw new Error(
+          "Policy refusal: Contract has no category set, cannot evaluate policy.",
+        );
+      }
 
       // 2. Mandatory server-side policy authorization
       const auth = await verifyPolicyExecutionAuthorization(businessId, {
         amount: finalPrice,
         savings,
-        category: contract?.category || "software",
+        category: contract.category,
         contractId: contract?.id,
         negotiationId: neg?.id,
         action: "release_escrow",
@@ -1149,16 +1204,19 @@ export function buildEscrowTools(ctx: ToolContext) {
         existingTx?.status === "released" ||
         existingTx?.status === "completed"
       ) {
-        const isSimReleased = existingTx.is_simulated === true || existingTx.status === "simulation-only";
+        const isSimReleased =
+          existingTx.is_simulated === true ||
+          existingTx.status === "simulation-only";
         return {
           success: true,
           transactionId: existingTx.id,
           txHash: existingTx.tx_hash,
           status: existingTx.status,
           amount: Number(existingTx.amount),
-          explorerUrl: (!isSimReleased && existingTx.tx_hash)
-            ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
-            : undefined,
+          explorerUrl:
+            !isSimReleased && existingTx.tx_hash
+              ? `${ARC_CONFIG.explorerUrl}/tx/${existingTx.tx_hash}`
+              : undefined,
           isSimulation: isSimReleased,
           isSimulated: isSimReleased,
           message: isSimReleased
@@ -1663,7 +1721,12 @@ export function buildEscrowTools(ctx: ToolContext) {
           reason: `Simulation refund: ${input.reason}`,
           confidence: 1.0,
           input: { transactionId: targetTx.id, reason: input.reason },
-          result: { status: "refunded", txHash: null, explorerUrl: null, isSimulated: true },
+          result: {
+            status: "refunded",
+            txHash: null,
+            explorerUrl: null,
+            isSimulated: true,
+          },
         });
 
         return {

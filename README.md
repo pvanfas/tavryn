@@ -129,25 +129,25 @@ Tavryn deeply integrates Circle's developer infrastructure and the Arc Network:
 
 In accordance with rigorous transparency standards, here is the honest disclosure of what is live vs. simulated:
 
-| Subsystem                         | Status     | Description                                                                                                                                                                                                                   |
-| :-------------------------------- | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Relational Database**           | **Real**   | Live Supabase PostgreSQL database running in production with 13 relational tables and migrations.                                                                                                                             |
-| **Database Security (RLS)**       | **Real**   | Active PostgreSQL Row-Level Security policies enforcing strict multi-tenant isolation.                                                                                                                                        |
-| **Cryptographic Audit Chain**     | **Real**   | Database triggers block UPDATE/DELETE; SHA-256 hashes sequentially chain every agent action.                                                                                                                                  |
-| **Deterministic Policy Engine**   | **Real**   | Pure TypeScript mathematics evaluating category budgets, thresholds, and human escalation boundaries.                                                                                                                         |
-| **Adversarial Reviewer Agent**    | **Real**   | Dual-pass reviewer (`lib/agent/reviewer.ts`) with deterministic benchmark checks and qualitative LLM auditing issuing `AGREE`, `CHALLENGE`, or `REJECT` verdicts.                                                             |
-| **Switch vs. Renegotiate Matrix** | **Real**   | Net NPV calculation engine (`lib/switching.ts`) modeling migration hours, retraining, and downtime risk with a strict human approval invariant.                                                                               |
-| **1-Tap Out-of-Band Approvals**   | **Real**   | Cryptographically signed HMAC-SHA256 tokens expiring in 48 hours with single-use enforcement and server-side policy re-verification upon consumption (`/approve/[token]`).                                                    |
-| **Supervisor Override Memory**    | **Real**   | Persistent `override_memory` table tracking structured rejection reason codes and injecting feedback into future negotiation prompts (`lib/override-memory.ts`).                                                              |
-| **Circle Developer SDK**          | **Real**   | Native `@circle-fin/developer-controlled-wallets` client wired for wallet creation, contract execution transactions, and balance queries.                                                                                    |
-| **Arc Escrow Smart Contracts**    | **Real**   | Solidity contract (`ArcEscrow.sol`) deployed to Arc Testnet at `0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`. Deposits lock funds in contract held balance; releases execute on-chain via Circle SCA / viem. Passing 11/11.   |
+| Subsystem                         | Status     | Description                                                                                                                                                                                                                       |
+| :-------------------------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Relational Database**           | **Real**   | Live Supabase PostgreSQL database running in production with 13 relational tables and migrations.                                                                                                                                 |
+| **Database Security (RLS)**       | **Real**   | Active PostgreSQL Row-Level Security policies enforcing strict multi-tenant isolation.                                                                                                                                            |
+| **Cryptographic Audit Chain**     | **Real**   | Database triggers block UPDATE/DELETE; SHA-256 hashes sequentially chain every agent action.                                                                                                                                      |
+| **Deterministic Policy Engine**   | **Real**   | Pure TypeScript mathematics evaluating category budgets, thresholds, and human escalation boundaries.                                                                                                                             |
+| **Adversarial Reviewer Agent**    | **Real**   | Dual-pass reviewer (`lib/agent/reviewer.ts`) with deterministic benchmark checks and qualitative LLM auditing issuing `AGREE`, `CHALLENGE`, or `REJECT` verdicts.                                                                 |
+| **Switch vs. Renegotiate Matrix** | **Real**   | Net NPV calculation engine (`lib/switching.ts`) modeling migration hours, retraining, and downtime risk with a strict human approval invariant.                                                                                   |
+| **1-Tap Out-of-Band Approvals**   | **Real**   | Cryptographically signed HMAC-SHA256 tokens expiring in 48 hours with single-use enforcement and server-side policy re-verification upon consumption (`/approve/[token]`).                                                        |
+| **Supervisor Override Memory**    | **Real**   | Persistent `override_memory` table tracking structured rejection reason codes and injecting feedback into future negotiation prompts (`lib/override-memory.ts`).                                                                  |
+| **Circle Developer SDK**          | **Real**   | Native `@circle-fin/developer-controlled-wallets` client wired for wallet creation, contract execution transactions, and balance queries.                                                                                         |
+| **Arc Escrow Smart Contracts**    | **Real**   | Solidity contract (`ArcEscrow.sol`) deployed to Arc Testnet at `0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`. Deposits lock funds in contract held balance; releases execute on-chain via Circle SCA / viem. Passing 11/11.        |
 | **On-Chain Escrow Execution**     | **Hybrid** | With Circle/Arc keys configured: live on-chain contract execution (`createAgreement`, `fundAgreement`, `approveMilestone`, `releasePayment`) with verified ArcScan links. In mock mode: explicitly records `is_simulated = true`. |
-| **Honest Transaction Labeling**   | **Real**   | Zero 404 links: simulated or mock transactions carry `is_simulated = true`, rendering `"Simulated (testnet mock)"` badges with copyable text. Working ArcScan links render exclusively for chain-confirmed transactions.    |
-| **Double-Payment Locking**        | **Real**   | Partial unique PostgreSQL indexes, migration 0008, server-side idempotency keys, and pending-first transaction insertion blocking race conditions and replay attacks.                                                         |
-| **One-Click Demo Pipeline**       | **Real**   | Live end-to-end execution: runs live negotiation loop against vendor simulator, counter-document generator, extraction audit, reviewer agent check, and escrow execution with dynamic variance per run.                        |
-| **Vendor Negotiations**           | **Hybrid** | Simulated vendors use reproducible concession curves (`lib/vendor-simulator.ts`); real vendors (`is_simulated = false`) use human-in-the-loop AI outreach drafting and structured reply parsing (`lib/agent/real-vendor.ts`). |
-| **Vendor Confirmation Receipts**  | **Hybrid** | Deterministic verification engine audits 4 contract fields (price, seats, term, date) against pasted or simulated counterparty receipts (`lib/agent/verification.ts`).                                                        |
-| **USDC Balances (Fallback)**      | **Real**   | Direct RPC JSON calls to precompile `0x3600...` on Arc Testnet, alerting when balance < 100 USDC.                                                                                                                             |
+| **Honest Transaction Labeling**   | **Real**   | Zero 404 links: simulated or mock transactions carry `is_simulated = true`, rendering `"Simulated (testnet mock)"` badges with copyable text. Working ArcScan links render exclusively for chain-confirmed transactions.          |
+| **Double-Payment Locking**        | **Real**   | Partial unique PostgreSQL indexes, migration 0008, server-side idempotency keys, and pending-first transaction insertion blocking race conditions and replay attacks.                                                             |
+| **One-Click Demo Pipeline**       | **Real**   | Live end-to-end execution: runs live negotiation loop against vendor simulator, counter-document generator, extraction audit, reviewer agent check, and escrow execution with dynamic variance per run.                           |
+| **Vendor Negotiations**           | **Hybrid** | Simulated vendors use reproducible concession curves (`lib/vendor-simulator.ts`); real vendors (`is_simulated = false`) use human-in-the-loop AI outreach drafting and structured reply parsing (`lib/agent/real-vendor.ts`).     |
+| **Vendor Confirmation Receipts**  | **Hybrid** | Deterministic verification engine audits 4 contract fields (price, seats, term, date) against pasted or simulated counterparty receipts (`lib/agent/verification.ts`).                                                            |
+| **USDC Balances (Fallback)**      | **Real**   | Direct RPC JSON calls to precompile `0x3600...` on Arc Testnet, alerting when balance < 100 USDC.                                                                                                                                 |
 
 ---
 
@@ -245,10 +245,10 @@ npm run test:e2e
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser:
+Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard) (or [http://localhost:3000](http://localhost:3000) for the public landing page) in your browser:
 
-- Logged-out visitors see the **Landing Page** with the one-line pitch, hero metrics, and 3-step loop.
-- Click **"Try the demo"** to immediately open Demo Co on `/dashboard`.
+- Logged-out visitors browsing to `/` see the **Landing Page** with the one-line pitch, hero metrics, and 3-step loop.
+- Authenticated visitors and **"Try the demo"** clicks automatically navigate directly to the **Dashboard** at `http://localhost:3000/dashboard`.
 - Click **"Run full demo"** on the dashboard to watch the 7-step autonomous procurement engine execute live in the Activity Timeline.
 - Click **"Audit Ledger"** (`/audit`) to verify the cryptographic SHA-256 chain.
 

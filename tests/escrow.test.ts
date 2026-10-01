@@ -63,6 +63,10 @@ test("3. create_escrow double-call test proves idempotency and prevents duplicat
     .single();
 
   assert.ok(slackContract, "Seeded Slack contract must exist");
+  await supabase
+    .from("contracts")
+    .update({ current_price: 9600 })
+    .eq("id", slackContract.id);
 
   const tools = createAgentTools({ businessId: slackContract.business_id });
   const uniqueKey = `idemp-test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -228,15 +232,29 @@ test("6. create_escrow escalates to human approval when vendor wallet address mu
     idempotency_key: `history-seed-${Date.now()}`,
   });
 
+  const { data: tempContract } = await supabase
+    .from("contracts")
+    .insert({
+      business_id: firstBiz.id,
+      vendor_id: tempVendor.id,
+      service: `Contract ${Date.now()}`,
+      category: "software",
+      current_price: 2000,
+      renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+      status: "active",
+    })
+    .select()
+    .single();
+
   const tools = createAgentTools({ businessId: firstBiz.id });
 
   // Attempt to escrow to mutated address
   const mutatedAddress = "0x4444444444444444444444444444444444444444";
   await assert.rejects(async () => {
     await (tools.create_escrow as any).execute({
+      contractId: tempContract?.id,
       vendor: tempVendor.id,
       amount: 1000,
-      savings: 500,
       category: "software",
       vendorWallet: mutatedAddress,
       idempotencyKey: `mutated-${Date.now()}`,
@@ -265,6 +283,11 @@ test("7. create_escrow handles on-chain funding failure and transitions status t
     .single();
 
   assert.ok(slackContract);
+  await supabase
+    .from("contracts")
+    .update({ current_price: 9600 })
+    .eq("id", slackContract.id);
+
   const tools = createAgentTools({ businessId: slackContract.business_id });
   const failKey = `fail-sim-${Date.now()}`;
   const validWallet =
@@ -289,7 +312,6 @@ test("7. create_escrow handles on-chain funding failure and transitions status t
       contractId: slackContract.id,
       negotiationId: failNeg?.id,
       amount: 1000,
-      savings: 1000,
       category: "software",
       vendorWallet: validWallet,
       idempotencyKey: failKey,
@@ -317,6 +339,10 @@ test("8. release_escrow updates state to released, logs to agent_actions, and pr
     .single();
 
   assert.ok(slackContract);
+  await supabase
+    .from("contracts")
+    .update({ current_price: 9600 })
+    .eq("id", slackContract.id);
   const tools = createAgentTools({ businessId: slackContract.business_id });
 
   const releaseResult = await (tools.release_escrow as any).execute({
@@ -326,7 +352,10 @@ test("8. release_escrow updates state to released, logs to agent_actions, and pr
   });
 
   assert.equal(releaseResult.success, true);
-  if (releaseResult.isSimulation || releaseResult.status === "simulation-only") {
+  if (
+    releaseResult.isSimulation ||
+    releaseResult.status === "simulation-only"
+  ) {
     assert.equal(releaseResult.status, "simulation-only");
     assert.equal(releaseResult.txHash, null);
     assert.equal(releaseResult.explorerUrl, null);

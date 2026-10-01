@@ -26,7 +26,7 @@ Row-Level Security (RLS) policies are deferred until multi-tenant auth lands, qu
 
 ## Proof
 
-Automated tests pass 100% via `npm test`, seed script runs idempotently with zero duplicates across consecutive runs (`npm run seed`), and the dashboard renders cleanly at `localhost:3000` showing verified DB figures ($42,850 USDC treasury balance, $5,900/mo active spend, $12,776 discovered savings).
+Automated tests pass 100% via `npm test`, seed script runs idempotently with zero duplicates across consecutive runs (`npm run seed`), and the dashboard renders cleanly at `http://localhost:3000/dashboard` showing verified DB figures ($42,850 USDC treasury balance, $5,900/mo active spend, $12,776 discovered savings).
 
 ## Next up
 

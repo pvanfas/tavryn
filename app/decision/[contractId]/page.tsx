@@ -28,7 +28,6 @@ import React, { use, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { BodySmall, Caption, H1, H2, Mono } from "@/components/ui/text";
-import { ARC_CONFIG } from "@/lib/circle";
 import { SwitchDecisionMatrix } from "@/lib/switching";
 
 interface CheckItem {

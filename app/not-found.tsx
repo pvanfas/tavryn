@@ -38,7 +38,7 @@ export default function NotFound() {
 
         <div className="pt-2 flex flex-col gap-2.5">
           <Link
-            href="/"
+            href="/dashboard"
             className="w-full inline-flex items-center justify-center h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-sm"
           >
             Return to Overview

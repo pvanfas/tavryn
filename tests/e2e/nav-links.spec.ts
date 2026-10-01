@@ -38,7 +38,7 @@ test.describe("Stage 0005: Sidebar & Navigation Rebuild", () => {
   }) => {
     // Authenticate demo session first
     await page.goto("/api/demo/session");
-    await page.waitForURL(/\/(dashboard)?/);
+    await page.waitForURL(/\/dashboard/);
 
     const routes = getAllAppNavRoutes();
     expect(routes.length).toBeGreaterThan(0);
@@ -99,8 +99,8 @@ test.describe("Stage 0005: Sidebar & Navigation Rebuild", () => {
     await expect(returnBtn).toBeVisible();
     await returnBtn.click();
 
-    // Verify navigation landed on Overview (/)
-    await page.waitForURL(/\/(dashboard)?/);
+    // Verify navigation landed on Overview (/dashboard)
+    await page.waitForURL(/\/dashboard/);
     await expect(page.locator("h1, h2").first()).toBeVisible();
   });
 

@@ -4,9 +4,7 @@ import {
   Activity,
   Bot,
   Building2,
-  Check,
   Clock,
-  Copy,
   ExternalLink,
   Layers,
   Receipt,
@@ -199,9 +197,6 @@ export function TractionMetricsClient({
                 Autonomous Governance & Approvals
               </H2>
             </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              Zero-Trust Policy
-            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 my-4">
@@ -287,9 +282,6 @@ export function TractionMetricsClient({
                   Multi-Agent Audit Telemetry
                 </H2>
               </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
-                Dual-LLM Cross-Check
-              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 my-4">
@@ -398,9 +390,6 @@ export function TractionMetricsClient({
                 Velocity & Negotiation Efficiency
               </H2>
             </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              Performance
-            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 my-4">

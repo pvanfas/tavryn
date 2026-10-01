@@ -14,34 +14,39 @@ Tavryn's financial and execution pipeline now operates with end-to-end cryptogra
 
 ## What actually got built
 
-### 1. Policy Authorization Security (formerly 0032)
+### 1. Policy Authorization Security
+
 - **Database Migration `0011_approval_amount_and_single_use.sql`**: Added `amount numeric` and `used_at timestamptz` columns to `approvals` with composite index `idx_approvals_negotiation_unused` on `(business_id, negotiation_id, status)`.
 - **Strict Negotiation-Scoped Authorization**: Hardened `verifyPolicyExecutionAuthorization` in `lib/policy.ts` to strictly require `negotiationId` for any action requiring human approval, eliminating company-wide ambient fallback queries.
 - **Approval Ceiling Enforcement**: Added strict amount validation requiring `approval.amount >= transaction.amount`.
 - **Single-Use Burn Mechanism**: Atomically stamps `used_at = now()` upon authorization, blocking reuse.
 - **Zero-Savings Default for Unlinked Transfers**: `effectiveSavings` defaults to `$0` when `contractId` is omitted, preventing synthetic savings from bypassing policy thresholds.
 
-### 2. Live ArcEscrow Smart Contract Execution (formerly 0033)
+### 2. Live ArcEscrow Smart Contract Execution
+
 - **Viem & Circle Contract Execution Integration**: Added `viem` to production dependencies and implemented typed contract helpers in `lib/contracts/arc-escrow.ts` and `lib/circle.ts`, supporting Circle Developer-Controlled Wallets contract execution with Viem fallback on Arc Testnet.
 - **Real Agreement Creation & Funding (`create_escrow`)**: Atomic calls to `ArcEscrow.sol`'s `createAgreementWithSavings` and `fundAgreement` lock USDC inside the contract's held balance.
 - **Authentic Verification Release (`release_escrow`)**: Eradicated `crypto.randomBytes(32)` generation. After confirmation verification passes, `release_escrow` calls `approveMilestone` (as verifier) and `release` on `ArcEscrow.sol`.
 - **Smart Escrow Refund Path (`refund_escrow`)**: Calls `ArcEscrow.sol`'s `refund` function when vendor verification fails and agreement deadlines pass, returning principal to the business treasury.
 - **Simulation-Only Integrity Guard**: When credentials are absent or in mock mode, records `status: 'simulation-only'`, `txHash: null`, and `explorerUrl: null`.
 
-### 3. Double-Payment Defense & Crash-Proof Idempotency (formerly 0034)
+### 3. Double-Payment Defense & Crash-Proof Idempotency
+
 - **Removed Caller-Supplied Idempotency Keys**: Eliminated `idempotencyKey` from `create_escrow`'s Zod schema. Keys are strictly computed server-side from `sha256(business_id|contract_id|negotiation_id|amount)`.
-- **Pre-Execution Pending State Lock**: Inserts a `pending` transaction row under the derived key *before* any blockchain call starts. Unique indexes (`idx_transactions_unique_negotiation` and `idx_transactions_unique_contract_unlinked` where `status != 'failed'`) catch concurrent requests before money moves.
+- **Pre-Execution Pending State Lock**: Inserts a `pending` transaction row under the derived key _before_ any blockchain call starts. Unique indexes (`idx_transactions_unique_negotiation` and `idx_transactions_unique_contract_unlinked` where `status != 'failed'`) catch concurrent requests before money moves.
 - **Definitive Failure vs. Ambiguous Timeout Branching (`isDefinitiveOnChainFailure`)**: Distinguishes terminal EVM reverts and Circle rejections from network dropouts (`ETIMEDOUT`, `ECONNRESET`, `504 Gateway Timeout`). Only definitive reverts transition `pending -> failed`; ambiguous timeouts preserve `pending`.
 - **On-Chain Pending Reconciliation (`reconcilePendingEscrow`)**: Reconciles pending transactions against `ArcEscrow.sol` via `getAgreementIdForTransaction`. If funded on-chain, marks `funded` as an idempotent hit without moving money twice. If undetermined, refuses duplicate execution.
 
-### 4. Genuine Autonomous Demo Pipeline & Reviewer Agent (formerly 0035)
+### 4. Genuine Autonomous Demo Pipeline & Reviewer Agent
+
 - **Full Real Pipeline in `/api/demo/reset-and-run`**: Replaced static fixtures with live function calls to `runNegotiationLoop`, `runReviewerAgent`, `checkPolicy`, `buildEscrowTools`, `generateVendorConfirmationDocument`, `extractVendorConfirmation`, and `record_vendor_memory`.
 - **Negotiation-Seeded Simulator Variance**: Enhanced `simulateVendorNegotiation` in `lib/vendor-simulator.ts` to accept `negotiation_id`. Mulberry32 PRNG seeds distinct concession curves across runs while preserving test reproducibility.
 - **Reviewer Agent Adversarial Audit**: Embedded a dedicated Stage 3 step where `runReviewerAgent` evaluates license idle percentage, deal velocity, and historical benchmarks, logging `reviewer_audit` actions and persisting to `reviews`.
 - **End-to-End Vendor Confirmation Extraction**: Pipes structured vendor confirmation schedules through `extractVendorConfirmation` (AI SDK with deterministic regex fallback) and verifies exact term matches before releasing escrow.
 - **Live Visual Progress Indicators**: Updated `components/ActivityTimeline.tsx` with active step-cycling progress animations.
 
-### 5. Honest Transaction Labeling & Anti-404 Explorer Proofs (formerly 0036)
+### 5. Honest Transaction Labeling & Anti-404 Explorer Proofs
+
 - **Database Schema Migration `0012_transaction_is_simulated.sql`**: Added `is_simulated boolean NOT NULL DEFAULT false` column and index `idx_transactions_is_simulated` to `transactions`.
 - **Universal Honest Hash Component (`components/TransactionHashBadge.tsx`)**: Live on-chain hashes render as clickable links to `testnet.arcscan.app/tx/[hash]`. Simulated hashes render an amber "Simulated (testnet mock)" badge with copyable monospace text and a copy button—never linking to an explorer.
 - **Public Proof of Savings Receipts (`lib/receipt.ts` & `app/r/[token]/page.tsx`)**: Extended `PublicReceiptViewModel` with `isSimulated: boolean` and `releaseTxHash`. Suppresses dead ArcScan links on simulated receipts and displays an amber sandbox verification banner.
@@ -80,8 +85,8 @@ We established a unified architectural invariant across all five areas: **state 
   - **Lifecycle Agreement #3**: Funding Tx [`0x66eb7f5c314756d2f2965352dc90b534807a8df097b13c4bef514c97cf81d24f`](https://testnet.arcscan.app/tx/0x66eb7f5c314756d2f2965352dc90b534807a8df097b13c4bef514c97cf81d24f) & Release Tx [`0xc6ef880a1bd0c856bd0a3699bef4b1efa79ce6f4b0b0825e05579d280cb7c304`](https://testnet.arcscan.app/tx/0xc6ef880a1bd0c856bd0a3699bef4b1efa79ce6f4b0b0825e05579d280cb7c304).
   - **Lifecycle Agreement #10**: Funding Tx [`0x9ded567b33b68eddadb00b6e4818001fddceff20f389ba9079873c7a5e282ee2`](https://testnet.arcscan.app/tx/0x9ded567b33b68eddadb00b6e4818001fddceff20f389ba9079873c7a5e282ee2) & Release Tx [`0xea6d483d4cd57b9f4f613a248e81486d18027e893105aff14acf8bbbbb379ba4`](https://testnet.arcscan.app/tx/0xea6d483d4cd57b9f4f613a248e81486d18027e893105aff14acf8bbbbb379ba4).
 - **Visual Verification Proofs**:
-  - Side-by-side verification page at `/verify-labeling` ([`honest_labeling_side_by_side.png`](file:///Users/admin/.gemini/antigravity-ide/brain/778bfc21-d6dc-4db9-9ef5-0c7086cf0e7f/honest_labeling_side_by_side.png)).
-  - Live public receipts verified: on-chain [`receipt_real_onchain.png`](file:///Users/admin/.gemini/antigravity-ide/brain/778bfc21-d6dc-4db9-9ef5-0c7086cf0e7f/receipt_real_onchain.png) and simulated [`receipt_simulated.png`](file:///Users/admin/.gemini/antigravity-ide/brain/778bfc21-d6dc-4db9-9ef5-0c7086cf0e7f/receipt_simulated.png).
+  - Side-by-side verification page at `/verify-labeling` (`honest_labeling_side_by_side.png`).
+  - Live public receipts verified: on-chain (`receipt_real_onchain.png`) and simulated (`receipt_simulated.png`).
 
 ## Next up
 

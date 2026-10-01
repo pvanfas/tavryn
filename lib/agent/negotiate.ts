@@ -527,7 +527,7 @@ Draft a concise, professional 1-2 sentence procurement negotiation message to th
       .eq("id", statusRes.negotiation.id);
   }
 
-  // 5b. Reviewer Agent Adversarial Audit (Stage 0010)
+  // 5b. Reviewer Agent Adversarial Audit
   let reviewerResult: ReviewerOutput | null = null;
   if (isAgreed && statusRes.negotiation?.id) {
     try {

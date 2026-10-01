@@ -83,6 +83,9 @@ export const AUTH_COOKIE_MAX_AGE_SECONDS = 604800;
 /** Default localhost fallback URL used when NEXT_PUBLIC_SITE_URL is unset */
 export const DEFAULT_SITE_URL = "http://localhost:3000";
 
+/** Default canonical dashboard URL */
+export const DEFAULT_DASHBOARD_URL = "http://localhost:3000/dashboard";
+
 // ---------------------------------------------------------------------------
 // Cron / Proactive Agent
 // ---------------------------------------------------------------------------
@@ -102,3 +105,118 @@ export const DEFAULT_NOTIFICATION_LIMIT = 40;
 
 /** Webhook HTTP request timeout in milliseconds */
 export const WEBHOOK_TIMEOUT_MS = 3500;
+
+// ---------------------------------------------------------------------------
+// Arc Network & Smart Contract Defaults
+// ---------------------------------------------------------------------------
+
+/** Arc Layer-1 Testnet Chain ID */
+export const DEFAULT_ARC_CHAIN_ID = 5042002;
+
+/** Public JSON-RPC endpoint for Arc Testnet */
+export const DEFAULT_ARC_RPC_URL = "https://rpc.testnet.arc.network";
+
+/** Public ArcScan block explorer URL */
+export const DEFAULT_ARC_EXPLORER_URL = "https://testnet.arcscan.app";
+
+/** Circle testnet faucet URL for funding USDC */
+export const DEFAULT_ARC_FAUCET_URL = "https://faucet.circle.com";
+
+/** Arc native USDC ERC-20 precompile contract address (6 decimals) */
+export const DEFAULT_ARC_USDC_CONTRACT =
+  "0x3600000000000000000000000000000000000000";
+
+/** Deployed ArcEscrow.sol smart contract address on Arc Testnet */
+export const DEFAULT_ARC_ESCROW_CONTRACT =
+  "0x78e61ae7e8EeF34Add911FA3e41F3408a819c047";
+
+/** Circle Developer-Controlled Wallets blockchain identifier */
+export const DEFAULT_CIRCLE_BLOCKCHAIN = "ARC-TESTNET";
+
+// ---------------------------------------------------------------------------
+// Verification & Proof Sample Values (Stage 0010 Honest Labeling)
+// ---------------------------------------------------------------------------
+
+/** Confirmed on-chain transaction hash used for visual proofs and verification */
+export const VERIFICATION_SAMPLE_REAL_TX_HASH =
+  "0xda45a52663ed21a83ed69800770b826e9dd123f5e09c0783b189acc1907e375a";
+
+/** Representative simulated transaction hash (non-chain mock) for visual proofs */
+export const VERIFICATION_SAMPLE_SIM_TX_HASH =
+  "0xsimulated_8f7b2c1e4d0a9b8c7d6e5f4a3b2c1d0e";
+
+/** Sample public receipt token for live on-chain transaction proof */
+export const VERIFICATION_SAMPLE_REAL_RECEIPT_TOKEN =
+  "5e00674ab8e2b86cdfedb78214f38672";
+
+/** Sample public receipt token for simulated mock transaction proof */
+export const VERIFICATION_SAMPLE_SIM_RECEIPT_TOKEN =
+  "5af64a561a009ece45b8895f7a44ebdf";
+
+// ---------------------------------------------------------------------------
+// Sanctions & Compliance Screening
+// ---------------------------------------------------------------------------
+
+/** Known sanctions/OFAC test vector addresses flagged during screening */
+export const SANCTIONS_BLOCKLIST_ADDRESSES = [
+  "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b", // Tornado Cash Router
+  "0x8589427373d6d84e98730d7795d8f6f8731fda16", // Flagged OFAC Vector
+  "0x7f367cc41522ce07553e823bf3be79a889debe1b", // High-risk test address
+] as const;
+
+// ---------------------------------------------------------------------------
+// LLM Provider & Mock Benchmarks
+// ---------------------------------------------------------------------------
+
+/** Default OpenAI model identifier */
+export const DEFAULT_OPENAI_MODEL = "gpt-4o";
+
+/** Default Anthropic model identifier */
+export const DEFAULT_ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022";
+
+/** Mock Language Model provider name */
+export const DEFAULT_MOCK_PROVIDER = "tavryn-mock-provider";
+
+/** Mock Language Model model identifier */
+export const DEFAULT_MOCK_MODEL_ID = "mock-analyzer-v1";
+
+/** LocalStorage theme key */
+export const THEME_STORAGE_KEY = "tavryn-theme";
+
+/** Mock agent baseline vendor benchmarks */
+export const MOCK_VENDOR_BENCHMARKS = {
+  default: {
+    currentPrice: 10000,
+    targetPrice: 7500,
+    savings: 2500,
+    recommendation: "negotiate",
+    rationale: "Identified idle capacity and benchmarked competitor pricing.",
+  },
+  slack: {
+    serviceName: "Slack",
+    currentPrice: 9600,
+    targetPrice: 6912,
+    savings: 2688,
+    recommendation: "downsize_seats",
+    rationale:
+      "Audit detected 7 idle licenses (28% waste). Recommend reducing seats from 25 to 18 to save $2,688/yr.",
+  },
+  datadog: {
+    serviceName: "Datadog",
+    currentPrice: 37200,
+    targetPrice: 29127.6,
+    savings: 8072.4,
+    recommendation: "negotiate",
+    rationale:
+      "Telemetry indicates a 31% volume decline in active workloads. Recommend renegotiating lower tier to save $8,072.40/yr.",
+  },
+  aws: {
+    serviceName: "AWS",
+    currentPrice: 24000,
+    targetPrice: 21984,
+    savings: 2016,
+    recommendation: "negotiate",
+    rationale:
+      "Telemetry indicates compute reservation renewal approaching. Recommend renegotiating tiered commitment to save $2,016/yr.",
+  },
+} as const;

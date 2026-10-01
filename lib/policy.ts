@@ -363,7 +363,7 @@ export async function verifyPolicyExecutionAuthorization(
   }
 
   // If decision is 'needs_human', inspect the approvals table
-  // Security Fix (Stage 0032): Require negotiationId on every approval lookup; business-wide fallback is prohibited.
+  // Security Invariant: Require negotiationId on every approval lookup; business-wide fallback is prohibited.
   if (!context.negotiationId) {
     return {
       authorized: false,

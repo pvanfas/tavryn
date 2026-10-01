@@ -40,8 +40,7 @@ function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 import { cookies } from "next/headers";
-
-import DashboardPage from "./dashboard/page";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +53,12 @@ export default async function Page(props: {
     .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
 
   if (hasAuth) {
-    return <DashboardPage searchParams={props.searchParams} />;
+    const { businessId } = await props.searchParams;
+    redirect(
+      businessId
+        ? `/dashboard?businessId=${encodeURIComponent(businessId)}`
+        : "/dashboard",
+    );
   }
 
   const supabase = getServiceSupabase();

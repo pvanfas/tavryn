@@ -163,17 +163,14 @@ export async function POST(
       confirmedSeats = seats + 5;
     }
 
-    const {
-      documentText,
-      confirmationId,
-      issuedAt,
-    } = generateVendorConfirmationDocument({
-      vendorName,
-      confirmedPrice,
-      confirmedSeats,
-      termMonths,
-      renewalDate,
-    });
+    const { documentText, confirmationId, issuedAt } =
+      generateVendorConfirmationDocument({
+        vendorName,
+        confirmedPrice,
+        confirmedSeats,
+        termMonths,
+        renewalDate,
+      });
 
     return apiSuccess({
       tampered: Boolean(tamper),

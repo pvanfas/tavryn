@@ -12,6 +12,7 @@ export interface TransactionHashBadgeProps {
   compact?: boolean;
   className?: string;
   showCopyButton?: boolean;
+  explorerUrl?: string;
 }
 
 /**
@@ -29,12 +30,15 @@ export function TransactionHashBadge({
   compact = false,
   className = "",
   showCopyButton = true,
+  explorerUrl: explorerUrlProp,
 }: TransactionHashBadgeProps) {
   const [copied, setCopied] = useState(false);
 
   if (!txHash) {
     return (
-      <span className={`font-mono text-[11px] text-slate-400 dark:text-slate-500 ${className}`}>
+      <span
+        className={`font-mono text-[11px] text-slate-400 dark:text-slate-500 ${className}`}
+      >
         N/A
       </span>
     );
@@ -96,7 +100,8 @@ export function TransactionHashBadge({
     );
   }
 
-  const explorerUrl = `${ARC_CONFIG.explorerUrl}/tx/${txHash}`;
+  const explorerUrl =
+    explorerUrlProp || `${ARC_CONFIG.explorerUrl}/tx/${txHash}`;
 
   return (
     <div

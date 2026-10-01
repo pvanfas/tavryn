@@ -232,7 +232,10 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
     assert.equal(res2.idempotencyKey, expectedServerKey);
 
     // Cleanup
-    await supabase.from("transactions").delete().eq("negotiation_id", clientNeg.id);
+    await supabase
+      .from("transactions")
+      .delete()
+      .eq("negotiation_id", clientNeg.id);
     await supabase.from("negotiations").delete().eq("id", clientNeg.id);
   });
 
@@ -318,7 +321,8 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
       .single();
 
     assert.ok(
-      reconciledTx?.status === "funded" || reconciledTx?.status === "simulation-only",
+      reconciledTx?.status === "funded" ||
+        reconciledTx?.status === "simulation-only",
       `Transaction status should be funded or simulation-only, got: ${reconciledTx?.status}`,
     );
 
@@ -329,10 +333,17 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
       .eq("negotiation_id", crashNeg.id)
       .not("status", "eq", "failed");
 
-    assert.equal(count, 1, "Exactly ONE transaction must exist across both calls");
+    assert.equal(
+      count,
+      1,
+      "Exactly ONE transaction must exist across both calls",
+    );
 
     // Cleanup
-    await supabase.from("transactions").delete().eq("negotiation_id", crashNeg.id);
+    await supabase
+      .from("transactions")
+      .delete()
+      .eq("negotiation_id", crashNeg.id);
     await supabase.from("negotiations").delete().eq("id", crashNeg.id);
   });
 
@@ -341,11 +352,15 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
 
     // 5a. Definitive failure check
     assert.equal(
-      isDefinitiveOnChainFailure(new Error("execution reverted: AgentNotAuthorized")),
+      isDefinitiveOnChainFailure(
+        new Error("execution reverted: AgentNotAuthorized"),
+      ),
       true,
     );
     assert.equal(
-      isDefinitiveOnChainFailure(new Error("insufficient funds for gas * price + value")),
+      isDefinitiveOnChainFailure(
+        new Error("insufficient funds for gas * price + value"),
+      ),
       true,
     );
     assert.equal(
@@ -430,7 +445,10 @@ describe("Double-Payment Defense & Concurrency Hardening", () => {
     assert.equal(count, 1);
 
     // Cleanup
-    await supabase.from("transactions").delete().eq("negotiation_id", timeoutNeg.id);
+    await supabase
+      .from("transactions")
+      .delete()
+      .eq("negotiation_id", timeoutNeg.id);
     await supabase.from("negotiations").delete().eq("id", timeoutNeg.id);
   });
 

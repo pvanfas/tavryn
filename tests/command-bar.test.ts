@@ -8,7 +8,7 @@ import {
 } from "../lib/agent/command";
 import { getServiceSupabase } from "../lib/supabase";
 
-describe("Stage 0009: Ask Tavryn Command Bar & Plain Language Agent", () => {
+describe("Ask Tavryn Command Bar & Plain Language Agent", () => {
   const businessId = "b655fb94-fc62-4e3c-8898-2c5f88068159"; // Demo Co
 
   it("1. READ question: 'What renews in the next 30 days?' returns renewals card with dates and prices", async () => {

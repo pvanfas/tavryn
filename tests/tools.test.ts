@@ -109,8 +109,8 @@ test("get_contract and get_usage run deterministically on seeded Slack contract 
     {
       action: "downsize_seats",
       amount: 6912,
-      savings: 2688,
       category: "software",
+      contractId: slackContract.id,
     },
     { messages: [], toolCallId: "t-policy" },
   );

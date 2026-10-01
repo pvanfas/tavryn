@@ -22,12 +22,12 @@ export interface AddressScreeningResult {
   isStub: boolean;
 }
 
+import { SANCTIONS_BLOCKLIST_ADDRESSES } from "./constants";
+
 // Known sanctions/OFAC test vector addresses (e.g. Tornado Cash router test vector, zero address, or known flagged vectors)
-const FLAGGED_HIGH_RISK_ADDRESSES = new Set([
-  "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b".toLowerCase(), // Tornado Cash Router
-  "0x8589427373d6d84e98730d7795d8f6f8731fda16".toLowerCase(), // Flagged OFAC Vector
-  "0x7f367cc41522ce07553e823bf3be79a889debe1b".toLowerCase(), // High-risk test address
-]);
+const FLAGGED_HIGH_RISK_ADDRESSES = new Set(
+  SANCTIONS_BLOCKLIST_ADDRESSES.map((addr) => addr.toLowerCase()),
+);
 
 /**
  * Validates whether an input is a valid 40-character hex EVM address with 0x prefix.

@@ -1,4 +1,5 @@
 -- Migration 0011: Approval Amount and Single-Use Consumption Tracking
+-- Stage 0010: Policy authorization patch
 -- Fixes security vulnerabilities where approvals had no amount limits and could be reused indefinitely.
 
 ALTER TABLE approvals ADD COLUMN IF NOT EXISTS amount numeric;

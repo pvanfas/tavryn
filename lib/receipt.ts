@@ -200,9 +200,10 @@ export async function getPublicReceipt(
     tx.status === "simulation-only" ||
     Boolean(tx.tx_hash?.startsWith("0xsimulated"));
 
-  const releaseTxUrl = (!isSimulated && tx.tx_hash)
-    ? `${ARC_CONFIG.explorerUrl}/tx/${tx.tx_hash}`
-    : null;
+  const releaseTxUrl =
+    !isSimulated && tx.tx_hash
+      ? `${ARC_CONFIG.explorerUrl}/tx/${tx.tx_hash}`
+      : null;
 
   const releaseTxHash = tx.tx_hash || null;
 
@@ -244,7 +245,9 @@ export async function getPublicReceipt(
         "Contract Price Matched",
         "Seat Allotment Verified",
         "Term Length Confirmed",
-        isSimulated ? "Simulated Settlement Verified" : "Arc Settlement Completed",
+        isSimulated
+          ? "Simulated Settlement Verified"
+          : "Arc Settlement Completed",
       ],
     },
     arcExplorerUrls: {

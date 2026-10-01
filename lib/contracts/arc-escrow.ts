@@ -1,12 +1,18 @@
 import { defineChain, parseAbi } from "viem";
 
+import {
+  DEFAULT_ARC_CHAIN_ID,
+  DEFAULT_ARC_EXPLORER_URL,
+  DEFAULT_ARC_RPC_URL,
+} from "../constants";
+
 /**
  * Arc Testnet Chain Definition for viem
  * Chain ID: 5042002
  * Native Gas Token: USDC (6 decimals)
  */
 export const arcTestnet = defineChain({
-  id: 5042002,
+  id: DEFAULT_ARC_CHAIN_ID,
   name: "Arc Testnet",
   nativeCurrency: {
     name: "USD Coin",
@@ -18,17 +24,17 @@ export const arcTestnet = defineChain({
       http: [
         process.env.ARC_RPC_URL ||
           process.env.NEXT_PUBLIC_ARC_RPC_URL ||
-          "https://rpc.testnet.arc.network",
+          DEFAULT_ARC_RPC_URL,
       ],
     },
     public: {
-      http: ["https://rpc.testnet.arc.network"],
+      http: [DEFAULT_ARC_RPC_URL],
     },
   },
   blockExplorers: {
     default: {
       name: "ArcScan",
-      url: "https://testnet.arcscan.app",
+      url: DEFAULT_ARC_EXPLORER_URL,
     },
   },
   testnet: true,

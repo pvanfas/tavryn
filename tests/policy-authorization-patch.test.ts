@@ -8,7 +8,7 @@ import {
 import { getServiceSupabase } from "../lib/supabase";
 import { create_escrow } from "../lib/tools";
 
-describe("Stage 0032: Critical Policy Authorization Patch Integration Tests", () => {
+describe("Policy Authorization Hardening Integration Tests", () => {
   const supabase = getServiceSupabase();
 
   // Helper to create a negotiation row satisfying foreign key constraints
@@ -220,7 +220,7 @@ describe("Stage 0032: Critical Policy Authorization Patch Integration Tests", ()
     }
   });
 
-  it("4. create_escrow with no contractId and no explicit savings is rejected by min_savings", async () => {
+  it("4. create_escrow with neither contractId nor negotiationId is rejected outright", async () => {
     const { data: business } = await supabase
       .from("businesses")
       .select("id")
@@ -228,9 +228,8 @@ describe("Stage 0032: Critical Policy Authorization Patch Integration Tests", ()
       .single();
     assert.ok(business, "Business record must exist");
 
-    // Call create_escrow without contractId and without savings.
-    // In Stage 0032, effectiveSavings defaults to 0 (not input.amount).
-    // Because policy requires minimum savings ($200 or $500), this must be refused.
+    // Call create_escrow without contractId and without negotiationId.
+    // Invariant: Payments with neither contractId nor negotiationId are rejected outright.
     await assert.rejects(async () => {
       await (create_escrow as any).execute(
         {
@@ -240,11 +239,11 @@ describe("Stage 0032: Critical Policy Authorization Patch Integration Tests", ()
           category: "software",
           businessId: business.id,
           // contractId omitted!
-          // savings omitted!
+          // negotiationId omitted!
         },
         { messages: [], toolCallId: "t-no-contract" },
       );
-    }, /Policy refusal: Transaction rejected by policy: .*savings \(\$0\) does not meet minimum policy threshold/i);
+    }, /Policy refusal: Transaction rejected: create_escrow requires a contractId or negotiationId/i);
   });
 
   it("5. Exploit test: approve $500 once, then successfully pay $50,000 against it now FAILS", async () => {
@@ -313,6 +312,117 @@ describe("Stage 0032: Critical Policy Authorization Patch Integration Tests", ()
     } finally {
       await supabase.from("approvals").delete().eq("id", created.id);
       await supabase.from("negotiations").delete().eq("id", exploitNegId);
+    }
+  });
+
+  it("6. calling create_escrow with savings: 1,000,000 fails min_savings because effectiveSavings is strictly derived server-side", async () => {
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
+    assert.ok(business, "Business record must exist");
+
+    // Create a real contract where current_price equals transaction amount ($1,000), meaning real savings = $0.
+    const { data: contract, error: cErr } = await supabase
+      .from("contracts")
+      .insert({
+        business_id: business.id,
+        service: `Zero Margin Test ${Date.now()}`,
+        category: "software",
+        current_price: 1000,
+        renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+        status: "active",
+      })
+      .select()
+      .single();
+    assert.ok(contract && !cErr);
+
+    try {
+      // Attacker attempts to bypass min_savings ($200 threshold) by injecting `savings: 1000000`.
+      await assert.rejects(async () => {
+        await (create_escrow as any).execute(
+          {
+            contractId: contract.id,
+            amount: 1000,
+            vendorWallet: "0x000000000000000000000000000000000000dEaD",
+            category: "software",
+            businessId: business.id,
+            savings: 1000000, // <--- ATTACK VECTOR: Caller attempts to inject massive savings
+          },
+          { messages: [], toolCallId: "t-caller-savings-exploit" },
+        );
+      }, /Policy refusal: Transaction rejected by policy: .*savings \(\$0\) does not meet minimum policy threshold/i);
+    } finally {
+      await supabase.from("contracts").delete().eq("id", contract.id);
+    }
+  });
+
+  it("7. calling create_escrow with a contract derives effectiveSavings strictly server-side, ignoring caller-supplied savings", async () => {
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .limit(1)
+      .single();
+    assert.ok(business, "Business record must exist");
+
+    // Create contract with current_price $2,500
+    const { data: contract, error: cErr } = await supabase
+      .from("contracts")
+      .insert({
+        business_id: business.id,
+        service: `Savings Tamper Test ${Date.now()}`,
+        category: "software",
+        current_price: 2500,
+        renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+        status: "active",
+      })
+      .select()
+      .single();
+    assert.ok(contract && !cErr);
+
+    const negId = await createTestNegotiation(business.id, 2500, 1500);
+
+    try {
+      // Execute create_escrow for amount $1,500 (real savings = $2,500 - $1,500 = $1,000 >= $200 min_savings).
+      // Caller maliciously tries to pass `savings: 50` (which would fail min_savings if caller input were respected).
+      const result = await (create_escrow as any).execute(
+        {
+          contractId: contract.id,
+          negotiationId: negId,
+          amount: 1500,
+          vendorWallet: "0x1111111111111111111111111111111111111111",
+          savings: 50, // <--- Tampered value (fails min_savings $200), must be completely ignored!
+        },
+        { messages: [], toolCallId: "t-tamper-check" },
+      );
+
+      assert.equal(result.success, true);
+      assert.equal(
+        result.savings,
+        1000,
+        "create_escrow result must report 1000 savings derived from contract price delta, ignoring 50",
+      );
+
+      // Verify in agent_actions table: logged input must have savings: 1000
+      const { data: actions } = await supabase
+        .from("agent_actions")
+        .select("input")
+        .eq("business_id", business.id)
+        .eq("action", "create_escrow")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      assert.ok(actions);
+      assert.equal(
+        (actions.input as any)?.savings,
+        1000,
+        "Agent action audit trail must record 1000 savings, NOT the tampered 50",
+      );
+    } finally {
+      await supabase.from("contracts").delete().eq("id", contract.id);
+      await supabase.from("negotiations").delete().eq("id", negId);
     }
   });
 });

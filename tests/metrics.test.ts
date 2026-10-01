@@ -162,6 +162,7 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
           status: "released",
           escrowAddress: "0x3600000000000000000000000000000000000000",
           txHash: "0xabcdef123456",
+          isSimulated: false,
           createdAt: new Date().toISOString(),
         },
       ],

@@ -3,13 +3,15 @@
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { THEME_STORAGE_KEY } from "@/lib/constants";
+
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Check initial preference from localStorage or system
-    const saved = localStorage.getItem("tavryn-theme") as
+    const saved = localStorage.getItem(THEME_STORAGE_KEY) as
       "light" | "dark" | null;
     if (saved) {
       setTheme(saved);
@@ -37,7 +39,7 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    localStorage.setItem("tavryn-theme", next);
+    localStorage.setItem(THEME_STORAGE_KEY, next);
     if (next === "dark") {
       document.documentElement.classList.add("dark");
     } else {

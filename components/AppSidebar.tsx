@@ -23,6 +23,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import { getCurrentUser } from "@/lib/auth";
+import { ARC_CONFIG } from "@/lib/circle";
 import {
   BOTTOM_NAV_ITEMS,
   isRouteActive,
@@ -154,8 +155,8 @@ export function AppSidebar({
   const activeBusiness =
     businesses.find((b) => b.id === activeBusinessId) || businesses[0];
   const arcscanUrl = walletAddress
-    ? `https://testnet.arcscan.app/address/${walletAddress}`
-    : "https://testnet.arcscan.app";
+    ? `${ARC_CONFIG.explorerUrl}/address/${walletAddress}`
+    : ARC_CONFIG.explorerUrl;
 
   return (
     <aside
@@ -167,7 +168,7 @@ export function AppSidebar({
       {/* 1. TOP SECTION: Logo & Collapse Button */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/70 shrink-0">
         <Link
-          href="/"
+          href="/dashboard"
           className={`flex items-center gap-3 transition-opacity ${
             collapsed ? "justify-center w-full" : ""
           }`}
@@ -239,7 +240,7 @@ export function AppSidebar({
                 onChange={(e) => {
                   const newId = e.target.value;
                   if (newId) {
-                    router.push(`/?businessId=${newId}`);
+                    router.push(`/dashboard?businessId=${newId}`);
                   }
                 }}
                 className="bg-transparent font-bold text-xs text-slate-900 dark:text-white focus:outline-hidden cursor-pointer w-full truncate pr-1"

@@ -194,7 +194,7 @@ export default async function NegotiationsPage({
               </Body>
             </div>
             <Link
-              href="/"
+              href="/dashboard"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
             >
               <Bot className="h-3.5 w-3.5" />

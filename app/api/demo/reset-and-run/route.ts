@@ -368,7 +368,9 @@ export async function POST(req: Request) {
       details: {
         transactionId: escrowResult.transactionId,
         txHash: escrowResult.txHash,
-        isSimulated: Boolean(escrowResult.isSimulated ?? escrowResult.isSimulation),
+        isSimulated: Boolean(
+          escrowResult.isSimulated ?? escrowResult.isSimulation,
+        ),
         escrowAddress: escrowResult.escrowAddress,
         idempotencyKey: escrowResult.idempotencyKey,
         vendorWallet,
@@ -379,12 +381,11 @@ export async function POST(req: Request) {
     // ==========================================
     // STEP 6: VENDOR CONFIRMATION VERIFICATION
     // ==========================================
-    const renewalDate =
-      slackContract.renewal_date
-        ? new Date(slackContract.renewal_date).toISOString().split("T")[0]
-        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0];
+    const renewalDate = slackContract.renewal_date
+      ? new Date(slackContract.renewal_date).toISOString().split("T")[0]
+      : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
 
     // Real call to vendor confirmation simulator
     const { documentText } = generateVendorConfirmationDocument({
@@ -451,15 +452,20 @@ export async function POST(req: Request) {
     steps.push({
       step: 7,
       name: "release",
-      title: releaseResult.isSimulated ? "Simulated Fund Settlement" : "Escrow Fund Release",
+      title: releaseResult.isSimulated
+        ? "Simulated Fund Settlement"
+        : "Escrow Fund Release",
       status: "completed",
       summary: releaseResult.isSimulated
         ? `Settled ${finalPrice.toLocaleString()} USDC in simulation mode (testnet mock).`
         : `Released ${finalPrice.toLocaleString()} USDC to vendor wallet on Arc testnet. Settlement finalized.`,
       details: {
         transactionId: escrowResult.transactionId,
-        releaseTxHash: releaseResult.releaseTxHash || releaseResult.txHash || null,
-        isSimulated: Boolean(releaseResult.isSimulated ?? releaseResult.isSimulation),
+        releaseTxHash:
+          releaseResult.releaseTxHash || releaseResult.txHash || null,
+        isSimulated: Boolean(
+          releaseResult.isSimulated ?? releaseResult.isSimulation,
+        ),
         status: releaseResult.status,
         explorerUrl: releaseResult.explorerUrl,
       },

@@ -232,7 +232,7 @@ export default function ChangePasswordPage() {
 
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/60 text-center">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />

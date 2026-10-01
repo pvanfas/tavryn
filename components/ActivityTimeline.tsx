@@ -383,7 +383,9 @@ export function ActivityTimeline({
                         Settlement Transaction:
                       </span>
                       <TransactionHashBadge
-                        txHash={item.details.releaseTxHash || item.details.txHash}
+                        txHash={
+                          item.details.releaseTxHash || item.details.txHash
+                        }
                         isSimulated={item.details.isSimulated}
                         status={item.details.status}
                       />

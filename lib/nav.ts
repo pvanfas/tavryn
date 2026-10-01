@@ -35,9 +35,8 @@ export const WORKSPACE_NAV_SECTIONS: NavSectionConfig[] = [
       {
         id: "overview",
         label: "Overview",
-        href: "/",
+        href: "/dashboard",
         iconName: "LayoutDashboard",
-        highlightNestedPrefixes: ["/dashboard"],
       },
       {
         id: "activity",
@@ -148,7 +147,7 @@ export const LANDING_NAV_LINKS: LandingNavLink[] = [
 
 export const FOOTER_NAV_LINKS: LandingNavLink[] = [
   { label: "Audit Trail", href: "/audit" },
-  { label: "Dashboard", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
   {
     label: "GitHub",
     href: "https://github.com/pvanfas/tavryn",
@@ -167,12 +166,12 @@ export function isRouteActive(
 ): boolean {
   if (!pathname || !href) return false;
 
-  // Root Overview matching
-  if (href === "/") {
+  // Dashboard Overview matching
+  if (href === "/dashboard") {
     if (
-      pathname === "/" ||
       pathname === "/dashboard" ||
-      pathname.startsWith("/dashboard?")
+      pathname.startsWith("/dashboard?") ||
+      pathname.startsWith("/dashboard/")
     ) {
       return true;
     }
@@ -190,7 +189,7 @@ export function isRouteActive(
   }
 
   // Standard prefix matching for non-root sections
-  if (href !== "/" && pathname.startsWith(href)) {
+  if (href !== "/" && href !== "/dashboard" && pathname.startsWith(href)) {
     return true;
   }
 

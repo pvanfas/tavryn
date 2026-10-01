@@ -204,7 +204,7 @@ export default async function ApprovalsPage({
               </Body>
             </div>
             <Link
-              href="/"
+              href="/dashboard"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs transition-colors"
             >
               <Bot className="h-3.5 w-3.5" />

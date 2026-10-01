@@ -2,6 +2,14 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { MockLanguageModelV4 } from "ai/test";
 
+import {
+  DEFAULT_ANTHROPIC_MODEL,
+  DEFAULT_MOCK_MODEL_ID,
+  DEFAULT_MOCK_PROVIDER,
+  DEFAULT_OPENAI_MODEL,
+  MOCK_VENDOR_BENCHMARKS,
+} from "../constants";
+
 /**
  * Returns a configured LanguageModel based on environment variables.
  * Supported LLM_PROVIDER: 'openai', 'anthropic', 'mock'.
@@ -16,24 +24,23 @@ export function getAgentLanguageModel(contractIdHint?: string) {
 
   if (provider === "openai" && openaiKey) {
     const openai = createOpenAI({ apiKey: openaiKey });
-    return openai(modelName || "gpt-4o");
+    return openai(modelName || DEFAULT_OPENAI_MODEL);
   }
 
   if (provider === "anthropic" && anthropicKey) {
     const anthropic = createAnthropic({ apiKey: anthropicKey });
-    return anthropic(modelName || "claude-3-5-sonnet-20241022");
+    return anthropic(modelName || DEFAULT_ANTHROPIC_MODEL);
   }
 
   // Fallback / Mock Language Model for deterministic test & dev execution
   let stepIndex = 0;
   let targetContractId = contractIdHint || "";
   let serviceName = "Contract";
-  let currentPrice = 10000;
-  let targetPrice = 7500;
-  let savings = 2500;
-  let recommendation = "negotiate";
-  let rationale =
-    "Identified idle capacity and benchmarked competitor pricing.";
+  let currentPrice: number = MOCK_VENDOR_BENCHMARKS.default.currentPrice;
+  let targetPrice: number = MOCK_VENDOR_BENCHMARKS.default.targetPrice;
+  let savings: number = MOCK_VENDOR_BENCHMARKS.default.savings;
+  let recommendation: string = MOCK_VENDOR_BENCHMARKS.default.recommendation;
+  let rationale: string = MOCK_VENDOR_BENCHMARKS.default.rationale;
 
   const defaultUsage = {
     inputTokens: { total: 50, noCache: 50, cacheRead: 0, cacheWrite: 0 },
@@ -41,8 +48,8 @@ export function getAgentLanguageModel(contractIdHint?: string) {
   };
 
   return new MockLanguageModelV4({
-    provider: "tavryn-mock-provider",
-    modelId: "mock-analyzer-v1",
+    provider: DEFAULT_MOCK_PROVIDER,
+    modelId: DEFAULT_MOCK_MODEL_ID,
     doGenerate: async (options: any) => {
       stepIndex++;
 
@@ -79,29 +86,26 @@ export function getAgentLanguageModel(contractIdHint?: string) {
       // Inspect tool results to calibrate decision
       const allText = JSON.stringify(options.prompt || []);
       if (allText.includes("Slack")) {
-        serviceName = "Slack";
-        currentPrice = 9600;
-        targetPrice = 6912;
-        savings = 2688;
-        recommendation = "downsize_seats";
-        rationale =
-          "Audit detected 7 idle licenses (28% waste). Recommend reducing seats from 25 to 18 to save $2,688/yr.";
+        serviceName = MOCK_VENDOR_BENCHMARKS.slack.serviceName;
+        currentPrice = MOCK_VENDOR_BENCHMARKS.slack.currentPrice;
+        targetPrice = MOCK_VENDOR_BENCHMARKS.slack.targetPrice;
+        savings = MOCK_VENDOR_BENCHMARKS.slack.savings;
+        recommendation = MOCK_VENDOR_BENCHMARKS.slack.recommendation;
+        rationale = MOCK_VENDOR_BENCHMARKS.slack.rationale;
       } else if (allText.includes("Datadog")) {
-        serviceName = "Datadog";
-        currentPrice = 37200;
-        targetPrice = 29127.6;
-        savings = 8072.4;
-        recommendation = "negotiate";
-        rationale =
-          "Telemetry indicates a 31% volume decline in active workloads. Recommend renegotiating lower tier to save $8,072.40/yr.";
+        serviceName = MOCK_VENDOR_BENCHMARKS.datadog.serviceName;
+        currentPrice = MOCK_VENDOR_BENCHMARKS.datadog.currentPrice;
+        targetPrice = MOCK_VENDOR_BENCHMARKS.datadog.targetPrice;
+        savings = MOCK_VENDOR_BENCHMARKS.datadog.savings;
+        recommendation = MOCK_VENDOR_BENCHMARKS.datadog.recommendation;
+        rationale = MOCK_VENDOR_BENCHMARKS.datadog.rationale;
       } else if (allText.includes("AWS")) {
-        serviceName = "AWS";
-        currentPrice = 24000;
-        targetPrice = 21984;
-        savings = 2016;
-        recommendation = "negotiate";
-        rationale =
-          "Workload telemetry indicates a 12% decline. Target revised reserved commitment to recapture $2,016/yr.";
+        serviceName = MOCK_VENDOR_BENCHMARKS.aws.serviceName;
+        currentPrice = MOCK_VENDOR_BENCHMARKS.aws.currentPrice;
+        targetPrice = MOCK_VENDOR_BENCHMARKS.aws.targetPrice;
+        savings = MOCK_VENDOR_BENCHMARKS.aws.savings;
+        recommendation = MOCK_VENDOR_BENCHMARKS.aws.recommendation;
+        rationale = MOCK_VENDOR_BENCHMARKS.aws.rationale;
       }
 
       // Step 2: Call get_usage
@@ -183,8 +187,8 @@ export function getAgentLanguageModel(contractIdHint?: string) {
               input: JSON.stringify({
                 action: recommendation,
                 amount: targetPrice,
-                savings: savings,
                 category: "software",
+                contractId: targetContractId,
               }),
             },
           ],

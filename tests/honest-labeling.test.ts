@@ -6,7 +6,7 @@ import { createReceipt, getPublicReceipt } from "../lib/receipt";
 import { getServiceSupabase } from "../lib/supabase";
 import { buildEscrowTools } from "../lib/tools/escrow";
 
-test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async (t) => {
+test("Honest Transaction Labeling & Anti-404 Explorer Proofs", async (t) => {
   const supabase = getServiceSupabase();
 
   // Create isolated test business
@@ -20,7 +20,10 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
     .select()
     .single();
 
-  assert.ok(biz && !bizErr, `Failed to setup test business: ${bizErr?.message}`);
+  assert.ok(
+    biz && !bizErr,
+    `Failed to setup test business: ${bizErr?.message}`,
+  );
   const businessId = biz.id;
 
   // Insert policy with high threshold and allowed categories
@@ -119,7 +122,10 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
         .select()
         .single();
 
-      assert.ok(neg && !negErr, `Failed to create negotiation: ${negErr?.message}`);
+      assert.ok(
+        neg && !negErr,
+        `Failed to create negotiation: ${negErr?.message}`,
+      );
 
       // Approve negotiation in policy table
       await supabase.from("approvals").insert({
@@ -207,14 +213,31 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
   await t.test(
     "4. Public Receipts strictly suppress dead ArcScan links when transaction is simulated",
     async () => {
+      // Create dedicated contract to avoid colliding with active unlinked transactions from earlier tests
+      const { data: testContract4 } = await supabase
+        .from("contracts")
+        .insert({
+          business_id: businessId,
+          vendor_id: vendor.id,
+          service: `Simulated Receipt Contract ${Date.now()}`,
+          category: "software",
+          current_price: 10000,
+          renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+          status: "active",
+        })
+        .select()
+        .single();
+      assert.ok(testContract4);
+
       // Insert a simulated transaction that has a mock hash (e.g. from fixture or legacy mock)
-      const mockHash = "0xsimulated_abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
+      const mockHash =
+        "0xsimulated_abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
       const { data: simTx, error: simErr } = await supabase
         .from("transactions")
         .insert({
           business_id: businessId,
           vendor_id: vendor.id,
-          contract_id: contract.id,
+          contract_id: testContract4.id,
           amount: 8000,
           currency: "USDC",
           status: "completed",
@@ -255,14 +278,31 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
   await t.test(
     "5. Public Receipts provide valid ArcScan link when transaction is real on-chain",
     async () => {
+      // Create dedicated contract to avoid colliding with active unlinked transactions from earlier tests
+      const { data: testContract5 } = await supabase
+        .from("contracts")
+        .insert({
+          business_id: businessId,
+          vendor_id: vendor.id,
+          service: `Real Receipt Contract ${Date.now()}`,
+          category: "software",
+          current_price: 10000,
+          renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+          status: "active",
+        })
+        .select()
+        .single();
+      assert.ok(testContract5);
+
       // Real transaction with real confirmed hash
-      const realHash = "0xda45a52663ed21a83ed69800770b826e9dd123f5e09c0783b189acc1907e375a";
+      const realHash =
+        "0xda45a52663ed21a83ed69800770b826e9dd123f5e09c0783b189acc1907e375a";
       const { data: realTx, error: realErr } = await supabase
         .from("transactions")
         .insert({
           business_id: businessId,
           vendor_id: vendor.id,
-          contract_id: contract.id,
+          contract_id: testContract5.id,
           amount: 8500,
           currency: "USDC",
           status: "completed",
@@ -273,7 +313,10 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
         .select()
         .single();
 
-      assert.ok(realTx && !realErr, `Failed to create realTx: ${realErr?.message}`);
+      assert.ok(
+        realTx && !realErr,
+        `Failed to create realTx: ${realErr?.message}`,
+      );
 
       const receiptRow = await createReceipt({
         transactionId: realTx.id,
@@ -301,6 +344,22 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
   await t.test(
     "6. Idempotent lookup of existing simulated transaction never yields an explorerUrl",
     async () => {
+      // Create dedicated contract to avoid colliding with active unlinked transactions from earlier tests
+      const { data: testContract6 } = await supabase
+        .from("contracts")
+        .insert({
+          business_id: businessId,
+          vendor_id: vendor.id,
+          service: `Idempotent Check Contract ${Date.now()}`,
+          category: "software",
+          current_price: 10000,
+          renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+          status: "active",
+        })
+        .select()
+        .single();
+      assert.ok(testContract6);
+
       const key = `idempotent-sim-check-${Date.now()}`;
       // Seed a simulated transaction with a mock hash
       const { data: seededTx, error: seedErr } = await supabase
@@ -308,7 +367,7 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
         .insert({
           business_id: businessId,
           vendor_id: vendor.id,
-          contract_id: contract.id,
+          contract_id: testContract6.id,
           amount: 7200,
           currency: "USDC",
           status: "funded",
@@ -322,7 +381,7 @@ test("Stage 0036: Honest Transaction Labeling & Anti-404 Explorer Proofs", async
       assert.ok(seededTx && !seedErr, `Failed to seed tx: ${seedErr?.message}`);
 
       const hit = await (tools.create_escrow as any).execute({
-        contractId: contract.id,
+        contractId: testContract6.id,
         amount: 7200,
         savings: 2800,
         category: "software",

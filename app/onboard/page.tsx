@@ -474,7 +474,7 @@ export default function OnboardPage() {
 
           <div className="flex justify-end pt-2">
             <Link
-              href={`/?businessId=${fundingResult.businessId}`}
+              href={`/dashboard?businessId=${fundingResult.businessId}`}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
             >
               <span>Go to Overview</span>
@@ -487,7 +487,7 @@ export default function OnboardPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Link
-              href="/"
+              href="/dashboard"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

@@ -1,4 +1,4 @@
--- Stage 0011 & 0013: One-Tap HMAC Approvals and Human Override Memory
+-- Stage 0009: One-Tap HMAC Approvals and Human Override Memory
 
 -- 1. approval_tokens: secure, signed, single-use approval links
 create table if not exists approval_tokens (
