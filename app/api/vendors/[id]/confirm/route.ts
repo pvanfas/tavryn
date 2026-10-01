@@ -17,6 +17,51 @@ const QuerySchema = z.object({
   tamper: z.enum(["seats", "price"]).nullable().optional(),
 });
 
+export interface GenerateVendorConfirmationParams {
+  vendorName: string;
+  confirmedPrice: number;
+  confirmedSeats: number;
+  termMonths?: number;
+  renewalDate?: string;
+  confirmationId?: string;
+  issuedAt?: string;
+}
+
+export function generateVendorConfirmationDocument({
+  vendorName,
+  confirmedPrice,
+  confirmedSeats,
+  termMonths = 12,
+  renewalDate = new Date().toISOString().split("T")[0],
+  confirmationId = `CONF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-2026`,
+  issuedAt = new Date().toISOString(),
+}: GenerateVendorConfirmationParams): {
+  documentText: string;
+  confirmationId: string;
+  issuedAt: string;
+} {
+  const documentText = [
+    `============================================================`,
+    `ORDER CONFIRMATION & RENEWAL SCHEDULE`,
+    `Confirmation Reference: ${confirmationId}`,
+    `Vendor: ${vendorName}`,
+    `Date Issued: ${issuedAt.split("T")[0]}`,
+    `============================================================`,
+    ``,
+    `AGREEMENT SPECIFICATIONS:`,
+    `• Annual Commitment Price: $${confirmedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`,
+    `• Authorized User Seats: ${confirmedSeats} licensed accounts`,
+    `• Contract Duration: ${termMonths} Months`,
+    `• Effective Renewal Date: ${renewalDate}`,
+    `• Settlement Escrow Asset: USDC (Arc Testnet)`,
+    ``,
+    `Payment instructions: Release escrow funds upon agreement verification.`,
+    `============================================================`,
+  ].join("\n");
+
+  return { documentText, confirmationId, issuedAt };
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -118,28 +163,17 @@ export async function POST(
       confirmedSeats = seats + 5;
     }
 
-    const confirmationId = `CONF-${Math.random().toString(36).substring(2, 8).toUpperCase()}-2026`;
-    const issuedAt = new Date().toISOString();
-
-    // 4. Generate realistic enterprise order confirmation document
-    const documentText = [
-      `============================================================`,
-      `ORDER CONFIRMATION & RENEWAL SCHEDULE`,
-      `Confirmation Reference: ${confirmationId}`,
-      `Vendor: ${vendorName}`,
-      `Date Issued: ${issuedAt.split("T")[0]}`,
-      `============================================================`,
-      ``,
-      `AGREEMENT SPECIFICATIONS:`,
-      `• Annual Commitment Price: $${confirmedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`,
-      `• Authorized User Seats: ${confirmedSeats} licensed accounts`,
-      `• Contract Duration: ${termMonths} Months`,
-      `• Effective Renewal Date: ${renewalDate}`,
-      `• Settlement Escrow Asset: USDC (Arc Testnet)`,
-      ``,
-      `Payment instructions: Release escrow funds upon agreement verification.`,
-      `============================================================`,
-    ].join("\n");
+    const {
+      documentText,
+      confirmationId,
+      issuedAt,
+    } = generateVendorConfirmationDocument({
+      vendorName,
+      confirmedPrice,
+      confirmedSeats,
+      termMonths,
+      renewalDate,
+    });
 
     return apiSuccess({
       tampered: Boolean(tamper),

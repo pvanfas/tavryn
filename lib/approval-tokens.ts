@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
 import { logger } from "@/lib/logger";
-import { checkPolicy, PolicyRule } from "@/lib/policy";
+import { checkPolicy, createApprovalRecord, PolicyRule } from "@/lib/policy";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -214,22 +214,41 @@ export async function consumeApprovalToken(
     .order("created_at", { ascending: false })
     .limit(1);
 
+  const approvedAmount = Number(
+    negotiation?.final_price ||
+      negotiation?.current_offer ||
+      contract?.current_price ||
+      0,
+  );
+
   if (existingApp && existingApp.length > 0) {
-    await supabase
-      .from("approvals")
-      .update({
-        status: decidedStatus,
-        reason: decisionReason,
-        decided_at: decidedAt,
-      })
-      .eq("id", existingApp[0].id);
-  } else {
-    await supabase.from("approvals").insert({
-      business_id: businessId,
-      negotiation_id: negotiation?.id || null,
+    const updatePayload: any = {
       status: decidedStatus,
       reason: decisionReason,
       decided_at: decidedAt,
+      amount: approvedAmount,
+    };
+    const { error: updErr } = await supabase
+      .from("approvals")
+      .update(updatePayload)
+      .eq("id", existingApp[0].id);
+
+    if (updErr && (updErr.code === "42703" || updErr.code === "PGRST204")) {
+      delete updatePayload.amount;
+      updatePayload.reason = `[AMOUNT: ${approvedAmount}] ${decisionReason}`;
+      await supabase
+        .from("approvals")
+        .update(updatePayload)
+        .eq("id", existingApp[0].id);
+    }
+  } else {
+    await createApprovalRecord(supabase, {
+      businessId,
+      negotiationId: negotiation?.id || null,
+      status: decidedStatus,
+      reason: decisionReason,
+      amount: approvedAmount,
+      decidedAt,
     });
   }
 

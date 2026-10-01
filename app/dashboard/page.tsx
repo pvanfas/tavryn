@@ -10,6 +10,7 @@ import React from "react";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AppShell } from "@/components/AppShell";
 import { OpportunitiesTable } from "@/components/OpportunitiesTable";
+import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { BodySmall, Caption, H2 } from "@/components/ui/text";
 import { ARC_CONFIG, getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
@@ -63,6 +64,12 @@ export default async function DashboardPage({
   let contracts: ContractRecord[] = [];
   let negotiationsCount = 0;
   let savingsRealized = 0;
+  let latestTx: {
+    id: string;
+    status: string;
+    tx_hash: string | null;
+    is_simulated: boolean | null;
+  } | null = null;
 
   try {
     // 1. Fetch all businesses
@@ -111,6 +118,20 @@ export default async function DashboardPage({
             (acc, row) => acc + (Number(row.savings) || 0),
             0,
           );
+        }
+
+        // Fetch latest settlement transaction for honest status display
+        const { data: tRow } = await supabase
+          .from("transactions")
+          .select("id, status, tx_hash, is_simulated")
+          .eq("business_id", business.id)
+          .not("status", "eq", "failed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (tRow) {
+          latestTx = tRow;
         }
       }
     }
@@ -310,6 +331,19 @@ export default async function DashboardPage({
                 Realized Savings
               </Caption>
             </div>
+            {latestTx && (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  latestTx.is_simulated || latestTx.status === "simulation-only"
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                    : "bg-emerald-500/10 text-[#107e65] dark:text-emerald-300 border-emerald-500/20"
+                }`}
+              >
+                {latestTx.is_simulated || latestTx.status === "simulation-only"
+                  ? "Simulated Mock"
+                  : "Arc Confirmed"}
+              </span>
+            )}
           </div>
           <H2
             as="div"
@@ -317,12 +351,22 @@ export default async function DashboardPage({
           >
             ${savingsRealized.toLocaleString()}
           </H2>
-          <BodySmall
-            as="div"
-            className="mt-2 text-slate-500 dark:text-slate-400"
-          >
-            {negotiationsCount} settled
-          </BodySmall>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5">
+            <BodySmall
+              as="div"
+              className="text-slate-500 dark:text-slate-400"
+            >
+              {negotiationsCount} settled
+            </BodySmall>
+            {latestTx?.tx_hash && (
+              <TransactionHashBadge
+                txHash={latestTx.tx_hash}
+                isSimulated={latestTx.is_simulated}
+                status={latestTx.status}
+                compact={true}
+              />
+            )}
+          </div>
         </div>
       </div>
 

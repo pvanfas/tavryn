@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { verifyPolicyExecutionAuthorization } from "../lib/policy";
+import {
+  createApprovalRecord,
+  verifyPolicyExecutionAuthorization,
+} from "../lib/policy";
 import { getServiceSupabase } from "../lib/supabase";
 import { create_escrow } from "../lib/tools";
 
@@ -58,33 +61,56 @@ describe("Server-Side Policy Enforcement & Human Approval Boundary", () => {
       .single();
     assert.ok(business, "Business must exist");
 
-    // Insert an approved row
-    const { data: approvedRow, error } = await supabase
-      .from("approvals")
+    const { data: contract } = await supabase
+      .from("contracts")
+      .select("id")
+      .eq("business_id", business.id)
+      .limit(1)
+      .single();
+    assert.ok(contract, "Contract must exist");
+
+    // Insert a valid test negotiation row
+    const { data: testNeg, error: negErr } = await supabase
+      .from("negotiations")
       .insert({
-        business_id: business.id,
-        status: "approved",
-        reason: "Manually approved by test administrator",
-        decided_at: new Date().toISOString(),
+        contract_id: contract.id,
+        original_price: 36000,
+        target_price: 28800,
+        current_offer: 28800,
+        status: "pending_approval",
       })
       .select("id")
       .single();
+    assert.ifError(negErr);
+    assert.ok(testNeg);
 
-    assert.ifError(error);
-    assert.ok(approvedRow);
+    // Insert an approved row
+    const created = await createApprovalRecord(supabase, {
+      businessId: business.id,
+      negotiationId: testNeg.id,
+      status: "approved",
+      reason: "Manually approved by test administrator",
+      decidedAt: new Date().toISOString(),
+      amount: 28800,
+    });
+
+    assert.ifError(created.error);
+    assert.ok(created.id);
 
     const auth = await verifyPolicyExecutionAuthorization(business.id, {
       amount: 28800,
       savings: 7200,
       category: "cloud",
+      negotiationId: testNeg.id,
     });
 
     assert.equal(auth.authorized, true);
     assert.equal(auth.decision, "approved");
-    assert.ok(auth.reason.includes("verified human approval record"));
+    assert.ok(auth.reason.includes("verified"));
 
     // Cleanup
-    await supabase.from("approvals").delete().eq("id", approvedRow.id);
+    await supabase.from("approvals").delete().eq("id", created.id);
+    await supabase.from("negotiations").delete().eq("id", testNeg.id);
   });
 
   it("create_escrow tool refuses unauthorized transaction exceeding policy boundary", async () => {

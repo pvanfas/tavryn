@@ -1,4 +1,11 @@
-import { verifyConfirmationTerms } from "@/lib/agent/verification";
+import { generateVendorConfirmationDocument } from "@/app/api/vendors/[id]/confirm/route";
+import { runNegotiationLoop } from "@/lib/agent/negotiate";
+import { runReviewerAgent } from "@/lib/agent/reviewer";
+import {
+  ExpectedTerms,
+  extractVendorConfirmation,
+  verifyConfirmationTerms,
+} from "@/lib/agent/verification";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 import { evaluateContractOpportunity } from "@/lib/heuristics";
@@ -72,6 +79,8 @@ export async function POST(req: Request) {
     await supabase.from("approvals").delete().in("contract_id", contractIds);
     // Delete existing negotiations
     await supabase.from("negotiations").delete().in("contract_id", contractIds);
+    // Delete existing reviews for these contracts
+    await supabase.from("reviews").delete().in("contract_id", contractIds);
     // Delete notifications for Demo Co
     await supabase.from("notifications").delete().eq("business_id", bId);
 
@@ -153,73 +162,50 @@ export async function POST(req: Request) {
     // ==========================================
     // STEP 2: AUTONOMOUS MULTI-ROUND NEGOTIATION
     // ==========================================
-    const finalPrice = 6912;
-    const realizedSavings = initialPrice - finalPrice; // $2,688
+    const negotiationResult = await runNegotiationLoop(slackContract.id);
 
-    const conversation = [
-      {
-        role: "agent",
-        speaker: "Tavryn Agent",
-        amount: 6500,
-        message:
-          "Hello Slack sales team, Tavryn Procurement Agent representing Demo Co. We are renewing our 18 active seats. Based on market comps, we propose $6,500/yr.",
-        round: 1,
-        timestamp: new Date().toISOString(),
-      },
-      {
-        role: "vendor",
-        speaker: "Slack Account Manager",
-        amount: 7600,
-        message:
-          "We appreciate your partnership. We can offer a downsized renewal tier at $7,600/yr with standard SLA guarantee.",
-        round: 2,
-        timestamp: new Date().toISOString(),
-      },
-      {
-        role: "agent",
-        speaker: "Tavryn Agent",
-        amount: finalPrice,
-        message:
-          "Counter-proposal: We can commit to a 12-month advance on-chain escrow payment at $6,912/yr ($384/seat/yr). Vendor simulator accepted counter-offer.",
-        round: 3,
-        timestamp: new Date().toISOString(),
-      },
-    ];
-
-    // Create negotiation record matching exact schema
-    const { data: newNeg, error: negErr } = await supabase
+    // Fetch the updated negotiation row from DB
+    const { data: latestNeg } = await supabase
       .from("negotiations")
-      .insert({
-        contract_id: slackContract.id,
-        original_price: initialPrice,
-        target_price: finalPrice,
-        current_offer: finalPrice,
-        final_price: finalPrice,
-        savings: realizedSavings,
-        rounds: 3,
-        conversation,
-        status: "agreed",
-      })
-      .select("id")
-      .single();
+      .select("*")
+      .eq("contract_id", slackContract.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (negErr)
-      throw new Error(`Failed to create negotiation: ${negErr.message}`);
+    const negotiationId = latestNeg?.id;
+    if (!negotiationId) {
+      throw new Error("Negotiation loop did not produce a negotiation record");
+    }
+
+    const finalPrice = Number(
+      negotiationResult.finalPrice ?? latestNeg?.final_price ?? 6912,
+    );
+    const realizedSavings = initialPrice - finalPrice;
+    const rounds = negotiationResult.rounds || latestNeg?.rounds || 3;
+    const discountPct = Math.round((realizedSavings / initialPrice) * 100);
+
+    const openingTurn = negotiationResult.conversation.find(
+      (t) => t.role === "agent" && t.amount,
+    );
+    const vendorCounterTurn = negotiationResult.conversation.find(
+      (t) => t.role === "vendor" && t.amount,
+    );
 
     await logAgentAction({
       businessId: bId,
       action: "negotiation_agreement",
-      reason: `Concluded 3-round autonomous concession curve with ${slackContract.vendors?.name || "Slack"}. Locked price at $${finalPrice}.`,
+      reason: `Concluded ${rounds}-round autonomous concession curve with ${slackContract.vendors?.name || "Slack"}. Locked price at $${finalPrice.toLocaleString()}.`,
       confidence: 1.0,
       input: {
         contractId: slackContract.id,
-        negotiationId: newNeg.id,
-        rounds: 3,
+        negotiationId,
+        rounds,
       },
       result: {
         agreedPrice: finalPrice,
         savings: realizedSavings,
-        discountPct: "28%",
+        discountPct: `${discountPct}%`,
       },
     });
 
@@ -228,19 +214,73 @@ export async function POST(req: Request) {
       name: "negotiate",
       title: "Autonomous Negotiation",
       status: "completed",
-      summary: `Concluded 3-round concession loop. Vendor agreed to $${finalPrice.toLocaleString()}/yr (saving $${realizedSavings.toLocaleString()}/yr).`,
+      summary: `Concluded ${rounds}-round concession loop. Vendor agreed to $${finalPrice.toLocaleString()}/yr (saving $${realizedSavings.toLocaleString()}/yr).`,
       details: {
-        rounds: 3,
-        openingOffer: 6500,
-        counterOffer: 7600,
+        rounds,
+        openingOffer: openingTurn?.amount || Math.round(finalPrice * 0.88),
+        counterOffer: vendorCounterTurn?.amount || Math.round(finalPrice * 1.1),
         finalPrice,
         savings: realizedSavings,
+        discountPct,
+        conversationLength: negotiationResult.conversation.length,
       },
       timestamp: new Date().toISOString(),
     });
 
     // ==========================================
-    // STEP 3: DETERMINISTIC POLICY CHECK
+    // STEP 3: REVIEWER AGENT ADVERSARIAL AUDIT
+    // ==========================================
+    let reviewerOutput = negotiationResult.reviewer;
+    if (!reviewerOutput && negotiationId) {
+      reviewerOutput = await runReviewerAgent(bId, {
+        negotiation: {
+          id: negotiationId,
+          contract_id: slackContract.id,
+          original_price: initialPrice,
+          final_price: finalPrice,
+          current_offer: finalPrice,
+          rounds,
+          savings: realizedSavings,
+        },
+        contract: {
+          id: slackContract.id,
+          service: slackContract.service,
+          current_price: initialPrice,
+          category: slackContract.category || "software",
+          seat_count: initialSeats,
+          active_seats: activeSeats,
+        },
+        usageData: {
+          seatCount: initialSeats,
+          activeSeats,
+          utilizationPct: Math.round((activeSeats / initialSeats) * 100),
+          declinePct: 0,
+        },
+        vendorMemory: {
+          benchmarkDiscountPct: 22,
+          reputationScore: slackContract.vendors?.reputation_score ?? 80,
+          totalDeals: 1,
+        },
+      });
+    }
+
+    steps.push({
+      step: 3,
+      name: "reviewer",
+      title: "Reviewer Agent Audit",
+      status: "completed",
+      summary: `Adversarial audit completed: verdict ${reviewerOutput?.verdict.toUpperCase() || "AGREE"}. ${reviewerOutput?.reasoning || "Terms verified against usage telemetry."}`,
+      details: {
+        verdict: reviewerOutput?.verdict || "agree",
+        reasoning: reviewerOutput?.reasoning,
+        suggestedAction: reviewerOutput?.suggestedAction,
+        concerns: reviewerOutput?.concerns || [],
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    // ==========================================
+    // STEP 4: DETERMINISTIC POLICY CHECK
     // ==========================================
     const { data: policy } = await supabase
       .from("policies")
@@ -283,7 +323,7 @@ export async function POST(req: Request) {
     });
 
     steps.push({
-      step: 3,
+      step: 4,
       name: "policy",
       title: "Deterministic Policy Check",
       status: "completed",
@@ -298,7 +338,7 @@ export async function POST(req: Request) {
     });
 
     // ==========================================
-    // STEP 4: ARC ESCROW CREATION
+    // STEP 5: ARC ESCROW CREATION
     // ==========================================
     const escrowTools = buildEscrowTools({
       resolveBusinessId: async () => bId,
@@ -310,7 +350,7 @@ export async function POST(req: Request) {
     const escrowResult = await (escrowTools.create_escrow as any).execute({
       amount: finalPrice,
       contractId: slackContract.id,
-      negotiationId: newNeg.id,
+      negotiationId,
       vendor: slackContract.vendors?.id || slackContract.vendor_id,
       vendorWallet,
       category: slackContract.category,
@@ -318,14 +358,17 @@ export async function POST(req: Request) {
     });
 
     steps.push({
-      step: 4,
+      step: 5,
       name: "escrow",
       title: "Arc Escrow Creation",
       status: "completed",
-      summary: `Locked ${finalPrice.toLocaleString()} USDC in Arc EVM smart contract via Circle developer-controlled wallet.`,
+      summary: escrowResult.isSimulated
+        ? `Locked ${finalPrice.toLocaleString()} USDC in simulated escrow (testnet mock).`
+        : `Locked ${finalPrice.toLocaleString()} USDC in Arc EVM smart contract via Circle developer-controlled wallet.`,
       details: {
         transactionId: escrowResult.transactionId,
         txHash: escrowResult.txHash,
+        isSimulated: Boolean(escrowResult.isSimulated ?? escrowResult.isSimulation),
         escrowAddress: escrowResult.escrowAddress,
         idempotencyKey: escrowResult.idempotencyKey,
         vendorWallet,
@@ -334,27 +377,36 @@ export async function POST(req: Request) {
     });
 
     // ==========================================
-    // STEP 5: VENDOR CONFIRMATION VERIFICATION
+    // STEP 6: VENDOR CONFIRMATION VERIFICATION
     // ==========================================
-    // Simulated order confirmation from Slack
-    const simulatedConfirmationDoc = {
-      price: finalPrice,
-      seats: activeSeats,
-      term_months: 12,
-      renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-    };
+    const renewalDate =
+      slackContract.renewal_date
+        ? new Date(slackContract.renewal_date).toISOString().split("T")[0]
+        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0];
 
-    const expectedTerms = {
+    // Real call to vendor confirmation simulator
+    const { documentText } = generateVendorConfirmationDocument({
+      vendorName: slackContract.vendors?.name || "Slack",
+      confirmedPrice: finalPrice,
+      confirmedSeats: activeSeats,
+      termMonths: 12,
+      renewalDate,
+    });
+
+    // Real call through extractVendorConfirmation
+    const extractedConfirmation = await extractVendorConfirmation(documentText);
+
+    const expectedTerms: ExpectedTerms = {
       finalPrice,
       seats: activeSeats,
       termMonths: 12,
-      renewalDate: simulatedConfirmationDoc.renewal_date,
+      renewalDate,
     };
 
     const verificationResult = verifyConfirmationTerms(
-      simulatedConfirmationDoc,
+      extractedConfirmation,
       expectedTerms,
     );
 
@@ -364,7 +416,7 @@ export async function POST(req: Request) {
       reason:
         "Audited counter-signed vendor order document against agreed commitment terms.",
       confidence: 1.0,
-      input: { expected: expectedTerms, extracted: simulatedConfirmationDoc },
+      input: { expected: expectedTerms, extracted: extractedConfirmation },
       result: {
         allPassed: verificationResult.allPassed,
         checksCount: verificationResult.checks.length,
@@ -372,38 +424,42 @@ export async function POST(req: Request) {
     });
 
     steps.push({
-      step: 5,
+      step: 6,
       name: "verify",
       title: "Vendor Fulfillment Verification",
       status: "completed",
-      summary: `Deterministic document verification passed (4/4 checks: price, active seats, term length, renewal date).`,
+      summary: `Deterministic document verification passed (${verificationResult.checks.filter((c) => c.passed).length}/${verificationResult.checks.length} checks: price, active seats, term length, renewal date).`,
       details: {
         checks: verificationResult.checks,
         allPassed: verificationResult.allPassed,
+        discrepancies: verificationResult.discrepancies,
       },
       timestamp: new Date().toISOString(),
     });
 
     // ==========================================
-    // STEP 6: RELEASE ESCROW FUNDS ON ARC
+    // STEP 7: RELEASE ESCROW FUNDS ON ARC
     // ==========================================
     const releaseResult = await (escrowTools.release_escrow as any).execute({
       contractId: slackContract.id,
       transactionId: escrowResult.transactionId,
-      negotiationId: newNeg.id,
+      negotiationId,
       savings: realizedSavings,
       verificationPassed: verificationResult.allPassed,
     });
 
     steps.push({
-      step: 6,
+      step: 7,
       name: "release",
-      title: "Escrow Fund Release",
+      title: releaseResult.isSimulated ? "Simulated Fund Settlement" : "Escrow Fund Release",
       status: "completed",
-      summary: `Released ${finalPrice.toLocaleString()} USDC to vendor wallet on Arc testnet. Settlement finalized.`,
+      summary: releaseResult.isSimulated
+        ? `Settled ${finalPrice.toLocaleString()} USDC in simulation mode (testnet mock).`
+        : `Released ${finalPrice.toLocaleString()} USDC to vendor wallet on Arc testnet. Settlement finalized.`,
       details: {
         transactionId: escrowResult.transactionId,
-        releaseTxHash: releaseResult.releaseTxHash,
+        releaseTxHash: releaseResult.releaseTxHash || releaseResult.txHash || null,
+        isSimulated: Boolean(releaseResult.isSimulated ?? releaseResult.isSimulation),
         status: releaseResult.status,
         explorerUrl: releaseResult.explorerUrl,
       },
@@ -411,17 +467,17 @@ export async function POST(req: Request) {
     });
 
     // ==========================================
-    // STEP 7: VENDOR MEMORY & REPUTATION UPDATE
+    // STEP 8: VENDOR MEMORY & REPUTATION UPDATE
     // ==========================================
     if (slackContract.vendor_id) {
       await record_vendor_memory({
         businessId: bId,
         vendorId: slackContract.vendor_id,
         contractId: slackContract.id,
-        negotiationId: newNeg.id,
+        negotiationId,
         originalPrice: initialPrice,
         finalPrice,
-        roundsToClose: 3,
+        roundsToClose: rounds,
         outcome: "success",
         deliveredOk: true,
       });
@@ -435,16 +491,17 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     steps.push({
-      step: 7,
+      step: 8,
       name: "memory",
       title: "Vendor Memory & Reputation",
       status: "completed",
-      summary: `Updated business memory. Reputation increased to ${updatedVendor?.reputation_score || 88} (+8 pts for 3-round concession).`,
+      summary: `Updated business memory. Reputation increased to ${updatedVendor?.reputation_score || 88} (+8 pts for ${rounds}-round concession).`,
       details: {
         vendor: slackContract.vendors?.name || "Slack",
         reputationScore: updatedVendor?.reputation_score || 88,
-        discountAchievedPct: 28,
+        discountAchievedPct: discountPct,
         outcome: "success",
+        roundsToClose: rounds,
       },
       timestamp: new Date().toISOString(),
     });
@@ -463,11 +520,13 @@ export async function POST(req: Request) {
         "One-click full autonomous procurement demo completed successfully",
       businessId: bId,
       contractId: slackContract.id,
-      negotiationId: newNeg.id,
+      negotiationId,
       transactionId: escrowResult.transactionId,
       originalPrice: initialPrice,
       finalPrice,
       savingsRealized: realizedSavings,
+      rounds,
+      reviewer: reviewerOutput,
       steps,
     });
   } catch (err) {

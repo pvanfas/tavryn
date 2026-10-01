@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-import { checkPolicy, PolicyRule } from "@/lib/policy";
+import { checkPolicy, createApprovalRecord, PolicyRule } from "@/lib/policy";
 import { getServiceSupabase } from "@/lib/supabase";
 
 import { logAgentAction } from "./audit";
@@ -143,21 +143,18 @@ export function buildPolicyTools(ctx: ToolContext) {
         if (existingApp) {
           approvalRow = existingApp;
         } else {
-          const { data: newApp, error: appErr } = await supabase
-            .from("approvals")
-            .insert({
-              business_id: businessId,
-              negotiation_id: negId,
-              status: "pending",
-              reason:
-                evalResult.reasons.join("; ") ||
-                `Amount ($${amount.toLocaleString()}) requires human approval`,
-            })
-            .select("id")
-            .single();
+          const newApp = await createApprovalRecord(supabase, {
+            businessId,
+            negotiationId: negId,
+            status: "pending",
+            reason:
+              evalResult.reasons.join("; ") ||
+              `Amount ($${amount.toLocaleString()}) requires human approval`,
+            amount,
+          });
 
-          if (!appErr && newApp) {
-            approvalRow = newApp;
+          if (!newApp.error && newApp.id) {
+            approvalRow = { id: newApp.id };
           }
         }
       }

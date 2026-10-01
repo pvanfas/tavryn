@@ -248,6 +248,7 @@ export function buildNegotiationTools(ctx: ToolContext) {
       const simResponse = simulateVendorNegotiation(
         {
           contract_id: contractId,
+          negotiation_id: negotiation.id,
           offer,
           commitment_months: commitment,
           round,

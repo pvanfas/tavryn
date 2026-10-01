@@ -36,6 +36,8 @@ export interface PublicReceiptViewModel {
     escrowContractUrl: string;
     network: string;
   };
+  isSimulated: boolean;
+  releaseTxHash: string | null;
   createdAt: string;
 }
 
@@ -87,15 +89,30 @@ export async function getPublicReceipt(
   }
 
   // 2. Fetch completed transaction
-  const { data: tx, error: txErr } = await supabase
+  let txRes = await supabase
     .from("transactions")
     .select(
-      "id, business_id, vendor_id, contract_id, negotiation_id, amount, status, tx_hash, escrow_address",
+      "id, business_id, vendor_id, contract_id, negotiation_id, amount, status, tx_hash, escrow_address, is_simulated",
     )
     .eq("id", receipt.transaction_id)
     .maybeSingle();
 
-  if (txErr || !tx) {
+  if (
+    txRes.error &&
+    (txRes.error.code === "PGRST204" ||
+      txRes.error.message?.includes("is_simulated"))
+  ) {
+    txRes = await supabase
+      .from("transactions")
+      .select(
+        "id, business_id, vendor_id, contract_id, negotiation_id, amount, status, tx_hash, escrow_address",
+      )
+      .eq("id", receipt.transaction_id)
+      .maybeSingle();
+  }
+
+  const tx = txRes.data;
+  if (!tx) {
     return null;
   }
 
@@ -178,9 +195,16 @@ export async function getPublicReceipt(
     process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS ||
     "0x673B3a5B1f58B55eC9d23315a6bA5a0b9eFa2326";
 
-  const releaseTxUrl = tx.tx_hash
+  const isSimulated =
+    tx.is_simulated === true ||
+    tx.status === "simulation-only" ||
+    Boolean(tx.tx_hash?.startsWith("0xsimulated"));
+
+  const releaseTxUrl = (!isSimulated && tx.tx_hash)
     ? `${ARC_CONFIG.explorerUrl}/tx/${tx.tx_hash}`
     : null;
+
+  const releaseTxHash = tx.tx_hash || null;
 
   return {
     token: receipt.token,
@@ -208,7 +232,9 @@ export async function getPublicReceipt(
       {
         name: "On-Chain Escrow",
         passed: true,
-        detail: "Funded and executed through Arc smart escrow protocol in USDC",
+        detail: isSimulated
+          ? "Simulated escrow allocation executed in mock mode without live Arc gas spend"
+          : "Funded and executed through Arc smart escrow protocol in USDC",
       },
     ],
     verificationResult: {
@@ -218,14 +244,18 @@ export async function getPublicReceipt(
         "Contract Price Matched",
         "Seat Allotment Verified",
         "Term Length Confirmed",
-        "Arc Settlement Completed",
+        isSimulated ? "Simulated Settlement Verified" : "Arc Settlement Completed",
       ],
     },
     arcExplorerUrls: {
       releaseTxUrl,
       escrowContractUrl: `${ARC_CONFIG.explorerUrl}/address/${escrowAddress}`,
-      network: "Arc Testnet (USDC-native EVM)",
+      network: isSimulated
+        ? "Arc Testnet (Simulated Mock)"
+        : "Arc Testnet (USDC-native EVM)",
     },
+    isSimulated,
+    releaseTxHash,
     createdAt: receipt.created_at,
   };
 }

@@ -189,6 +189,8 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
       "policyChecklist",
       "verificationResult",
       "arcExplorerUrls",
+      "isSimulated",
+      "releaseTxHash",
       "createdAt",
     ]);
 

@@ -97,10 +97,16 @@ test("3. create_escrow double-call test proves idempotency and prevents duplicat
   });
 
   assert.equal(firstCall.success, true);
-  assert.equal(firstCall.status, "funded");
   assert.equal(firstCall.idempotentHit, false);
-  assert.ok(firstCall.txHash.startsWith("0x"));
-  assert.ok(firstCall.explorerUrl.includes("testnet.arcscan.app/tx/"));
+  if (firstCall.isSimulation || firstCall.status === "simulation-only") {
+    assert.equal(firstCall.status, "simulation-only");
+    assert.equal(firstCall.txHash, null);
+    assert.equal(firstCall.explorerUrl, null);
+  } else {
+    assert.equal(firstCall.status, "funded");
+    assert.ok(firstCall.txHash.startsWith("0x"));
+    assert.ok(firstCall.explorerUrl.includes("testnet.arcscan.app/tx/"));
+  }
 
   // Second call with same idempotencyKey -> must hit cache and NOT create a new tx
   const secondCall = await (tools.create_escrow as any).execute({
@@ -118,11 +124,11 @@ test("3. create_escrow double-call test proves idempotency and prevents duplicat
   assert.equal(secondCall.idempotentHit, true);
   assert.match(secondCall.message, /Idempotent hit/);
 
-  // Database verification: strictly ONE record with this key
+  // Database verification: strictly ONE record with this server-derived key
   const { data: matches, count } = await supabase
     .from("transactions")
     .select("id", { count: "exact" })
-    .eq("idempotency_key", uniqueKey);
+    .eq("idempotency_key", firstCall.idempotencyKey);
 
   assert.equal(matches?.length, 1);
   assert.equal(count, 1);
@@ -230,6 +236,7 @@ test("6. create_escrow escalates to human approval when vendor wallet address mu
     await (tools.create_escrow as any).execute({
       vendor: tempVendor.id,
       amount: 1000,
+      savings: 500,
       category: "software",
       vendorWallet: mutatedAddress,
       idempotencyKey: `mutated-${Date.now()}`,
@@ -294,7 +301,7 @@ test("7. create_escrow handles on-chain funding failure and transitions status t
   const { data: failedTx } = await supabase
     .from("transactions")
     .select("status")
-    .eq("idempotency_key", failKey)
+    .eq("negotiation_id", failNeg?.id)
     .single();
 
   assert.ok(failedTx);
@@ -319,7 +326,13 @@ test("8. release_escrow updates state to released, logs to agent_actions, and pr
   });
 
   assert.equal(releaseResult.success, true);
-  assert.equal(releaseResult.status, "released");
-  assert.ok(releaseResult.txHash.startsWith("0x"));
-  assert.ok(releaseResult.explorerUrl.includes("testnet.arcscan.app/tx/"));
+  if (releaseResult.isSimulation || releaseResult.status === "simulation-only") {
+    assert.equal(releaseResult.status, "simulation-only");
+    assert.equal(releaseResult.txHash, null);
+    assert.equal(releaseResult.explorerUrl, null);
+  } else {
+    assert.equal(releaseResult.status, "released");
+    assert.ok(releaseResult.txHash.startsWith("0x"));
+    assert.ok(releaseResult.explorerUrl.includes("testnet.arcscan.app/tx/"));
+  }
 });

@@ -17,6 +17,7 @@ import {
 import React, { useState } from "react";
 
 import { PageHeader } from "@/components/PageHeader";
+import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { Display, H2 } from "@/components/ui/text";
 import { ARC_CONFIG } from "@/lib/circle";
 import { TractionMetricsResult } from "@/lib/metrics";
@@ -623,35 +624,12 @@ export function TractionMetricsClient({
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      {t.txHash ? (
-                        <div className="flex items-center gap-1.5">
-                          <a
-                            href={`${ARC_CONFIG.explorerUrl}/tx/${t.txHash}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="font-mono text-[11px] text-[#107e65] dark:text-[#34d399] hover:underline flex items-center gap-1"
-                          >
-                            <span>{t.txHash.slice(0, 10)}...</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyTx(t.id, t.txHash!)}
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                            title="Copy Tx Hash"
-                          >
-                            {copiedTxId === t.id ? (
-                              <Check className="h-3 w-3 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 font-mono text-[11px]">
-                          Pending on-chain
-                        </span>
-                      )}
+                      <TransactionHashBadge
+                        txHash={t.txHash}
+                        isSimulated={t.isSimulated}
+                        status={t.status}
+                        compact={true}
+                      />
                     </td>
                     <td className="px-5 py-3.5 text-right text-slate-500 text-[11px]">
                       {new Date(t.createdAt).toLocaleTimeString([], {

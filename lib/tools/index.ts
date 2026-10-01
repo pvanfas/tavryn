@@ -9,7 +9,11 @@ import { ToolContext } from "./types";
 
 // Re-export types and individual utilities for consumer convenience
 export { logAgentAction } from "./audit";
-export { computeEscrowIdempotencyKey } from "./escrow";
+export {
+  computeEscrowIdempotencyKey,
+  isDefinitiveOnChainFailure,
+  reconcilePendingEscrow,
+} from "./escrow";
 export * from "./types";
 
 /**
@@ -78,5 +82,6 @@ export const {
   create_escrow,
   release_escrow,
   dispute_escrow,
+  refund_escrow,
   get_vendor_history,
 } = defaultTools;

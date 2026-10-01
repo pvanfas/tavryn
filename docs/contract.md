@@ -60,12 +60,22 @@ The contract implements strict role separation between human governance, autonom
 
 ---
 
-## 4. On-Chain Spending Limits
+## 4. On-Chain Spending Limits & Protocol Economics
 
 - **`maxPerAgreement`**: Hard cap per agreement initiated by the agent. Any amount exceeding this value triggers a contract revert (`ArcEscrow: Amount exceeds agent policy cap`).
 - **`categoryBudgets[category]`**: Tracks spending caps across categories (`software`, `cloud`, `contractors`).
 - **`categorySpent[category]`**: Accumulates committed escrow capital. If `categorySpent + amount > categoryBudgets[category]`, agreement creation reverts. Rolled back automatically on refund.
 - **`deadline` Timelock**: Every agreement defines an expiration timestamp. If milestones are unapproved after the deadline, the depositor can claim an unconditional refund.
+- **Protocol Success Fee (`feeBps` & `feeRecipient`)**:
+  - Owner-settable fee rate hard-capped at `MAX_FEE_BPS = 2000` (20.00%).
+  - Calculated strictly on realized savings: `feeAmount = (savings * feeBps) / 10000`, where `savings = baselinePrice - negotiatedPrice`.
+  - Zero savings guarantees zero fee.
+  - Depositor deposits `negotiatedPrice + feeAmount` into escrow.
+  - On release, vendor receives `negotiatedPrice` and `feeRecipient` receives `feeAmount`.
+  - On cancellation or refund, 100% of deposited funds (price + fee) are refunded back to the depositor.
+- **On-Chain Idempotency Keys**:
+  - `agreementByKey[idempotencyKey]` tracks unique external agreement hashes.
+  - Prevents network retries or concurrent agent loops from double-funding agreements.
 
 ---
 
@@ -80,3 +90,5 @@ The contract implements strict role separation between human governance, autonom
 | **Vendor Non-Delivery**         | Vendor accepts agreement but never provides valid contract renewal               | Timelock refund path: after `deadline`, depositor calls `refund()` to reclaim 100% of escrowed USDC and restore category budget.      | High (Mitigated)     |
 | **Premature Refund**            | Depositor attempts to pull funds while vendor is fulfilling obligations          | `refund()` requires `block.timestamp > ag.deadline`. Reverts with `ArcEscrow: Deadline has not passed`.                               | Medium (Mitigated)   |
 | **Address Hijacking**           | Attacker substitutes a phishing address for the vendor                           | Server-side address comparison against previous vendor history + vendor screening before escrow funding.                              | High (Mitigated)     |
+| **Fee Inflation / Extraction**  | Malicious actor inflates protocol fee to drain depositor funds                   | `feeBps` hard-capped at 2000 (20%) in EVM bytecode; fee calculation strictly proportional to positive savings; 100% refunded on fail. | High (Mitigated)     |
+| **Duplicate Agreement Funding** | Network timeout causes agent to retry funding same negotiated deal               | Unique `idempotencyKey` mapping (`agreementByKey`) ensures identical transactions revert or resolve to existing agreement.            | High (Mitigated)     |

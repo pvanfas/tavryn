@@ -363,32 +363,146 @@ export async function verifyPolicyExecutionAuthorization(
   }
 
   // If decision is 'needs_human', inspect the approvals table
-  let approvalQuery = supabase
+  // Security Fix (Stage 0032): Require negotiationId on every approval lookup; business-wide fallback is prohibited.
+  if (!context.negotiationId) {
+    return {
+      authorized: false,
+      decision: "needs_human",
+      reason: `Transaction exceeds autonomous ceiling ($${context.amount.toLocaleString()}) and requires explicit human approval; lacks a linked negotiationId. Explicit negotiationId is strictly required for approval lookup; business-wide fallback is prohibited.`,
+    };
+  }
+
+  // Look up unused approvals matching business, negotiationId, and amount >= context.amount
+  let approvedRecord: any = null;
+
+  const scopedQuery = supabase
     .from("approvals")
     .select("*")
     .eq("business_id", businessId)
-    .eq("status", "approved");
+    .eq("negotiation_id", context.negotiationId)
+    .eq("status", "approved")
+    .is("used_at", null)
+    .gte("amount", context.amount)
+    .order("created_at", { ascending: false });
 
-  if (context.negotiationId) {
-    approvalQuery = approvalQuery.eq("negotiation_id", context.negotiationId);
+  const { data: dbData, error: dbErr } = await scopedQuery;
+
+  if (!dbErr && dbData && dbData.length > 0) {
+    approvedRecord = dbData[0];
+  } else if (dbErr && (dbErr.code === "42703" || dbErr.code === "PGRST204")) {
+    // Schema fallback if remote DB columns (amount, used_at) have not yet been migrated
+    const { data: allApproved } = await supabase
+      .from("approvals")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("negotiation_id", context.negotiationId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (allApproved) {
+      approvedRecord = allApproved.find((r: any) => {
+        if (
+          r.used_at ||
+          (typeof r.reason === "string" && r.reason.startsWith("[USED"))
+        ) {
+          return false;
+        }
+        let appAmount = 0;
+        if (
+          r.amount !== undefined &&
+          r.amount !== null &&
+          !isNaN(Number(r.amount))
+        ) {
+          appAmount = Number(r.amount);
+        } else if (typeof r.reason === "string") {
+          const m = r.reason.match(/\[AMOUNT:\s*(\d+(?:\.\d+)?)\]/);
+          if (m) appAmount = Number(m[1]);
+        }
+        return appAmount >= context.amount;
+      });
+    }
   }
 
-  const { data: approvedRecords } = await approvalQuery
-    .order("created_at", { ascending: false })
-    .limit(1);
+  if (approvedRecord) {
+    // Single-use enforcement: mark used_at = now() immediately upon authorization
+    const usedAt = new Date().toISOString();
+    const { error: updErr } = await supabase
+      .from("approvals")
+      .update({ used_at: usedAt })
+      .eq("id", approvedRecord.id);
 
-  if (approvedRecords && approvedRecords.length > 0) {
+    if (updErr && (updErr.code === "42703" || updErr.code === "PGRST204")) {
+      // Fallback marking if used_at column does not exist on remote DB yet
+      await supabase
+        .from("approvals")
+        .update({
+          reason: `[USED ${usedAt}] ${approvedRecord.reason || ""}`.trim(),
+        })
+        .eq("id", approvedRecord.id);
+    }
+
     return {
       authorized: true,
       decision: "approved",
-      reason: "Transaction authorized via verified human approval record",
-      approvalId: approvedRecords[0].id,
+      reason:
+        "Transaction authorized via verified single-use human approval record",
+      approvalId: approvedRecord.id,
     };
   }
 
   return {
     authorized: false,
     decision: "needs_human",
-    reason: `Transaction exceeds autonomous ceiling ($${context.amount.toLocaleString()}) and requires explicit human approval in approvals table.`,
+    reason: `Transaction exceeds autonomous ceiling ($${context.amount.toLocaleString()}) and requires explicit human approval; lacks an unused, valid human approval record with approved amount >= transaction amount for negotiation ${context.negotiationId}.`,
   };
+}
+
+/**
+ * Safely inserts an approval record with exact requested amount.
+ * Handles both migrated schema (amount column) and pre-migration fallback ([AMOUNT: X] tag in reason).
+ */
+export async function createApprovalRecord(
+  supabase: any,
+  payload: {
+    businessId: string;
+    negotiationId?: string | null;
+    status: "pending" | "approved" | "rejected";
+    reason: string;
+    amount?: number | null;
+    decidedAt?: string | null;
+  },
+): Promise<{ id?: string; error?: any }> {
+  const insertObj: any = {
+    business_id: payload.businessId,
+    negotiation_id: payload.negotiationId || null,
+    status: payload.status,
+    reason: payload.reason,
+    decided_at: payload.decidedAt || null,
+  };
+
+  if (payload.amount !== undefined && payload.amount !== null) {
+    insertObj.amount = payload.amount;
+  }
+
+  const { data, error } = await supabase
+    .from("approvals")
+    .insert(insertObj)
+    .select("id")
+    .maybeSingle();
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    delete insertObj.amount;
+    if (payload.amount !== undefined && payload.amount !== null) {
+      insertObj.reason =
+        `[AMOUNT: ${payload.amount}] ${payload.reason || ""}`.trim();
+    }
+    const fallbackRes = await supabase
+      .from("approvals")
+      .insert(insertObj)
+      .select("id")
+      .maybeSingle();
+    return { id: fallbackRes.data?.id, error: fallbackRes.error };
+  }
+
+  return { id: data?.id, error };
 }

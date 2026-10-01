@@ -26,6 +26,7 @@ import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { BodySmall, Caption, H1, H2, Mono } from "@/components/ui/text";
 import { ARC_CONFIG } from "@/lib/circle";
 import { SwitchDecisionMatrix } from "@/lib/switching";
@@ -260,6 +261,7 @@ export default function DecisionDetailPage({
       status: string;
       tx_hash?: string;
       amount: number;
+      is_simulated?: boolean;
     } | null;
     approval?: {
       id: string;
@@ -1213,24 +1215,30 @@ export default function DecisionDetailPage({
           {/* Bottom Release / Dispute Action Bar */}
           <div className="mt-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/60 dark:bg-[#141c18]/60">
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 min-w-0">
-              {verification?.transaction?.status === "completed" ? (
+              {verification?.transaction?.status === "completed" ||
+              verification?.transaction?.status === "released" ||
+              verification?.transaction?.status === "simulation-only" ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0 ${
+                      verification?.transaction?.is_simulated ||
+                      verification?.transaction?.status === "simulation-only"
+                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                        : "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border-emerald-500/20"
+                    }`}
+                  >
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    Escrow Released on Arc
+                    {verification?.transaction?.is_simulated ||
+                    verification?.transaction?.status === "simulation-only"
+                      ? "Simulated Settlement Completed"
+                      : "Escrow Released on Arc"}
                   </span>
                   {verification?.transaction?.tx_hash && (
-                    <a
-                      href={`${ARC_CONFIG.explorerUrl}/tx/${verification.transaction.tx_hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs text-[#107e65] dark:text-emerald-400 hover:underline inline-flex items-center gap-1 shrink-0"
-                    >
-                      <span>
-                        {verification.transaction.tx_hash.slice(0, 10)}...
-                      </span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <TransactionHashBadge
+                      txHash={verification.transaction.tx_hash}
+                      isSimulated={verification.transaction.is_simulated}
+                      status={verification.transaction.status}
+                    />
                   )}
                 </div>
               ) : verification?.allPassed === false ||

@@ -22,6 +22,7 @@ export interface VendorSimulatorConfig {
 
 export interface NegotiateRequest {
   contract_id: string;
+  negotiation_id?: string;
   offer: number;
   commitment_months?: number;
   round: number;
@@ -179,9 +180,10 @@ export function simulateVendorNegotiation(
   req: NegotiateRequest,
   vendorConfig: VendorSimulatorConfig,
 ): NegotiateResponse {
-  const rng = createSeededRng(
-    `round-${req.contract_id}-${vendorConfig.vendorId}-${req.round}`,
-  );
+  const seedKey = req.negotiation_id
+    ? `round-${req.negotiation_id}-${vendorConfig.vendorId}-${req.round}`
+    : `round-${req.contract_id}-${vendorConfig.vendorId}-${req.round}`;
+  const rng = createSeededRng(seedKey);
 
   const originalPrice = req.original_price;
   const currentCounter = req.previous_counter ?? originalPrice;

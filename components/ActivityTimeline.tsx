@@ -12,12 +12,14 @@ import {
   RefreshCw,
   Search,
   Send,
+  ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { AgentIcon } from "@/components/AgentIcon";
+import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { H3 } from "@/components/ui/text";
 import { ARC_CONFIG } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
@@ -54,7 +56,7 @@ const DEFAULT_STEPS: StepItem[] = [
     title: "2. Autonomous Negotiation",
     status: "completed",
     summary:
-      "Executed 3-round concession loop against vendor simulator; negotiated price down to $6,912.",
+      "Executed concession loop against vendor simulator; negotiated rate down dynamically.",
     details: {
       rounds: 3,
       opening: 6500,
@@ -66,11 +68,26 @@ const DEFAULT_STEPS: StepItem[] = [
   },
   {
     step: 3,
-    name: "policy",
-    title: "3. Deterministic Policy",
+    name: "reviewer",
+    title: "3. Reviewer Agent Audit",
     status: "completed",
     summary:
-      "Deterministic engine approved $6,912 commitment within $10k auto-limit and >$500 savings rule.",
+      "Adversarial auditor audited concession terms against usage telemetry; approved with zero unaddressed seat waste.",
+    details: {
+      verdict: "agree",
+      model: "deterministic-rules",
+      concerns: 0,
+      suggestedAction: "Proceed to deterministic policy gatekeeper evaluation.",
+    },
+    timestamp: "Ready",
+  },
+  {
+    step: 4,
+    name: "policy",
+    title: "4. Deterministic Policy",
+    status: "completed",
+    summary:
+      "Deterministic engine approved commitment within $10k auto-limit and >$500 savings rule.",
     details: {
       rule: "max_auto_transaction <= $10,000",
       result: "AUTONOMOUS_APPROVAL",
@@ -79,12 +96,12 @@ const DEFAULT_STEPS: StepItem[] = [
     timestamp: "Ready",
   },
   {
-    step: 4,
+    step: 5,
     name: "escrow",
-    title: "4. Arc Escrow Lock",
+    title: "5. Arc Escrow Lock",
     status: "completed",
     summary:
-      "Locked 6,912 USDC into Arc EVM smart contract using Circle developer-controlled wallet.",
+      "Locked USDC into Arc EVM smart contract using Circle developer-controlled wallet.",
     details: {
       chain: "Arc Testnet",
       token: "USDC",
@@ -93,12 +110,12 @@ const DEFAULT_STEPS: StepItem[] = [
     timestamp: "Ready",
   },
   {
-    step: 5,
+    step: 6,
     name: "verify",
-    title: "5. Document Verification",
+    title: "6. Document Verification",
     status: "completed",
     summary:
-      "Parsed vendor renewal order confirmation: verified price, 18 seats, term length, and effective date.",
+      "Parsed vendor renewal order confirmation: verified price, active seats, term length, and effective date.",
     details: {
       priceMatched: true,
       seatsMatched: true,
@@ -108,22 +125,22 @@ const DEFAULT_STEPS: StepItem[] = [
     timestamp: "Ready",
   },
   {
-    step: 6,
+    step: 7,
     name: "release",
-    title: "6. Payment Settlement",
+    title: "7. Payment Settlement",
     status: "completed",
     summary:
-      "Released 6,912 USDC from Arc escrow to Slack vendor wallet. Settlement completed on-chain.",
+      "Released USDC from Arc escrow to Slack vendor wallet. Settlement completed on-chain.",
     details: { status: "released", vendorWallet: DEV_TREASURY_ADDRESS },
     timestamp: "Ready",
   },
   {
-    step: 7,
+    step: 8,
     name: "memory",
-    title: "7. Business Memory",
+    title: "8. Business Memory",
     status: "completed",
     summary:
-      "Saved concession benchmark to business memory: Slack reputation score increased to 88.",
+      "Saved concession benchmark to business memory: Slack reputation score updated.",
     details: {
       vendor: "Slack",
       reputationDelta: "+8 pts",
@@ -136,6 +153,7 @@ const DEFAULT_STEPS: StepItem[] = [
 const STEP_ICONS: Record<string, React.ElementType> = {
   detect: Search,
   negotiate: MessageSquare,
+  reviewer: ShieldAlert,
   policy: ShieldCheck,
   escrow: Lock,
   verify: FileCheck,
@@ -162,14 +180,37 @@ export function ActivityTimeline({
     setIsRunning(true);
     setLastRunNotice(null);
 
-    // Visual animation of stepping through
+    // Initial running state
     setSteps((prev) =>
       prev.map((s, idx) => ({
         ...s,
         status: idx === 0 ? "running" : "idle",
-        timestamp: "Executing...",
+        timestamp: idx === 0 ? "Executing..." : s.timestamp,
       })),
     );
+
+    // Live progress indicator advancing through pipeline steps during execution
+    let currentIdx = 0;
+    const progressInterval = setInterval(() => {
+      currentIdx = (currentIdx + 1) % 8;
+      setSteps((prev) =>
+        prev.map((s, idx) => ({
+          ...s,
+          status:
+            idx === currentIdx
+              ? "running"
+              : idx < currentIdx
+                ? "completed"
+                : "idle",
+          timestamp:
+            idx === currentIdx
+              ? "Executing..."
+              : idx < currentIdx
+                ? "Done"
+                : s.timestamp,
+        })),
+      );
+    }, 450);
 
     try {
       const res = await fetch("/api/demo/reset-and-run", {
@@ -189,8 +230,10 @@ export function ActivityTimeline({
         setSteps(data.steps);
       }
 
+      const savings =
+        data.result?.savingsRealized ?? data.savingsRealized ?? 2688;
       setLastRunNotice(
-        `Full loop executed: $${(data.result?.savingsRealized || 2688).toLocaleString()} annual savings secured, escrowed & settled on Arc!`,
+        `Full loop executed: $${savings.toLocaleString()} annual savings secured, reviewer verified, escrowed & settled on Arc!`,
       );
 
       router.refresh();
@@ -198,6 +241,7 @@ export function ActivityTimeline({
       setLastRunNotice(`Demo execution error: ${(err as Error).message}`);
       setSteps(DEFAULT_STEPS);
     } finally {
+      clearInterval(progressInterval);
       setIsRunning(false);
     }
   };
@@ -296,11 +340,15 @@ export function ActivityTimeline({
                       <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                         {item.title}
                       </span>
-                      {item.status === "completed" && (
+                      {item.details?.isSimulated ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                          Simulated (testnet mock)
+                        </span>
+                      ) : item.status === "completed" ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-emerald-300 border border-emerald-500/20">
                           Verified
                         </span>
-                      )}
+                      ) : null}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
                       {item.summary}
@@ -328,7 +376,19 @@ export function ActivityTimeline({
 
               {/* Expanded JSON / Details Drawer */}
               {isExpanded && item.details && (
-                <div className="px-4 pb-4 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                <div className="px-4 pb-4 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
+                  {(item.details.releaseTxHash || item.details.txHash) && (
+                    <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-slate-400 font-medium">
+                        Settlement Transaction:
+                      </span>
+                      <TransactionHashBadge
+                        txHash={item.details.releaseTxHash || item.details.txHash}
+                        isSimulated={item.details.isSimulated}
+                        status={item.details.status}
+                      />
+                    </div>
+                  )}
                   <div className="p-3 rounded-lg bg-slate-900 text-slate-200 font-mono text-xs overflow-x-auto">
                     <pre>{JSON.stringify(item.details, null, 2)}</pre>
                   </div>

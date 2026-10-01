@@ -22,6 +22,7 @@ export interface TransactionMetricItem {
   status: string;
   escrowAddress: string | null;
   txHash: string | null;
+  isSimulated: boolean;
   createdAt: string;
 }
 
@@ -310,6 +311,10 @@ export async function getTractionMetrics(options?: {
       status: t.status,
       escrowAddress: t.escrow_address,
       txHash: t.tx_hash,
+      isSimulated:
+        t.is_simulated === true ||
+        t.status === "simulation-only" ||
+        Boolean(t.tx_hash?.startsWith("0xsimulated")),
       createdAt: t.created_at,
     });
   }

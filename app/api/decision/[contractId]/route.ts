@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
-import { checkPolicy, PolicyRule } from "@/lib/policy";
+import { checkPolicy, createApprovalRecord, PolicyRule } from "@/lib/policy";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -248,33 +248,46 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       .order("created_at", { ascending: false })
       .limit(1);
 
+    const approvedAmount = Number(
+      negotiation?.final_price ||
+        negotiation?.current_offer ||
+        contract?.current_price ||
+        0,
+    );
+
     if (existingApp && existingApp.length > 0) {
       approvalId = existingApp[0].id;
+      const updatePayload: any = {
+        status: decidedStatus,
+        reason: decisionReason,
+        decided_at: decidedAt,
+        amount: approvedAmount,
+      };
       const { error: updErr } = await supabase
         .from("approvals")
-        .update({
-          status: decidedStatus,
-          reason: decisionReason,
-          decided_at: decidedAt,
-        })
+        .update(updatePayload)
         .eq("id", approvalId);
 
-      if (updErr) throw updErr;
+      if (updErr && (updErr.code === "42703" || updErr.code === "PGRST204")) {
+        delete updatePayload.amount;
+        updatePayload.reason = `[AMOUNT: ${approvedAmount}] ${decisionReason}`;
+        await supabase
+          .from("approvals")
+          .update(updatePayload)
+          .eq("id", approvalId);
+      }
     } else {
-      const { data: newApp, error: insErr } = await supabase
-        .from("approvals")
-        .insert({
-          business_id: businessId,
-          negotiation_id: negotiation?.id || null,
-          status: decidedStatus,
-          reason: decisionReason,
-          decided_at: decidedAt,
-        })
-        .select("id")
-        .single();
+      const appRes = await createApprovalRecord(supabase, {
+        businessId,
+        negotiationId: negotiation?.id || null,
+        status: decidedStatus,
+        reason: decisionReason,
+        amount: approvedAmount,
+        decidedAt,
+      });
 
-      if (insErr || !newApp) throw insErr;
-      approvalId = newApp.id;
+      if (appRes.error || !appRes.id) throw appRes.error;
+      approvalId = appRes.id;
     }
 
     // 3. Append to immutable agent_actions audit log

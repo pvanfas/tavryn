@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import React from "react";
 
 import { CopyReceiptButton } from "@/components/CopyReceiptButton";
+import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { getPublicReceipt } from "@/lib/receipt";
 
 export const dynamic = "force-dynamic";
@@ -260,19 +261,52 @@ export default async function PublicReceiptPage({
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Lock className="h-4 w-4 text-emerald-400" />
-                  <span>On-Chain Arc Settlement</span>
+                  <span>
+                    {receipt.isSimulated
+                      ? "Arc Settlement Verification (Simulated)"
+                      : "On-Chain Arc Settlement"}
+                  </span>
                 </h3>
                 <span className="text-xs text-slate-400">
                   {receipt.arcExplorerUrls.network}
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                Settled on Arc Testnet
+              <span
+                className={`text-[11px] font-mono px-2.5 py-1 rounded-md border ${
+                  receipt.isSimulated
+                    ? "text-amber-400/90 bg-amber-500/10 border-amber-500/20"
+                    : "text-emerald-400/80 bg-emerald-500/10 border-emerald-500/20"
+                }`}
+              >
+                {receipt.isSimulated
+                  ? "Simulated (testnet mock)"
+                  : "Settled on Arc Testnet"}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {receipt.arcExplorerUrls.releaseTxUrl && (
+              {receipt.isSimulated ? (
+                <div
+                  data-testid="simulated-receipt-tx-card"
+                  className="p-3.5 rounded-xl border border-amber-500/25 bg-slate-900/90 flex flex-col justify-between gap-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-slate-200">
+                      Escrow Release Tx
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Simulated (testnet mock)
+                    </span>
+                  </div>
+                  <div className="pt-0.5">
+                    <TransactionHashBadge
+                      txHash={receipt.releaseTxHash}
+                      isSimulated={true}
+                      compact={true}
+                    />
+                  </div>
+                </div>
+              ) : receipt.arcExplorerUrls.releaseTxUrl ? (
                 <a
                   href={receipt.arcExplorerUrls.releaseTxUrl}
                   target="_blank"
@@ -289,7 +323,7 @@ export default async function PublicReceiptPage({
                   </div>
                   <ExternalLink className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
                 </a>
-              )}
+              ) : null}
 
               <a
                 href={receipt.arcExplorerUrls.escrowContractUrl}

@@ -2,6 +2,7 @@ import { generateText } from "ai";
 
 import { getAgentLanguageModel } from "@/lib/agent/provider";
 import { getOverrideGuidancePrompt } from "@/lib/override-memory";
+import { createApprovalRecord } from "@/lib/policy";
 import { getServiceSupabase } from "@/lib/supabase";
 import {
   check_policy,
@@ -566,11 +567,17 @@ Draft a concise, professional 1-2 sentence procurement negotiation message to th
         reviewerResult.verdict === "reject" ||
         reviewerResult.verdict === "challenge"
       ) {
-        await supabase.from("approvals").insert({
-          business_id: contract.business_id,
-          negotiation_id: statusRes.negotiation.id,
+        const approvedAmount =
+          finalPrice ||
+          targetPrice ||
+          statusRes.negotiation.current_offer ||
+          null;
+        await createApprovalRecord(supabase, {
+          businessId: contract.business_id,
+          negotiationId: statusRes.negotiation.id,
           status: "pending",
           reason: `Reviewer Agent ${reviewerResult.verdict.toUpperCase()}: ${reviewerResult.suggestedAction} (${reviewerResult.concerns.map((c) => c.issue).join("; ")})`,
+          amount: approvedAmount,
         });
       }
     } catch (reviewerErr) {
