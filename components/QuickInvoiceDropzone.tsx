@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, FileText, FileUp, Loader2, Sparkles, Upload, X } from "lucide-react";
+import { CheckCircle2, FileUp, Loader2, Sparkles, Upload, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 
 interface QuickInvoiceDropzoneProps {

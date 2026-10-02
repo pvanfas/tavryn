@@ -18,6 +18,7 @@ import { SwitchDecisionMatrix } from "@/lib/switching";
 
 import {
   DecisionData,
+  DecisionTimelineSection,
   PolicyChecklistSection,
   PublicReceiptsSection,
   ReceiptItem,
@@ -551,6 +552,16 @@ export default function DecisionDetailPage({
             </div>
           )}
         </div>
+
+        {/* Step-by-Step Decision Reasoning Tree & Liquidity Runway Timeline */}
+        <DecisionTimelineSection
+          contract={contract}
+          policy={policy}
+          evaluation={evaluation}
+          approval={approval}
+          review={data?.review}
+          switchingMatrix={switchingMatrix}
+        />
 
         {/* Dual-Agent Reviewer Audit Card */}
         <ReviewerAuditSection

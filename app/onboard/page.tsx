@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, FileSpreadsheet, FileText } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  FileSpreadsheet,
+  FileText,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
@@ -211,6 +217,175 @@ export default function OnboardPage() {
     }
   };
 
+  // 3b. 1-Click "Load Real Org" Handler for Hackathon Evaluators
+  const handleLoadRealOrg = () => {
+    setBusinessName("Acme Operations Corp");
+    setTreasuryBalance("125000");
+    setPolicy({
+      max_auto_transaction: 10000,
+      min_savings: 500,
+      human_approval_required_above: 25000,
+      allowed_categories: ["software", "cloud", "contractors"],
+    });
+
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    const sampleSubscriptions: ValidatedSubscriptionRow[] = [
+      {
+        id: `acme-salesforce-${Date.now()}`,
+        raw: {
+          vendor: "Salesforce",
+          service: "Salesforce Sales Cloud",
+          category: "software",
+          annual_price: "42000",
+          renewal_date: new Date(now + 28 * dayMs).toISOString().split("T")[0],
+          seats: "85",
+          active_seats: "52",
+          usage_decline_pct: "38",
+        },
+        parsed: {
+          vendor: "Salesforce",
+          service: "Salesforce Sales Cloud",
+          category: "software",
+          annual_price: 42000,
+          renewal_date: new Date(now + 28 * dayMs).toISOString().split("T")[0],
+          seats: 85,
+          active_seats: 52,
+          usage_decline_pct: 38,
+        },
+        isValid: true,
+        errors: {},
+        source: "invoice-import",
+        confidence: 0.99,
+        needsConfirmation: false,
+        included: true,
+      },
+      {
+        id: `acme-slack-${Date.now()}`,
+        raw: {
+          vendor: "Slack",
+          service: "Slack Enterprise Grid",
+          category: "software",
+          annual_price: "18500",
+          renewal_date: new Date(now + 21 * dayMs).toISOString().split("T")[0],
+          seats: "120",
+          active_seats: "78",
+          usage_decline_pct: "35",
+        },
+        parsed: {
+          vendor: "Slack",
+          service: "Slack Enterprise Grid",
+          category: "software",
+          annual_price: 18500,
+          renewal_date: new Date(now + 21 * dayMs).toISOString().split("T")[0],
+          seats: 120,
+          active_seats: 78,
+          usage_decline_pct: 35,
+        },
+        isValid: true,
+        errors: {},
+        source: "invoice-import",
+        confidence: 0.98,
+        needsConfirmation: false,
+        included: true,
+      },
+      {
+        id: `acme-datadog-${Date.now()}`,
+        raw: {
+          vendor: "Datadog",
+          service: "Datadog Infrastructure Pro",
+          category: "cloud",
+          annual_price: "37200",
+          renewal_date: new Date(now + 14 * dayMs).toISOString().split("T")[0],
+          seats: "",
+          active_seats: "",
+          usage_decline_pct: "31",
+        },
+        parsed: {
+          vendor: "Datadog",
+          service: "Datadog Infrastructure Pro",
+          category: "cloud",
+          annual_price: 37200,
+          renewal_date: new Date(now + 14 * dayMs).toISOString().split("T")[0],
+          seats: null,
+          active_seats: null,
+          usage_decline_pct: 31,
+        },
+        isValid: true,
+        errors: {},
+        source: "statement-import",
+        confidence: 0.96,
+        needsConfirmation: false,
+        included: true,
+      },
+      {
+        id: `acme-aws-${Date.now()}`,
+        raw: {
+          vendor: "AWS",
+          service: "Amazon Web Services Compute",
+          category: "cloud",
+          annual_price: "24000",
+          renewal_date: new Date(now + 35 * dayMs).toISOString().split("T")[0],
+          seats: "",
+          active_seats: "",
+          usage_decline_pct: "12",
+        },
+        parsed: {
+          vendor: "AWS",
+          service: "Amazon Web Services Compute",
+          category: "cloud",
+          annual_price: 24000,
+          renewal_date: new Date(now + 35 * dayMs).toISOString().split("T")[0],
+          seats: null,
+          active_seats: null,
+          usage_decline_pct: 12,
+        },
+        isValid: true,
+        errors: {},
+        source: "statement-import",
+        confidence: 0.97,
+        needsConfirmation: false,
+        included: true,
+      },
+      {
+        id: `acme-github-${Date.now()}`,
+        raw: {
+          vendor: "GitHub",
+          service: "GitHub Enterprise Cloud",
+          category: "software",
+          annual_price: "9600",
+          renewal_date: new Date(now + 40 * dayMs).toISOString().split("T")[0],
+          seats: "96",
+          active_seats: "68",
+          usage_decline_pct: "29",
+        },
+        parsed: {
+          vendor: "GitHub",
+          service: "GitHub Enterprise Cloud",
+          category: "software",
+          annual_price: 9600,
+          renewal_date: new Date(now + 40 * dayMs).toISOString().split("T")[0],
+          seats: 96,
+          active_seats: 68,
+          usage_decline_pct: 29,
+        },
+        isValid: true,
+        errors: {},
+        source: "invoice-import",
+        confidence: 0.99,
+        needsConfirmation: false,
+        included: true,
+      },
+    ];
+
+    setRows(sampleSubscriptions);
+    setImportError(null);
+    setImportSuccess(
+      "Imported Acme Corp Live SaaS Stack (5 enterprise contracts, $131,300 total spend, pre-configured policy limits and $125k treasury). Ready for 1-click commitment!",
+    );
+  };
+
   // 4. Handle Manual Add
   const handleAddManual = (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,7 +591,17 @@ export default function OnboardPage() {
             </Link>
 
             {/* Quick Demo Sample Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleLoadRealOrg}
+                disabled={isFileUploading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/40 hover:bg-emerald-500/20 text-xs font-bold text-[#107e65] dark:text-[#34d399] transition-all shadow-xs cursor-pointer"
+                title="Instantly loads 5 realistic enterprise SaaS subscriptions, $125k treasury, and deterministic policy"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
+                <span>Import Acme Corp Live SaaS Stack</span>
+              </button>
               <button
                 type="button"
                 onClick={handleLoadSampleStatement}
@@ -424,7 +609,7 @@ export default function OnboardPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 text-[#107e65]" />
-                <span>Try Sample Statement CSV</span>
+                <span>Try Sample CSV</span>
               </button>
               <button
                 type="button"
@@ -433,7 +618,7 @@ export default function OnboardPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
               >
                 <FileText className="h-3.5 w-3.5 text-[#107e65]" />
-                <span>Try Sample Invoice PDF</span>
+                <span>Try Sample PDF</span>
               </button>
             </div>
           </div>

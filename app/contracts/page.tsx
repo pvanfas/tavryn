@@ -4,8 +4,8 @@ import React from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
-import { Body, H2 } from "@/components/ui/text";
 import { QuickInvoiceDropzone } from "@/components/QuickInvoiceDropzone";
+import { Body, H2 } from "@/components/ui/text";
 import { VendorLogo } from "@/components/VendorLogo";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";

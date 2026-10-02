@@ -20,6 +20,10 @@ export interface PolicyContext {
   contractId?: string;
   vendor_id?: string;
   negotiationId?: string;
+  // Treasury runway & liquidity pre-check fields
+  upcomingObligations30d?: number;
+  daysUntilRenewal?: number;
+  monthlyBurnRate?: number;
 }
 
 export type PolicyDecision = "approved" | "needs_human" | "rejected";
@@ -30,6 +34,16 @@ export interface PolicyCheckItem {
   detail: string;
 }
 
+export interface RunwayAnalysis {
+  treasuryBalance: number;
+  transactionAmount: number;
+  projectedLiquidity: number;
+  upcomingObligations30d: number;
+  daysUntilRenewal: number;
+  hasSufficientRunway: boolean;
+  recommendation: "execute_now" | "schedule_deferred" | "escalate_low_runway";
+}
+
 export interface PolicyEvaluation {
   decision: PolicyDecision;
   checks: PolicyCheckItem[];
@@ -37,4 +51,5 @@ export interface PolicyEvaluation {
   // Backwards compatibility properties
   approved: boolean;
   requiresHumanApproval: boolean;
+  runwayAnalysis?: RunwayAnalysis;
 }

@@ -93,12 +93,42 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
       ? Number(contract.businesses.treasury_balance)
       : undefined;
 
+    const renewalDate = contract.renewal_date ? new Date(contract.renewal_date) : null;
+    const daysUntilRenewal =
+      renewalDate && !isNaN(renewalDate.getTime())
+        ? Math.max(
+            0,
+            Math.ceil(
+              (renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+            ),
+          )
+        : 30;
+
+    const thirtyDaysFromNow = new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const nowIso = new Date().toISOString();
+    const { data: upcomingContracts } = await supabase
+      .from("contracts")
+      .select("current_price")
+      .eq("business_id", businessId)
+      .neq("id", contractId)
+      .gte("renewal_date", nowIso)
+      .lte("renewal_date", thirtyDaysFromNow);
+
+    const upcomingObligations30d = (upcomingContracts || []).reduce(
+      (sum, c) => sum + Number(c.current_price || 0),
+      0,
+    );
+
     // 4. Run deterministic policy evaluation
     const evaluation = checkPolicy("evaluate_decision", policy, {
       amount: proposedPrice,
       savings: annualSavings,
       category: contract.category,
       treasuryBalance,
+      upcomingObligations30d,
+      daysUntilRenewal,
       contractId: contract.id,
       negotiationId: negotiation?.id,
     });
@@ -139,6 +169,9 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
         savingsPct,
         seat_count: contract.seat_count,
         active_seats: contract.active_seats,
+        renewal_date: contract.renewal_date,
+        daysUntilRenewal,
+        upcomingObligations30d,
         vendor: contract.vendors,
         business: {
           id: contract.businesses?.id,

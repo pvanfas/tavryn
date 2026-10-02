@@ -22,6 +22,8 @@ export interface ContractInfo {
   savingsPct: number;
   seat_count: number | null;
   active_seats: number | null;
+  daysUntilRenewal?: number;
+  upcomingObligations30d?: number;
   vendor?: {
     name: string;
     is_simulated: boolean;
@@ -42,6 +44,16 @@ export interface DecisionData {
     reasons: string[];
     approved: boolean;
     requiresHumanApproval: boolean;
+    runwayAnalysis?: {
+      activeTreasury: number;
+      upcomingObligations30d: number;
+      proposedCommitment: number;
+      projectedLiquidity: number;
+      daysUntilRenewal: number;
+      liquidityRatio: number;
+      recommendation: "execute_now" | "schedule_deferred" | "escalate_low_runway";
+      reasoning: string;
+    };
   };
   approval: {
     id: string;

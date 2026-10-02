@@ -8,7 +8,6 @@ import {
   isSimulationMode,
 } from "@/lib/circle";
 import { SIMULATED_VENDOR_WALLET } from "@/lib/constants";
-import { record_vendor_memory } from "@/lib/memory";
 import {
   createApprovalRecord,
   verifyPolicyExecutionAuthorization,

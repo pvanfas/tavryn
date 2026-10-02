@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import {
   ARC_CONFIG,
-  fundArcEscrowAgreement,
   getAgreementIdForTransaction,
   isSimulationMode,
   refundArcEscrowAgreement,

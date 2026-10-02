@@ -11,8 +11,14 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AppShell } from "@/components/AppShell";
 import { OpportunitiesTable } from "@/components/OpportunitiesTable";
 import { TransactionHashBadge } from "@/components/TransactionHashBadge";
+import { TreasuryUnifiedBalancePanel } from "@/components/TreasuryUnifiedBalancePanel";
 import { BodySmall, Caption, H2 } from "@/components/ui/text";
-import { ARC_CONFIG, getOnChainUSDCBalance } from "@/lib/circle";
+import {
+  ARC_CONFIG,
+  calculateIdleTreasuryUsycYield,
+  getCircleGatewayUnifiedBalance,
+  getOnChainUSDCBalance,
+} from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
 import { getServiceSupabase } from "@/lib/supabase";
 
@@ -188,6 +194,21 @@ export default async function DashboardPage({
     (acc, opp) => acc + (opp.status === "active" ? opp.savings : 0),
     0,
   );
+
+  // Compute Circle Gateway Multichain Unified Balance and Idle Cash USYC Yield
+  const [gatewayUnified, usycYield] = await Promise.all([
+    getCircleGatewayUnifiedBalance(business?.wallet_address, treasuryBalance),
+    Promise.resolve(
+      calculateIdleTreasuryUsycYield({
+        treasuryBalance,
+        upcomingObligations30d: spendThisMonth,
+        contracts: contracts.map((c) => ({
+          current_price: Number(c.current_price) || 0,
+          renewal_date: c.renewal_date,
+        })),
+      }),
+    ),
+  ]);
 
   return (
     <AppShell
@@ -366,6 +387,15 @@ export default async function DashboardPage({
           </div>
         </div>
       </div>
+
+      {/* Circle Gateway Multichain Unified Balance & USYC Yield Allocator */}
+      <section id="unified-treasury" aria-label="Circle Gateway and USYC Yield">
+        <TreasuryUnifiedBalancePanel
+          gateway={gatewayUnified}
+          yieldAllocation={usycYield}
+          walletAddress={business?.wallet_address}
+        />
+      </section>
 
       {/* Real-Time Agent Activity Timeline */}
       <section

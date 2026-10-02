@@ -1,6 +1,7 @@
 import { record_vendor_memory } from "@/lib/memory";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
+
 import { extractTermsFromVendorReplyAsync } from "./extraction";
 import { ProcessReplyResult } from "./types";
 

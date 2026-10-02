@@ -232,7 +232,74 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
 
       expect(res1).toEqual(res2);
       expect(res1.decision).toBe("approved");
-      expect(res1.checks.length).toBe(7);
+      expect(res1.checks.length).toBe(8);
+    });
+  });
+
+  describe("Treasury Runway & Working Capital Liquidity Pre-Check", () => {
+    it("approves when projected liquidity safely covers 30-day obligations", () => {
+      const result = checkPolicy("evaluate_decision", basePolicy, {
+        amount: 1500,
+        savings: 500,
+        category: "software",
+        treasuryBalance: 25000,
+        upcomingObligations30d: 8000,
+        daysUntilRenewal: 30,
+      });
+
+      expect(result.decision).toBe("approved");
+      expect(result.runwayAnalysis).toBeDefined();
+      expect(result.runwayAnalysis?.hasSufficientRunway).toBe(true);
+      expect(result.runwayAnalysis?.projectedLiquidity).toBe(23500);
+      expect(result.runwayAnalysis?.recommendation).toBe("execute_now");
+
+      const check = result.checks.find(
+        (c) => c.name === "runway_liquidity_precheck",
+      );
+      expect(check?.passed).toBe(true);
+      expect(check?.detail).toContain("safely covers 30-day commitments");
+    });
+
+    it("advises deferred escrow scheduling when 30-day runway is tight and renewal is weeks away", () => {
+      const result = checkPolicy("evaluate_decision", basePolicy, {
+        amount: 1800,
+        savings: 400,
+        category: "software",
+        treasuryBalance: 5000,
+        upcomingObligations30d: 4000, // 5000 - 1800 = 3200 < 4000
+        daysUntilRenewal: 25, // 25 days away
+      });
+
+      expect(result.decision).toBe("needs_human");
+      expect(result.runwayAnalysis).toBeDefined();
+      expect(result.runwayAnalysis?.hasSufficientRunway).toBe(false);
+      expect(result.runwayAnalysis?.recommendation).toBe("schedule_deferred");
+
+      const check = result.checks.find(
+        (c) => c.name === "runway_liquidity_precheck",
+      );
+      expect(check?.passed).toBe(false);
+      expect(check?.detail).toContain("recommend scheduling escrow closer to deadline");
+      expect(result.reasons[0]).toContain("Deferring escrow commitment");
+    });
+
+    it("escalates for supervisor authorization when renewal is imminent and working capital is tight", () => {
+      const result = checkPolicy("evaluate_decision", basePolicy, {
+        amount: 1800,
+        savings: 400,
+        category: "software",
+        treasuryBalance: 5000,
+        upcomingObligations30d: 4000,
+        daysUntilRenewal: 3, // imminent (< 7 days)
+      });
+
+      expect(result.decision).toBe("needs_human");
+      expect(result.runwayAnalysis?.recommendation).toBe("escalate_low_runway");
+      const check = result.checks.find(
+        (c) => c.name === "runway_liquidity_precheck",
+      );
+      expect(check?.passed).toBe(false);
+      expect(check?.detail).toContain("imminent renewal deadline");
     });
   });
 });

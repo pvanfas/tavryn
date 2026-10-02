@@ -4,9 +4,8 @@ import { z } from "zod";
 import { getAgentLanguageModel } from "@/lib/agent/provider";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logAgentAction } from "@/lib/tools/audit";
+
 import {
-  toolProposeApprovalRequest,
-  toolProposeCreateReceipt,
   toolProposeNegotiation,
 } from "./action-tools";
 import { isPromptInjection } from "./guardrails";

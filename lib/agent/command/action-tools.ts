@@ -1,6 +1,7 @@
 import { evaluateContractOpportunity } from "@/lib/heuristics";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
+
 import { runNegotiationLoop } from "../negotiate";
 import { ActionConfirmationData } from "./types";
 

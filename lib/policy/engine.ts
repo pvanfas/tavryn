@@ -175,6 +175,80 @@ export function checkPolicy(
     });
   }
 
+  // 5b. Runway & Liquidity Pre-Check (Evaluate active cash balance against 30-day obligations)
+  let runwayAnalysis: import("./types").RunwayAnalysis | undefined = undefined;
+  if (
+    context.treasuryBalance !== undefined &&
+    (context.upcomingObligations30d !== undefined ||
+      context.monthlyBurnRate !== undefined)
+  ) {
+    const treasury = Number(context.treasuryBalance);
+    const obligations30d = Number(
+      context.upcomingObligations30d ?? context.monthlyBurnRate ?? 0,
+    );
+    const daysLeft =
+      context.daysUntilRenewal !== undefined
+        ? Number(context.daysUntilRenewal)
+        : 30;
+    const projectedLiquidity = treasury - amount;
+    const hasSufficientRunway = projectedLiquidity >= obligations30d;
+
+    let recommendation:
+      | "execute_now"
+      | "schedule_deferred"
+      | "escalate_low_runway" = "execute_now";
+
+    if (!hasSufficientRunway) {
+      if (daysLeft > 7) {
+        recommendation = "schedule_deferred";
+        checks.push({
+          name: "runway_liquidity_precheck",
+          passed: false,
+          detail: `Projected liquidity ($${projectedLiquidity.toLocaleString()}) drops below 30-day obligations ($${obligations30d.toLocaleString()}). With renewal ${daysLeft} days away, recommend scheduling escrow closer to deadline to preserve operating working capital.`,
+        });
+        reasons.push(
+          `Working capital buffer tight: Deferring escrow commitment closer to renewal date (${daysLeft}d remaining) recommended to protect 30-day operating runway ($${obligations30d.toLocaleString()})`,
+        );
+        needsHuman = true;
+      } else {
+        recommendation = "escalate_low_runway";
+        checks.push({
+          name: "runway_liquidity_precheck",
+          passed: false,
+          detail: `Projected liquidity ($${projectedLiquidity.toLocaleString()}) falls below 30-day obligations ($${obligations30d.toLocaleString()}) with imminent renewal deadline (${daysLeft}d left). Supervisor authorization required.`,
+        });
+        reasons.push(
+          `30-day operating liquidity deficit ($${obligations30d.toLocaleString()}) with immediate renewal deadline (${daysLeft}d)`,
+        );
+        needsHuman = true;
+      }
+    } else {
+      recommendation = "execute_now";
+      checks.push({
+        name: "runway_liquidity_precheck",
+        passed: true,
+        detail: `Projected liquidity ($${projectedLiquidity.toLocaleString()}) safely covers 30-day commitments ($${obligations30d.toLocaleString()}). Operating runway verified healthy (${daysLeft}d to renewal).`,
+      });
+    }
+
+    runwayAnalysis = {
+      treasuryBalance: treasury,
+      transactionAmount: amount,
+      projectedLiquidity,
+      upcomingObligations30d: obligations30d,
+      daysUntilRenewal: daysLeft,
+      hasSufficientRunway,
+      recommendation,
+    };
+  } else {
+    checks.push({
+      name: "runway_liquidity_precheck",
+      passed: true,
+      detail:
+        "Runway liquidity pre-check verified (no external 30-day commitments configured in context)",
+    });
+  }
+
   // 6. Human approval required above threshold
   const humanAbove = Number(policy.human_approval_required_above);
   const withinHumanThreshold = amount <= humanAbove;
@@ -239,5 +313,6 @@ export function checkPolicy(
         : ["Transaction complies with all deterministic policy rules"],
     approved,
     requiresHumanApproval,
+    runwayAnalysis,
   };
 }

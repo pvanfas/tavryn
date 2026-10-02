@@ -2,6 +2,7 @@ import { get_vendor_history } from "@/lib/memory";
 import { getServiceSupabase } from "@/lib/supabase";
 import { find_vendor_options, get_usage } from "@/lib/tools";
 import { logAgentAction } from "@/lib/tools/audit";
+
 import { DraftEmailResult } from "./types";
 
 async function execTool<T>(tool: any, input: any): Promise<T> {
