@@ -218,7 +218,7 @@ export async function executeCircleContractCall(params: {
   walletId: string;
   contractAddress: string;
   abiFunctionSignature: string;
-  abiParameters: any[];
+  abiParameters: unknown[];
   idempotencyKey?: string;
   refId?: string;
 }): Promise<{ transactionId: string; txHash?: string; state?: string }> {
@@ -241,8 +241,9 @@ export async function executeCircleContractCall(params: {
   }
 
   // Poll for txHash
-  let txHash = (response.data as any)?.txHash;
-  let state = (response.data as any)?.state;
+  const resData = response.data as { txHash?: string; state?: string } | undefined;
+  let txHash = resData?.txHash;
+  let state = resData?.state;
   for (let i = 0; i < 15 && !txHash; i++) {
     await new Promise((r) => setTimeout(r, 1500));
     try {
@@ -255,8 +256,9 @@ export async function executeCircleContractCall(params: {
         );
       }
       if (txHash) break;
-    } catch (e: any) {
-      if (e.message?.includes("failed")) throw e;
+    } catch (e: unknown) {
+      const err = e as Error;
+      if (err.message?.includes("failed")) throw err;
     }
   }
 

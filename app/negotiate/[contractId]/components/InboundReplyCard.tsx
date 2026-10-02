@@ -41,7 +41,7 @@ export function InboundReplyCard({
   onRecordSavingsWithoutPayment,
 }: InboundReplyCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 dark:from-[#111714] dark:to-[#0f1412] p-5 shadow-2xs">
+    <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 dark:from-[#111714] dark:via-[#131b17] dark:to-[#0f1412] p-5 shadow-2xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/70">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">

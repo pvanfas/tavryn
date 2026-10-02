@@ -233,7 +233,7 @@ export async function consumeApprovalToken(
   );
 
   if (existingApp && existingApp.length > 0) {
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       status: decidedStatus,
       reason: decisionReason,
       decided_at: decidedAt,

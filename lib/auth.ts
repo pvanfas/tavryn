@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, Session, User } from "@supabase/supabase-js";
 
 import { AUTH_COOKIE_MAX_AGE_SECONDS, DEFAULT_SITE_URL } from "@/lib/constants";
 
@@ -24,7 +24,7 @@ export function getBrowserSupabase() {
  * Get the current session (browser-side).
  * Returns null if not authenticated.
  */
-export async function getSession() {
+export async function getSession(): Promise<Session | null> {
   const client = getBrowserSupabase();
   const { data } = await client.auth.getSession();
   if (data.session) return data.session;
@@ -35,12 +35,18 @@ export async function getSession() {
   ) {
     return {
       access_token: "demo-tavryn-session-token",
+      refresh_token: "demo-refresh-token",
+      expires_in: 3600,
+      token_type: "bearer",
       user: {
         id: "demo-user-001",
-        email: "demo@tavryn.io",
+        app_metadata: {},
         user_metadata: { full_name: "Demo Operator", name: "Demo Operator" },
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+        email: "demo@tavryn.io",
       },
-    } as any;
+    } as unknown as Session;
   }
   return null;
 }
@@ -48,7 +54,7 @@ export async function getSession() {
 /**
  * Get current user (browser-side).
  */
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<User | null> {
   const client = getBrowserSupabase();
   const { data } = await client.auth.getUser();
   if (data.user) return data.user;
@@ -59,9 +65,12 @@ export async function getCurrentUser() {
   ) {
     return {
       id: "demo-user-001",
-      email: "demo@tavryn.io",
+      app_metadata: {},
       user_metadata: { full_name: "Demo Operator", name: "Demo Operator" },
-    } as any;
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+      email: "demo@tavryn.io",
+    } as unknown as User;
   }
   return null;
 }

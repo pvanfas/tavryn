@@ -59,10 +59,11 @@ The application features a responsive sidebar navigation on desktop and an optim
    - **Seat Utilization Metrics** (provisioned seats vs. active 30-day logins).
    - **Lifecycle Status** (`active`, `negotiating`, `pending_approval`, `settled`).
 
-### Importing Vendor Statements
+### Importing Vendor Statements & Invoices
 
-- Upload your monthly credit card statements (CSV) or vendor renewal notices (PDF).
-- Tavryn automatically extracts vendor names, recurrence intervals, price-per-seat changes, and flags surprise rate increases.
+- **Quick Invoice Dropzone:** Drag and drop vendor renewal invoices (PDF) or bank/card statements (CSV) directly onto the dropzone in `/contracts` or `/opportunities`.
+- **Automated Metadata Extraction:** In-memory PDF parser and CSV parser extract vendor names, license counts, renewal dates, and recurring pricing with zero server-side disk storage.
+- **Immediate Renewal Sync:** Extracted subscriptions are previewed in an interactive review table where operators can adjust categories, confirm terms, and immediately register contracts into the autonomous renewal pipeline.
 
 ---
 
@@ -118,7 +119,11 @@ When an agreement exceeds your autonomous limit or is challenged by the Reviewer
 
 ## 7. Treasury Operations & Arc Escrow Settlement
 
-Tavryn settles all agreements using Circle Smart Contract Account (SCA) wallets deployed on **Arc Testnet**:
+### Managing Treasury & Testnet Funding
+
+- **Real-Time Arc L1 Balance:** View live Circle agent Smart Contract Account (SCA) USDC balance and total committed capital across active escrows.
+- **In-App Circle Faucet:** Click the **Get Testnet USDC** button in `/treasury` to request testnet funds directly from Circle's faucet without leaving the dashboard.
+- **Active Escrow Locks:** Inspect in-flight escrows. Under Migration 0014, contracts enforce an active escrow lock (`idx_transactions_active_contract`), ensuring only one funded escrow per contract is active at any time.
 
 ### Understanding the Settlement Flow
 

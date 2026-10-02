@@ -59,6 +59,13 @@ export interface ContractData {
     reputation_score: number | null;
     is_simulated: boolean | null;
   } | null;
+  vendor?: {
+    name: string;
+    category: string;
+    contact: string | null;
+    reputation_score: number | null;
+    is_simulated: boolean | null;
+  } | null;
 }
 
 export interface ExtractedTerms {

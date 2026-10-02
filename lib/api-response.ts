@@ -12,7 +12,7 @@ export function apiSuccess<T>(
 ): NextResponse {
   const payload =
     typeof data === "object" && data !== null && !Array.isArray(data)
-      ? { success: true, ...(data as Record<string, any>), data }
+      ? { success: true, ...(data as Record<string, unknown>), data }
       : { success: true, data };
 
   return NextResponse.json(payload, {
@@ -24,7 +24,7 @@ export function apiSuccess<T>(
 export function apiError(
   message: string,
   status = 400,
-  details?: any,
+  details?: unknown,
   options?: ApiResponseOptions,
 ): NextResponse {
   return NextResponse.json(

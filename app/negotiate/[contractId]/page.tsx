@@ -67,24 +67,41 @@ export default function NegotiationDetailPage({
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`/api/negotiate/${contractId}`);
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to load negotiation data");
+      const res = await fetch(`/api/agent/negotiate/${contractId}`);
+      const contentType = res.headers.get("content-type") || "";
+      let json: Record<string, any> | null = null;
+
+      if (contentType.includes("application/json")) {
+        try {
+          json = await res.json();
+        } catch {
+          json = null;
+        }
       }
 
-      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          json?.error ||
+            `Failed to load negotiation data (HTTP ${res.status})`,
+        );
+      }
+
+      if (!json) {
+        throw new Error("Invalid response format received from server");
+      }
+
       setContract(json.contract);
       setNegotiation(json.negotiation);
-      setVendorMemory(json.vendor_memory || null);
+      setVendorMemory(json.vendor_memory || json.memory || null);
 
-      if (json.contract?.vendors?.is_simulated) {
+      const activeVendor = json.contract?.vendor || json.contract?.vendors;
+      if (activeVendor?.is_simulated) {
         setMode("simulated");
       } else {
         setMode("real");
       }
     } catch (err) {
-      console.error(err);
+      console.error("fetchData error:", err);
       setError((err as Error).message);
     } finally {
       setLoading(false);
@@ -100,23 +117,51 @@ export default function NegotiationDetailPage({
       setRunning(true);
       setError(null);
 
-      const res = await fetch(`/api/negotiate/${contractId}`, {
+      const res = await fetch(`/api/agent/negotiate/${contractId}`, {
         method: "POST",
       });
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Negotiation execution failed");
+      const contentType = res.headers.get("content-type") || "";
+      let payload: Record<string, any> | null = null;
+      if (contentType.includes("application/json")) {
+        try {
+          payload = await res.json();
+        } catch {
+          payload = null;
+        }
       }
 
-      const result = await res.json();
-      setNegotiation(result.negotiation);
-      setExplanation(result.explanation || null);
-      if (result.vendor_memory) {
-        setVendorMemory(result.vendor_memory);
+      if (!res.ok) {
+        throw new Error(
+          payload?.error ||
+            `Negotiation execution failed (HTTP ${res.status})`,
+        );
       }
+
+      const result = payload?.result || payload;
+      if (result?.negotiation) {
+        setNegotiation(result.negotiation);
+      } else if (result?.conversation) {
+        setNegotiation((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: result.status,
+                final_price: result.finalPrice,
+                savings: result.savings,
+                rounds: result.rounds,
+                conversation: result.conversation,
+              }
+            : null,
+        );
+      }
+      setExplanation(result?.explanation || null);
+      if (result?.vendor_memory || result?.memoryUsed) {
+        setVendorMemory(result.vendor_memory || result.memoryUsed);
+      }
+      await fetchData();
     } catch (err) {
-      console.error(err);
+      console.error("handleStartNegotiation error:", err);
       setError((err as Error).message);
     } finally {
       setRunning(false);
@@ -128,20 +173,31 @@ export default function NegotiationDetailPage({
       setDraftingEmail(true);
       setError(null);
 
-      const res = await fetch(`/api/negotiate/${contractId}/draft`, {
+      const res = await fetch(`/api/agent/negotiate/${contractId}/outreach`, {
         method: "POST",
       });
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to draft outreach email");
+      const contentType = res.headers.get("content-type") || "";
+      let data: Record<string, any> | null = null;
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
       }
 
-      const data = await res.json();
-      setDraftEmail(data.draft);
+      if (!res.ok) {
+        throw new Error(
+          data?.error ||
+            `Failed to draft outreach email (HTTP ${res.status})`,
+        );
+      }
+
+      setDraftEmail(data?.draft || null);
       setEmailApproved(false);
     } catch (err) {
-      console.error(err);
+      console.error("handleDraftEmail error:", err);
       setError((err as Error).message);
     } finally {
       setDraftingEmail(false);
@@ -163,28 +219,41 @@ export default function NegotiationDetailPage({
       setError(null);
       setSaveSuccess(null);
 
-      const res = await fetch(`/api/negotiate/${contractId}/reply`, {
+      const res = await fetch(`/api/agent/negotiate/${contractId}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rawReply: replyText }),
       });
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to process vendor reply");
+      const contentType = res.headers.get("content-type") || "";
+      let data: Record<string, any> | null = null;
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
       }
 
-      const data = await res.json();
-      setExtractedResult(data.result);
-      if (data.result.negotiation) {
-        setNegotiation(data.result.negotiation);
+      if (!res.ok) {
+        throw new Error(
+          data?.error ||
+            `Failed to process vendor reply (HTTP ${res.status})`,
+        );
       }
-      if (data.result.explanation) {
-        setExplanation(data.result.explanation);
+
+      if (data?.result) {
+        setExtractedResult(data.result);
+        if (data.result.negotiation) {
+          setNegotiation(data.result.negotiation);
+        }
+        if (data.result.explanation) {
+          setExplanation(data.result.explanation);
+        }
       }
       await fetchData();
     } catch (err) {
-      console.error(err);
+      console.error("handleProcessReply error:", err);
       setError((err as Error).message);
     } finally {
       setProcessingReply(false);
@@ -197,31 +266,46 @@ export default function NegotiationDetailPage({
       setRecordingSavings(true);
       setError(null);
 
-      const res = await fetch(`/api/negotiate/${contractId}/record-savings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          negotiationId: negotiation?.id,
-          finalPrice:
-            extractedResult.extraction.counter_offer ||
-            negotiation?.current_offer,
-          reason: extractedResult.reason,
-          notes: extractedResult.extraction.notes,
-        }),
-      });
+      const res = await fetch(
+        `/api/agent/negotiate/${contractId}/record-savings`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            negotiationId: negotiation?.id,
+            finalPrice:
+              extractedResult.extraction.counter_offer ||
+              negotiation?.current_offer,
+            reason: extractedResult.reason,
+            notes: extractedResult.extraction.notes,
+          }),
+        },
+      );
 
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to record savings");
+      const contentType = res.headers.get("content-type") || "";
+      let data: Record<string, any> | null = null;
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
       }
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          data?.error || `Failed to record savings (HTTP ${res.status})`,
+        );
+      }
+
+      const savedAmount =
+        data?.result?.savings || data?.savings || extractedResult.extraction.counter_offer || 0;
       setSaveSuccess(
-        `Successfully captured $${Number(data.savings || 0).toLocaleString()} in annual recurring savings off-chain. Traction metrics updated!`,
+        `Successfully captured $${Number(savedAmount).toLocaleString()} in annual recurring savings off-chain. Traction metrics updated!`,
       );
       await fetchData();
     } catch (err) {
-      console.error(err);
+      console.error("handleRecordSavingsWithoutPayment error:", err);
       setError((err as Error).message);
     } finally {
       setRecordingSavings(false);
@@ -241,15 +325,19 @@ export default function NegotiationDetailPage({
     );
   }
 
-  const baselinePrice = negotiation?.original_price ?? contract?.current_price ?? 0;
-  const currentOffer = negotiation?.final_price ?? negotiation?.current_offer ?? baselinePrice;
+  const baselinePrice =
+    negotiation?.original_price ?? contract?.current_price ?? 0;
+  const currentOffer =
+    negotiation?.final_price ?? negotiation?.current_offer ?? baselinePrice;
   const savings = baselinePrice - currentOffer;
   const savingsPct = baselinePrice > 0 ? (savings / baselinePrice) * 100 : 0;
+  const activeVendor = contract?.vendor || contract?.vendors;
+  const isSimulated = Boolean(activeVendor?.is_simulated);
 
   return (
     <AppShell
       businessName="Tavryn Demo Co"
-      isReal={!contract?.vendors?.is_simulated}
+      isReal={!isSimulated}
       breadcrumbs={[
         { label: "Overview", href: "/" },
         { label: "Negotiations", href: "/negotiations" },
@@ -290,11 +378,11 @@ export default function NegotiationDetailPage({
               </H1>
               <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
                 {contract?.category ||
-                  contract?.vendors?.category ||
+                  activeVendor?.category ||
                   "Subscription"}
               </span>
-              {contract?.vendors ? (
-                contract.vendors.is_simulated ? (
+              {activeVendor ? (
+                activeVendor.is_simulated ? (
                   <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400">
                     Simulated Vendor
                   </span>
@@ -308,9 +396,9 @@ export default function NegotiationDetailPage({
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
               Account Executive:{" "}
               <span className="font-semibold text-slate-700 dark:text-slate-300">
-                {contract?.vendors?.name || contract?.service}
+                {activeVendor?.name || contract?.service}
               </span>
-              {contract?.vendors?.contact && ` (${contract.vendors.contact})`}
+              {activeVendor?.contact && ` (${activeVendor.contact})`}
             </p>
           </div>
 

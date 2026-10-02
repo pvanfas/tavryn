@@ -230,7 +230,7 @@ function deterministicInvoiceParser(
   text: string,
   fileName: string,
 ): ExtractedInvoiceData {
-  const lower = text.toLowerCase();
+  const lower = `${text} ${fileName}`.toLowerCase();
 
   // Detect Vendor
   let vendorName = "Enterprise Vendor";

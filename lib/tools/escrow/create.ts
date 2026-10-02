@@ -154,16 +154,6 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
                 null;
             }
           }
-
-          let negRecord: any = null;
-          if (negId) {
-            const { data: neg } = await supabase
-              .from("negotiations")
-              .select("id, savings, original_price")
-              .eq("id", negId)
-              .maybeSingle();
-            negRecord = neg;
-          }
         }
       }
 

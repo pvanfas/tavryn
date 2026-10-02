@@ -65,6 +65,7 @@ export async function GET(req: Request, { params }: RouteProps) {
       negotiation: status.negotiation,
       contract,
       memory,
+      vendor_memory: memory,
     });
   } catch (err) {
     logger.error("GET negotiate error", err);

@@ -29,7 +29,7 @@ function sanitizeString(str: string): string {
   return sanitized;
 }
 
-function sanitizeObject(obj: any, depth = 0): any {
+function sanitizeObject(obj: unknown, depth = 0): unknown {
   if (depth > 6) return "[DEPTH_LIMIT]";
   if (obj === null || obj === undefined) return obj;
 
@@ -45,7 +45,7 @@ function sanitizeObject(obj: any, depth = 0): any {
     return obj.map((item) => sanitizeObject(item, depth + 1));
   }
 
-  const result: Record<string, any> = {};
+  const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     const isSensitiveKey = SENSITIVE_KEY_PATTERNS.some((pat) => pat.test(key));
     if (isSensitiveKey) {
@@ -58,7 +58,7 @@ function sanitizeObject(obj: any, depth = 0): any {
 }
 
 export const logger = {
-  info: (message: string, meta?: any) => {
+  info: (message: string, meta?: unknown) => {
     const cleanMsg = sanitizeString(message);
     if (meta !== undefined) {
       console.log(`[INFO] ${cleanMsg}`, JSON.stringify(sanitizeObject(meta)));
@@ -66,7 +66,7 @@ export const logger = {
       console.log(`[INFO] ${cleanMsg}`);
     }
   },
-  warn: (message: string, meta?: any) => {
+  warn: (message: string, meta?: unknown) => {
     const cleanMsg = sanitizeString(message);
     if (meta !== undefined) {
       console.warn(`[WARN] ${cleanMsg}`, JSON.stringify(sanitizeObject(meta)));
@@ -74,7 +74,7 @@ export const logger = {
       console.warn(`[WARN] ${cleanMsg}`);
     }
   },
-  error: (message: string, meta?: any) => {
+  error: (message: string, meta?: unknown) => {
     const cleanMsg = sanitizeString(message);
     if (meta !== undefined) {
       console.error(

@@ -20,6 +20,7 @@ Tavryn's operational capabilities and code health have reached full production m
 ## What actually got built
 
 ### 1. Active Escrow Lock & Idempotency Hardening
+
 - **PostgreSQL Migration (`supabase/migrations/0014_contract_active_escrow_lock.sql`):**
   ```sql
   CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_active_contract
@@ -29,14 +30,17 @@ Tavryn's operational capabilities and code health have reached full production m
 - **Error Handling & Reconciliation (`lib/tools/escrow/create.ts`):** Caught PostgreSQL error `23505` conflicts specifically targeting `idx_transactions_active_contract` to return a clean duplicate-rejection response with the existing in-flight transaction details.
 
 ### 2. Embedded Testnet Faucet Integration
+
 - **Faucet Endpoint (`app/api/wallet/faucet/route.ts`):** Validates the agent wallet address and requests testnet USDC directly from Circle's funding infrastructure with rate-limiting and transaction status feedback.
 - **Interactive UI (`components/CircleFaucetButton.tsx`):** Provides a one-click faucet funding button with loading indicators and live balance refresh.
 
 ### 3. Quick Invoice Ingestion
+
 - **Dropzone Component (`components/QuickInvoiceDropzone.tsx`):** Drag-and-drop interface supporting PDF and CSV uploads with client-side file validation and visual upload progress.
 - **Extraction Pipeline:** Integrated with `lib/invoice-extraction.ts` and `lib/csv.ts` for instant parsing of vendor name, seat count, recurrence period, and total contract amount.
 
 ### 4. Smart Contract RBAC Hardening
+
 - **Bytecode Verifier Invariant (`contracts/contracts/ArcEscrow.sol`):**
   ```solidity
   require(_verifier != _agent, "ArcEscrow: Verifier cannot be agent");
@@ -49,6 +53,7 @@ Tavryn's operational capabilities and code health have reached full production m
   ```
 
 ### 5. Modular Code Architecture
+
 - **`lib/policy/`**: Split into `engine.ts` (deterministic checks), `enforcement.ts` (execution authorization & single-use tokens), and `types.ts`.
 - **`lib/tools/escrow/`**: Split into `create.ts`, `release.ts`, `refund.ts`, `dispute.ts`, and `idempotency.ts`.
 - **`lib/circle/`**: Split into `client.ts`, `balances.ts`, `escrow-contract.ts`, and `config.ts`.
@@ -58,6 +63,7 @@ Tavryn's operational capabilities and code health have reached full production m
 - **UI Component Refactors**: Modularized `OpportunitiesTable.tsx`, `CommandBar.tsx`, `decision/[contractId]`, `metrics`, and `onboard` into dedicated component folders.
 
 ### 6. Circle Skills & Documentation Integration
+
 - Added 18 specialized skills under `.agents/skills/` covering Developer-Controlled Wallets, Gateway Nanopayments, Smart Contract Platform, and Arc L1.
 - Pinned configuration in `skills-lock.json`.
 - Configured Mintlify MCP server in `.agents/mcp_config.json`.

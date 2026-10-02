@@ -460,4 +460,3 @@ export function CommandBar({
     </div>
   );
 }
-export default CommandBar;
