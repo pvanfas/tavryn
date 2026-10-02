@@ -2,50 +2,29 @@
 
 import {
   AlertTriangle,
-  ArrowRight,
   Bot,
-  Calendar,
-  Check,
-  CheckCircle2,
-  ExternalLink,
   History,
   Loader2,
-  Lock,
   Send,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
-  TrendingDown,
-  UserCheck,
-  Wallet,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
 import { CommandCard } from "@/lib/agent/command";
 
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-  card?: CommandCard;
-  isStreaming?: boolean;
-}
-
-interface CommandBarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  businessId?: string;
-  businessName?: string;
-}
-
-const SUGGESTED_CHIPS = [
-  "What renews in the next 30 days?",
-  "Which contracts have the biggest savings?",
-  "What is pending my approval?",
-  "How much have we saved this month?",
-];
+import {
+  ActionConfirmationCard,
+  ApprovalsCard,
+  ChatMessage,
+  CommandBarProps,
+  DecisionExplanationCard,
+  RenewalsCard,
+  SavingsCard,
+  SavingsSummaryCard,
+  SUGGESTED_CHIPS,
+} from "./command-bar";
 
 export function CommandBar({
   isOpen,
@@ -233,7 +212,7 @@ export function CommandBar({
 
   const handleConfirmAction = async (
     actionId: string,
-    action: "start_negotiation" | "request_approval" | "create_receipt",
+    action: string,
     params: Record<string, unknown>,
   ) => {
     try {
@@ -400,366 +379,43 @@ export function CommandBar({
                   <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
 
-                {/* Structured Cards (Rendered deterministically from tool output) */}
+                {/* Structured Cards */}
                 {msg.card && (
                   <div className="mt-2 text-left max-w-full">
-                    {/* 1. Renewals Card */}
                     {msg.card.type === "renewals" && (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141b18] overflow-hidden shadow-xs">
-                        <div className="px-4 py-2.5 bg-slate-50 dark:bg-[#18221e] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                          <span className="font-bold text-[11px] text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-[#107e65]" />
-                            Upcoming Contract Renewals
-                          </span>
-                          <Link
-                            href="/contracts"
-                            onClick={onClose}
-                            className="text-[#107e65] dark:text-[#34d399] hover:underline text-[10px] font-bold flex items-center gap-1"
-                          >
-                            <span>All Contracts</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                          {msg.card.data.map((item) => (
-                            <div
-                              key={item.id}
-                              className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
-                            >
-                              <div>
-                                <div className="font-bold text-slate-900 dark:text-white">
-                                  {item.service}
-                                </div>
-                                <div className="text-[10px] text-slate-400">
-                                  Renews{" "}
-                                  {new Date(
-                                    item.renewalDate,
-                                  ).toLocaleDateString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                  {item.seatCount && item.activeSeats && (
-                                    <>
-                                      {" "}
-                                      &bull; {item.activeSeats}/{item.seatCount}{" "}
-                                      seats active
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-mono font-bold text-slate-900 dark:text-white">
-                                  ${item.currentPrice.toLocaleString()}
-                                </div>
-                                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">
-                                  {item.status}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <RenewalsCard card={msg.card} onClose={onClose} />
                     )}
 
-                    {/* 2. Biggest Savings Card */}
                     {msg.card.type === "savings" && (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141b18] overflow-hidden shadow-xs">
-                        <div className="px-4 py-2.5 bg-slate-50 dark:bg-[#18221e] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                          <span className="font-bold text-[11px] text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                            <TrendingDown className="h-3.5 w-3.5 text-emerald-600" />
-                            Ranked Savings Opportunities
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            Ranked by potential cut
-                          </span>
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                          {msg.card.data.map((item) => (
-                            <div
-                              key={item.id}
-                              className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
-                            >
-                              <div className="space-y-0.5">
-                                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                  <span>{item.service}</span>
-                                  <span className="text-[10px] font-semibold text-slate-400">
-                                    (${item.currentPrice.toLocaleString()}{" "}
-                                    baseline)
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                                  {item.explanation}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3 shrink-0">
-                                <div className="text-right font-mono">
-                                  <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                                    -${item.potentialSavings.toLocaleString()}
-                                  </div>
-                                  <div className="text-[9px] text-slate-400">
-                                    {item.savingsPct}% cut
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleSubmit(`Negotiate ${item.service}`)
-                                  }
-                                  className="px-2.5 py-1 rounded-lg bg-[#107e65] hover:bg-[#0d6b55] text-white text-[10px] font-bold shadow-2xs transition-colors cursor-pointer"
-                                >
-                                  Negotiate
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <SavingsCard
+                        card={msg.card}
+                        onNegotiate={(q) => handleSubmit(q)}
+                      />
                     )}
 
-                    {/* 3. Pending Approvals Card */}
                     {msg.card.type === "approvals" && (
-                      <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/20 overflow-hidden shadow-xs">
-                        <div className="px-4 py-2.5 bg-amber-100/50 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between">
-                          <span className="font-bold text-[11px] text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-                            <UserCheck className="h-3.5 w-3.5 text-amber-600" />
-                            Awaiting Supervisor Approval
-                          </span>
-                          <Link
-                            href="/approvals"
-                            onClick={onClose}
-                            className="text-amber-800 dark:text-amber-300 hover:underline text-[10px] font-bold flex items-center gap-1"
-                          >
-                            <span>Open Approvals</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        </div>
-                        <div className="divide-y divide-amber-100 dark:divide-amber-900/40">
-                          {msg.card.data.map((item) => (
-                            <div
-                              key={item.id}
-                              className="p-3 flex items-center justify-between gap-3"
-                            >
-                              <div className="space-y-0.5">
-                                <div className="font-bold text-slate-900 dark:text-white">
-                                  {item.service}
-                                </div>
-                                <div className="text-[10px] text-slate-600 dark:text-slate-400">
-                                  {item.reason}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3 shrink-0">
-                                {item.amount > 0 && (
-                                  <div className="font-mono font-bold text-slate-900 dark:text-white text-right">
-                                    ${item.amount.toLocaleString()} USDC
-                                  </div>
-                                )}
-                                <Link
-                                  href={item.link}
-                                  onClick={onClose}
-                                  className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold shadow-2xs transition-colors"
-                                >
-                                  Review
-                                </Link>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <ApprovalsCard card={msg.card} onClose={onClose} />
                     )}
 
-                    {/* 4. Decision Explanation Card */}
                     {msg.card.type === "decision_explanation" && (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141b18] p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white text-xs">
-                              {msg.card.data.service} Negotiation Breakdown
-                            </span>
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/10 text-[#107e65] uppercase">
-                              {msg.card.data.status}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {msg.card.data.rounds} rounds
-                          </span>
-                        </div>
-
-                        {/* Price Delta Highlights */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-400 uppercase block">
-                              Baseline
-                            </span>
-                            <span className="font-mono font-bold text-slate-400 line-through text-xs">
-                              ${msg.card.data.originalPrice.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-500 uppercase block">
-                              Accepted
-                            </span>
-                            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">
-                              ${msg.card.data.finalPrice.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-950/20 border border-emerald-500/20 text-[#107e65] dark:text-[#34d399]">
-                            <span className="text-[10px] uppercase block font-bold">
-                              Annual Cut
-                            </span>
-                            <span className="font-mono font-bold text-xs">
-                              -${msg.card.data.savings.toLocaleString()} (
-                              {msg.card.data.savingsPct}%)
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Rationale and Signals */}
-                        <div className="space-y-1.5 pt-1">
-                          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                            {msg.card.data.rationale}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {msg.card.data.telemetrySignals.map(
-                              (signal, sIdx) => (
-                                <span
-                                  key={sIdx}
-                                  className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400"
-                                >
-                                  &bull; {signal}
-                                </span>
-                              ),
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                          <Link
-                            href={msg.card.data.link}
-                            onClick={onClose}
-                            className="inline-flex items-center gap-1 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] hover:underline"
-                          >
-                            <span>Inspect Decision Transcript</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </div>
-                      </div>
+                      <DecisionExplanationCard
+                        card={msg.card}
+                        onClose={onClose}
+                      />
                     )}
 
-                    {/* 5. Savings Summary Card */}
                     {msg.card.type === "savings_summary" && (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141b18] p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <Wallet className="h-3.5 w-3.5 text-[#107e65]" />
-                            Cumulative Procurement Savings (
-                            {msg.card.data.period})
-                          </span>
-                          <Link
-                            href={msg.card.data.link}
-                            onClick={onClose}
-                            className="text-[#107e65] dark:text-[#34d399] hover:underline text-[10px] font-bold flex items-center gap-1"
-                          >
-                            <span>Full Telemetry</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center">
-                          <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#107e65] dark:text-[#34d399]">
-                            <span className="text-[10px] uppercase font-bold block">
-                              Negotiated Savings
-                            </span>
-                            <span className="font-mono font-bold text-base">
-                              $
-                              {msg.card.data.negotiatedSavings.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-500 uppercase block">
-                              Settled On-Chain
-                            </span>
-                            <span className="font-mono font-bold text-slate-900 dark:text-white text-base">
-                              ${msg.card.data.realizedSavings.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 col-span-2 sm:col-span-1">
-                            <span className="text-[10px] text-slate-500 uppercase block">
-                              Savings Rate
-                            </span>
-                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base">
-                              {msg.card.data.savingsRatePct}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                      <SavingsSummaryCard card={msg.card} onClose={onClose} />
                     )}
 
-                    {/* 6. Action Confirmation Card */}
                     {msg.card.type === "action_confirmation" && (
-                      <div className="rounded-xl border border-amber-200 dark:border-amber-900/70 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between border-b border-amber-200/80 dark:border-amber-900/60 pb-2">
-                          <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-200 font-bold text-xs">
-                            <ShieldAlert className="h-4 w-4 text-amber-600" />
-                            <span>Action Confirmation Required</span>
-                          </div>
-                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900 text-amber-900 dark:text-amber-200">
-                            Zero-Trust Boundary
-                          </span>
-                        </div>
-
-                        <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-                          {msg.card.detail}
-                        </p>
-
-                        {/* Confirmation Execution State */}
-                        {confirmedResults[msg.id] ? (
-                          <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#107e65] dark:text-[#34d399] font-bold text-[11px] flex items-center gap-1.5">
-                            <CheckCircle2 className="h-4 w-4 shrink-0" />
-                            <span>{confirmedResults[msg.id]}</span>
-                          </div>
-                        ) : (
-                          <div className="pt-2 flex items-center justify-between gap-3">
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                              <Lock className="h-3 w-3" />
-                              <span>
-                                Actions are never executed automatically from
-                                chat.
-                              </span>
-                            </span>
-
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                disabled={confirmingAction === msg.id}
-                                onClick={() =>
-                                  handleConfirmAction(
-                                    msg.id,
-                                    msg.card?.type === "action_confirmation"
-                                      ? msg.card.action
-                                      : "start_negotiation",
-                                    msg.card?.type === "action_confirmation"
-                                      ? msg.card.params
-                                      : {},
-                                  )
-                                }
-                                className="px-3.5 py-1.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                              >
-                                {confirmingAction === msg.id ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <Check className="h-3.5 w-3.5" />
-                                )}
-                                <span>
-                                  {confirmingAction === msg.id
-                                    ? "Running..."
-                                    : "Confirm & Execute"}
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <ActionConfirmationCard
+                        card={msg.card}
+                        msgId={msg.id}
+                        confirmedResult={confirmedResults[msg.id]}
+                        isConfirming={confirmingAction === msg.id}
+                        onConfirmAction={handleConfirmAction}
+                      />
                     )}
                   </div>
                 )}
@@ -804,3 +460,4 @@ export function CommandBar({
     </div>
   );
 }
+export default CommandBar;

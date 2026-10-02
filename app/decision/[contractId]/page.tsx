@@ -1,109 +1,31 @@
 "use client";
 
 import {
-  AlertOctagon,
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  ArrowRightLeft,
-  Bot,
-  Check,
   CheckCircle2,
-  Copy,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Lock,
-  Receipt,
-  RefreshCw,
   ShieldCheck,
-  Trash2,
   UserCheck,
-  X,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { TransactionHashBadge } from "@/components/TransactionHashBadge";
-import { BodySmall, Caption, H1, H2, Mono } from "@/components/ui/text";
+import { Caption, H1, Mono } from "@/components/ui/text";
 import { SwitchDecisionMatrix } from "@/lib/switching";
 
-interface CheckItem {
-  name: string;
-  passed: boolean;
-  detail: string;
-}
-
-interface PolicyData {
-  max_auto_transaction: number;
-  min_savings: number;
-  human_approval_required_above: number;
-  allowed_categories: string[];
-  category_budgets?: Record<string, number> | null;
-}
-
-interface ContractInfo {
-  id: string;
-  service: string;
-  category: string;
-  baselinePrice: number;
-  proposedPrice: number;
-  annualSavings: number;
-  savingsPct: number;
-  seat_count: number | null;
-  active_seats: number | null;
-  vendor?: {
-    name: string;
-    is_simulated: boolean;
-  } | null;
-  business?: {
-    id: string;
-    name: string;
-    treasury_balance?: number;
-  } | null;
-}
-
-interface DecisionData {
-  contract: ContractInfo;
-  policy: PolicyData;
-  evaluation: {
-    decision: "approved" | "needs_human" | "rejected";
-    checks: CheckItem[];
-    reasons: string[];
-    approved: boolean;
-    requiresHumanApproval: boolean;
-  };
-  approval: {
-    id: string;
-    status: "pending" | "approved" | "rejected";
-    reason?: string;
-    decided_at?: string;
-  } | null;
-  review?: {
-    id: string;
-    business_id: string;
-    contract_id: string;
-    verdict: "agree" | "challenge" | "reject";
-    concerns: Array<{
-      issue: string;
-      severity: "low" | "medium" | "high";
-    }>;
-    suggested_action: string;
-    model: string;
-    created_at: string;
-  } | null;
-}
-
-interface ReceiptItem {
-  id: string;
-  token: string;
-  created_at: string;
-  revoked_at: string | null;
-  show_business_name: boolean;
-  show_vendor_name: boolean;
-}
+import {
+  DecisionData,
+  PolicyChecklistSection,
+  PublicReceiptsSection,
+  ReceiptItem,
+  ReviewerAuditSection,
+  SwitchingAlternativesSection,
+  VendorVerificationSection,
+  VerificationData,
+} from "./components";
 
 export default function DecisionDetailPage({
   params,
@@ -129,6 +51,21 @@ export default function DecisionDetailPage({
   const [switchingMatrix, setSwitchingMatrix] =
     useState<SwitchDecisionMatrix | null>(null);
   const [loadingSwitching, setLoadingSwitching] = useState(false);
+
+  const [verification, setVerification] = useState<VerificationData | null>(
+    null,
+  );
+  const [verifying, setVerifying] = useState(false);
+  const [selectedTamper, setSelectedTamper] = useState<
+    null | "price" | "seats"
+  >(null);
+  const [releaseLoading, setReleaseLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(
+    null,
+  );
 
   const fetchSwitchingMatrix = async () => {
     try {
@@ -242,44 +179,6 @@ export default function DecisionDetailPage({
     }
   };
 
-  const [verification, setVerification] = useState<{
-    verified: boolean;
-    allPassed: boolean;
-    checks: Array<{
-      field: string;
-      name: string;
-      expected: string | number;
-      actual: string | number;
-      passed: boolean;
-      message: string;
-    }>;
-    discrepancies: string[];
-    confirmationDocument?: string;
-    transaction?: {
-      id: string;
-      status: string;
-      tx_hash?: string;
-      amount: number;
-      is_simulated?: boolean;
-    } | null;
-    approval?: {
-      id: string;
-      status: string;
-      reason?: string;
-    } | null;
-  } | null>(null);
-  const [verifying, setVerifying] = useState(false);
-  const [selectedTamper, setSelectedTamper] = useState<
-    null | "price" | "seats"
-  >(null);
-  const [releaseLoading, setReleaseLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  );
-  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(
-    null,
-  );
-
   const fetchVerificationStatus = async () => {
     try {
       const res = await fetch(`/api/decision/${contractId}/verify`);
@@ -363,13 +262,6 @@ export default function DecisionDetailPage({
     }
   };
 
-  useEffect(() => {
-    fetchDecisionData();
-    fetchVerificationStatus();
-    fetchReceipts();
-    fetchSwitchingMatrix();
-  }, [contractId]);
-
   const handleDecision = async (action: "approve" | "reject") => {
     if (!data) return;
     try {
@@ -406,26 +298,12 @@ export default function DecisionDetailPage({
     }
   };
 
-  const getCheckTitle = (name: string): string => {
-    switch (name) {
-      case "category_allowed":
-        return "Category Authorization";
-      case "amount_within_auto_ceiling":
-        return `Autonomous Spend Ceiling (≤ $${data?.policy.max_auto_transaction.toLocaleString()})`;
-      case "savings_threshold":
-        return `Minimum Savings Requirement (≥ $${data?.policy.min_savings.toLocaleString()})`;
-      case "category_budget":
-        return "Category Budget Allocation";
-      case "treasury_balance":
-        return "Treasury Liquidity";
-      case "human_approval_threshold":
-        return `Human Boundary Ceiling (≤ $${data?.policy.human_approval_required_above.toLocaleString()})`;
-      case "valid_numbers":
-        return "Numerical Integrity Validation";
-      default:
-        return name.replace(/_/g, " ");
-    }
-  };
+  useEffect(() => {
+    fetchDecisionData();
+    fetchVerificationStatus();
+    fetchReceipts();
+    fetchSwitchingMatrix();
+  }, [contractId]);
 
   if (loading && !data) {
     return (
@@ -517,7 +395,10 @@ export default function DecisionDetailPage({
               <Caption className="uppercase text-slate-400 dark:text-slate-500 block text-[10px] sm:text-xs">
                 Baseline
               </Caption>
-              <Mono as="p" className="text-xs sm:text-base text-slate-400 line-through">
+              <Mono
+                as="p"
+                className="text-xs sm:text-base text-slate-400 line-through"
+              >
                 ${contract?.baselinePrice.toLocaleString()}
               </Mono>
             </div>
@@ -526,7 +407,10 @@ export default function DecisionDetailPage({
               <Caption className="uppercase text-slate-500 dark:text-slate-400 block text-[10px] sm:text-xs">
                 Negotiated
               </Caption>
-              <Mono as="p" className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold">
+              <Mono
+                as="p"
+                className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold"
+              >
                 ${contract?.proposedPrice.toLocaleString()}
               </Mono>
             </div>
@@ -669,1057 +553,53 @@ export default function DecisionDetailPage({
         </div>
 
         {/* Dual-Agent Reviewer Audit Card */}
-        <div className="mt-8 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#111714] p-5 sm:p-6 shadow-2xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/70 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Reviewer Agent: Dual-LLM Cross-Check
-                  </h3>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
-                    Independent Auditor
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Adversarial second agent reviews deal terms, seat waste, and
-                  benchmark fairness before escrow funding.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleRunReviewer}
-              disabled={reviewing}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 dark:border-purple-800/80 bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all shadow-2xs disabled:opacity-50 cursor-pointer shrink-0"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 shrink-0 ${reviewing ? "animate-spin" : ""}`}
-              />
-              <span>
-                {reviewing
-                  ? "Auditing Deal..."
-                  : data?.review
-                    ? "Re-Run Audit"
-                    : "Run Reviewer Cross-Check"}
-              </span>
-            </button>
-          </div>
-
-          {data?.review ? (
-            <div className="mt-4 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/60 dark:bg-[#141b18]/60">
-                <div className="flex items-center gap-2.5">
-                  {data.review.verdict === "agree" ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Verdict: AGREE</span>
-                    </span>
-                  ) : data.review.verdict === "challenge" ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>Verdict: CHALLENGE</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
-                      <XCircle className="h-4 w-4" />
-                      <span>Verdict: REJECT / ESCALATE</span>
-                    </span>
-                  )}
-
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {data.review.verdict === "agree"
-                      ? "Deal terms cleared by adversarial auditor without reservation."
-                      : data.review.verdict === "challenge"
-                        ? "Auditor recommends re-negotiating before final execution."
-                        : "High risk identified — supervisor intervention strongly advised."}
-                  </span>
-                </div>
-
-                <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 shrink-0">
-                  Model: {data.review.model}
-                </div>
-              </div>
-
-              {data.review.concerns && data.review.concerns.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Identified Commercial &amp; Utilization Concerns:
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {data.review.concerns.map((c, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white dark:bg-slate-900/40 text-xs space-y-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                              c.severity === "high"
-                                ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
-                                : c.severity === "medium"
-                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
-                            }`}
-                          >
-                            {c.severity} Severity
-                          </span>
-                        </div>
-                        <p className="text-slate-800 dark:text-slate-200 font-medium">
-                          {c.issue}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {data.review.suggested_action && (
-                <div className="p-3 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 text-xs">
-                  <span className="font-bold text-purple-900 dark:text-purple-300">
-                    Recommended Supervisor Action:{" "}
-                  </span>
-                  <span className="text-purple-800 dark:text-purple-200">
-                    {data.review.suggested_action}
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-4 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
-              No adversarial audit recorded for this negotiation yet. Click
-              &quot;Run Reviewer Cross-Check&quot; above to trigger independent
-              verification.
-            </div>
-          )}
-        </div>
+        <ReviewerAuditSection
+          review={data?.review}
+          reviewing={reviewing}
+          onRunReviewer={handleRunReviewer}
+        />
 
         {/* Strategic Alternatives Matrix: Switch vs Renegotiate */}
-        <div className="mt-8 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#111714] p-5 sm:p-6 shadow-2xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/70 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                <ArrowRightLeft className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Market Alternatives: Switch vs. Renegotiate
-                  </h3>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                    NPV Migration Audit
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Calculates category migration engineering effort, downtime
-                  risk, and retraining cost vs renegotiated incumbent rates.
-                </p>
-              </div>
-            </div>
+        <SwitchingAlternativesSection
+          contract={contract}
+          switchingMatrix={switchingMatrix}
+          loadingSwitching={loadingSwitching}
+          onRefresh={fetchSwitchingMatrix}
+        />
 
-            <button
-              type="button"
-              onClick={fetchSwitchingMatrix}
-              disabled={loadingSwitching}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-2xs disabled:opacity-50 cursor-pointer shrink-0"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 shrink-0 ${loadingSwitching ? "animate-spin" : ""}`}
-              />
-              <span>
-                {loadingSwitching
-                  ? "Analyzing Alternatives..."
-                  : "Recalculate Matrix"}
-              </span>
-            </button>
-          </div>
-
-          {switchingMatrix ? (
-            <div className="mt-4 space-y-4">
-              {/* Recommendation Banner */}
-              <div
-                className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  switchingMatrix.recommendation.action ===
-                  "stay_and_renegotiate"
-                    ? "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/20"
-                    : "border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {switchingMatrix.recommendation.action ===
-                  "stay_and_renegotiate" ? (
-                    <CheckCircle2 className="h-5 w-5 text-[#107e65] shrink-0" />
-                  ) : (
-                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
-                  )}
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      {switchingMatrix.recommendation.action ===
-                      "stay_and_renegotiate"
-                        ? "Recommendation: Stay & Renegotiate with Incumbent"
-                        : `Alternative Viable: Migrate to ${switchingMatrix.recommendation.targetVendor}`}
-                    </h4>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
-                      {switchingMatrix.recommendation.rationale}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    Policy Invariant
-                  </span>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Human Approval Required to Migrate
-                  </span>
-                </div>
-              </div>
-
-              {/* Mobile Card View (sm:hidden) */}
-              <div className="sm:hidden space-y-3">
-                {/* Incumbent Card */}
-                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-slate-900 dark:text-white">
-                        {contract?.vendor?.name || contract?.service}
-                      </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                        Incumbent
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      Immediate
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] uppercase text-slate-500 block">Annual Cost</span>
-                      <Mono as="span" className="font-bold text-slate-900 dark:text-white">
-                        ${switchingMatrix.renegotiatedPrice.toLocaleString()}
-                      </Mono>
-                    </div>
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] uppercase text-slate-500 block">Migration Friction</span>
-                      <Mono as="span" className="text-slate-400">$0 (None)</Mono>
-                    </div>
-                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                      <span className="text-[10px] uppercase text-emerald-600 dark:text-emerald-400 block">Year 1 Yield</span>
-                      <Mono as="span" className="font-bold text-[#107e65] dark:text-[#34d399]">
-                        +${switchingMatrix.renegotiatedSavings.toLocaleString()}
-                      </Mono>
-                    </div>
-                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                      <span className="text-[10px] uppercase text-emerald-600 dark:text-emerald-400 block">2-Year NPV</span>
-                      <Mono as="span" className="font-bold text-[#107e65] dark:text-[#34d399]">
-                        +${(switchingMatrix.renegotiatedSavings * 2).toLocaleString()}
-                      </Mono>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Competitor Alternative Cards */}
-                {switchingMatrix.competitors.map((comp, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#141b18]/80 space-y-3 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900 dark:text-white">
-                          {comp.vendorName}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          ★ {comp.reputationScore}
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        {comp.paybackMonths < 99 ? `${comp.paybackMonths} mo payback` : "N/A"}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[10px] uppercase text-slate-500 block">Annual Cost</span>
-                        <Mono as="span" className="font-bold text-slate-900 dark:text-white">
-                          ${comp.estimatedPrice.toLocaleString()}
-                        </Mono>
-                      </div>
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[10px] uppercase text-slate-500 block">Switching Friction</span>
-                        <Mono as="span" className="text-rose-600 dark:text-rose-400 font-semibold">
-                          -${comp.switchingCosts.totalSwitchingCost.toLocaleString()}
-                        </Mono>
-                      </div>
-                      <div
-                        className={`p-2 rounded-lg border ${
-                          comp.netYear1Savings > 0
-                            ? "bg-emerald-500/10 border-emerald-500/20"
-                            : "bg-rose-500/10 border-rose-500/20"
-                        }`}
-                      >
-                        <span
-                          className={`text-[10px] uppercase block ${
-                            comp.netYear1Savings > 0
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          Year 1 Yield
-                        </span>
-                        <Mono
-                          as="span"
-                          className={`font-bold ${
-                            comp.netYear1Savings > 0
-                              ? "text-[#107e65] dark:text-[#34d399]"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {comp.netYear1Savings > 0 ? "+" : ""}$
-                          {comp.netYear1Savings.toLocaleString()}
-                        </Mono>
-                      </div>
-                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[10px] uppercase text-slate-500 block">2-Year NPV</span>
-                        <Mono
-                          as="span"
-                          className={`font-bold ${
-                            comp.netYear2Savings > switchingMatrix.renegotiatedSavings * 2
-                              ? "text-purple-600 dark:text-purple-400"
-                              : "text-slate-800 dark:text-slate-200"
-                          }`}
-                        >
-                          {comp.netYear2Savings > 0 ? "+" : ""}$
-                          {comp.netYear2Savings.toLocaleString()}
-                        </Mono>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Competitors & Incumbent Comparison Table */}
-              <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
-                <table className="w-full text-left text-xs font-sans border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      <Caption as="th" className="py-3 px-3.5">
-                        Vendor Option
-                      </Caption>
-                      <Caption as="th" className="py-3 px-3.5 text-right">
-                        Annual Cost
-                      </Caption>
-                      <Caption as="th" className="py-3 px-3.5 text-right">
-                        Migration Friction
-                      </Caption>
-                      <Caption as="th" className="py-3 px-3.5 text-right">
-                        Net Year 1 Yield
-                      </Caption>
-                      <Caption as="th" className="py-3 px-3.5 text-right">
-                        2-Year Net NPV
-                      </Caption>
-                      <Caption as="th" className="py-3 px-3.5 text-center">
-                        Payback
-                      </Caption>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
-                    {/* Incumbent Row */}
-                    <tr className="bg-emerald-500/[0.04] font-medium">
-                      <td className="py-3 px-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {contract?.vendor?.name || contract?.service}
-                          </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                            Incumbent
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3.5 text-right font-mono font-bold text-slate-900 dark:text-white">
-                        ${switchingMatrix.renegotiatedPrice.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3.5 text-right font-mono text-slate-400">
-                        $0 (None)
-                      </td>
-                      <td className="py-3 px-3.5 text-right font-mono font-bold text-[#107e65] dark:text-[#34d399]">
-                        +${switchingMatrix.renegotiatedSavings.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3.5 text-right font-mono font-bold text-[#107e65] dark:text-[#34d399]">
-                        +$
-                        {(
-                          switchingMatrix.renegotiatedSavings * 2
-                        ).toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3.5 text-center text-slate-400 font-mono">
-                        Immediate
-                      </td>
-                    </tr>
-
-                    {/* Competitor Alternative Rows */}
-                    {switchingMatrix.competitors.map((comp, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
-                      >
-                        <td className="py-3 px-3.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">
-                              {comp.vendorName}
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                              ★ {comp.reputationScore}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3.5 text-right font-mono text-slate-700 dark:text-slate-300">
-                          ${comp.estimatedPrice.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-3.5 text-right font-mono text-rose-600 dark:text-rose-400">
-                          -$
-                          {comp.switchingCosts.totalSwitchingCost.toLocaleString()}
-                        </td>
-                        <td
-                          className={`py-3 px-3.5 text-right font-mono font-semibold ${
-                            comp.netYear1Savings > 0
-                              ? "text-[#107e65] dark:text-[#34d399]"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {comp.netYear1Savings > 0 ? "+" : ""}$
-                          {comp.netYear1Savings.toLocaleString()}
-                        </td>
-                        <td
-                          className={`py-3 px-3.5 text-right font-mono font-bold ${
-                            comp.netYear2Savings >
-                            switchingMatrix.renegotiatedSavings * 2
-                              ? "text-purple-600 dark:text-purple-400"
-                              : "text-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          {comp.netYear2Savings > 0 ? "+" : ""}$
-                          {comp.netYear2Savings.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-3.5 text-center font-mono text-slate-600 dark:text-slate-400">
-                          {comp.paybackMonths < 99
-                            ? `${comp.paybackMonths} mo`
-                            : "N/A"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
-              Loading competitive market alternatives...
-            </div>
-          )}
-        </div>
-
-        {/* Checklist Table */}
-        <div className="mt-8">
-          <H2 className="text-slate-900 dark:text-white mb-3">
-            Deterministic Policy Checklist
-          </H2>
-
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
-            <table className="w-full text-left text-xs font-sans border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <Caption as="th" className="py-3.5 px-4 w-28 text-center">
-                    Status
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4 min-w-[220px]">
-                    Rule Specification
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4">
-                    Evaluation Detail
-                  </Caption>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
-                {evaluation?.checks.map((chk, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/[0.04] transition-colors duration-150"
-                  >
-                    <td className="py-3.5 px-4 text-center">
-                      {chk.passed ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                          <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-                          <span>Passed</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
-                          <X className="h-3.5 w-3.5 stroke-[2.5]" />
-                          <span>Refused</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                      {getCheckTitle(chk.name)}
-                    </td>
-                    <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-300">
-                      {chk.detail}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Card View */}
-          <div className="sm:hidden space-y-2.5">
-            {evaluation?.checks.map((chk, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/70 dark:bg-[#111714]/70 shadow-2xs flex flex-col gap-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-xs text-slate-900 dark:text-white">
-                    {getCheckTitle(chk.name)}
-                  </span>
-                  {chk.passed ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
-                      <Check className="h-3 w-3 stroke-[2.5]" />
-                      <span>Passed</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 shrink-0">
-                      <X className="h-3 w-3 stroke-[2.5]" />
-                      <span>Refused</span>
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                  {chk.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Deterministic Policy Checklist Table */}
+        <PolicyChecklistSection evaluation={evaluation} policy={policy} />
 
         {/* Vendor Confirmation Verification & Escrow Release Section */}
-        <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800/70">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <H2 className="text-slate-900 dark:text-white">
-                Vendor Confirmation &amp; Escrow Release
-              </H2>
-              <BodySmall className="text-slate-500 dark:text-slate-400 mt-0.5">
-                LLM extracts confirmation fields into strict schema;
-                deterministic code verifies every field before releasing Arc
-                USDC.
-              </BodySmall>
-            </div>
+        <VendorVerificationSection
+          verification={verification}
+          verifying={verifying}
+          releaseLoading={releaseLoading}
+          submitting={submitting}
+          selectedTamper={selectedTamper}
+          verificationError={verificationError}
+          verificationSuccess={verificationSuccess}
+          onSelectTamper={setSelectedTamper}
+          onRunVerification={handleRunVerification}
+          onEscalateToHuman={() => handleDecision("approve")}
+        />
 
-            {/* Tamper Simulator Selector */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTamper(null);
-                  handleRunVerification(null, "verify");
-                }}
-                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
-                  selectedTamper === null
-                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                Exact Match
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTamper("price");
-                  handleRunVerification("price", "verify");
-                }}
-                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
-                  selectedTamper === "price"
-                    ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                Tamper: Price
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTamper("seats");
-                  handleRunVerification("seats", "verify");
-                }}
-                className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
-                  selectedTamper === "seats"
-                    ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                Tamper: Seats
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons & Status Feedback */}
-          {verificationError && (
-            <div className="mb-4 p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
-              <AlertOctagon className="h-4 w-4 shrink-0" />
-              <span>{verificationError}</span>
-            </div>
-          )}
-
-          {verificationSuccess && (
-            <div className="mb-4 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20 text-[#107e65] dark:text-[#34d399] text-xs font-semibold flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{verificationSuccess}</span>
-            </div>
-          )}
-
-          {/* Desktop Verification Checklist Table */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
-            <table className="w-full text-left text-xs font-sans border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <Caption as="th" className="py-3.5 px-4 w-28 text-center">
-                    Status
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4 min-w-[180px]">
-                    Contract Term
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4 min-w-[140px]">
-                    Negotiated Agreement
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4 min-w-[140px]">
-                    Vendor Confirmation
-                  </Caption>
-                  <Caption as="th" className="py-3.5 px-4">
-                    Verification Audit
-                  </Caption>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
-                {verification?.checks && verification.checks.length > 0 ? (
-                  verification.checks.map((chk, i) => (
-                    <tr
-                      key={i}
-                      className="hover:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/[0.04] transition-colors"
-                    >
-                      <td className="py-3.5 px-4 text-center">
-                        {chk.passed ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                            <Check className="h-3 w-3 stroke-[2.5]" />
-                            <span>Match</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
-                            <X className="h-3 w-3 stroke-[2.5]" />
-                            <span>Mismatch</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                        {chk.name}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-slate-700 dark:text-slate-300">
-                        {chk.field === "price"
-                          ? `$${Number(chk.expected).toLocaleString()}`
-                          : chk.field === "seats"
-                            ? `${chk.expected} seats`
-                            : chk.field === "term_months"
-                              ? `${chk.expected} months`
-                              : String(chk.expected)}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-slate-900 dark:text-white">
-                        {chk.field === "price"
-                          ? `$${Number(chk.actual).toLocaleString()}`
-                          : chk.field === "seats"
-                            ? `${chk.actual} seats`
-                            : chk.field === "term_months"
-                              ? `${chk.actual} months`
-                              : String(chk.actual)}
-                      </td>
-                      <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-300">
-                        {chk.message}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="py-8 text-center text-slate-400 dark:text-slate-500 font-medium"
-                    >
-                      Click &quot;Verify Vendor Confirmation&quot; below to
-                      trigger extraction and comparison.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Verification Checklist Cards */}
-          <div className="sm:hidden space-y-2.5">
-            {verification?.checks && verification.checks.length > 0 ? (
-              verification.checks.map((chk, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/70 dark:bg-[#111714]/70 shadow-2xs flex flex-col gap-2.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-xs text-slate-900 dark:text-white">
-                      {chk.name}
-                    </span>
-                    {chk.passed ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
-                        <Check className="h-3 w-3 stroke-[2.5]" />
-                        <span>Match</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 shrink-0">
-                        <X className="h-3 w-3 stroke-[2.5]" />
-                        <span>Mismatch</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-slate-50/70 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 text-xs">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
-                        Negotiated
-                      </div>
-                      <div className="font-mono font-semibold text-slate-700 dark:text-slate-300 truncate">
-                        {chk.field === "price"
-                          ? `$${Number(chk.expected).toLocaleString()}`
-                          : chk.field === "seats"
-                            ? `${chk.expected} seats`
-                            : chk.field === "term_months"
-                              ? `${chk.expected} months`
-                              : String(chk.expected)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5">
-                        Vendor Actual
-                      </div>
-                      <div className="font-mono font-semibold text-slate-900 dark:text-white truncate">
-                        {chk.field === "price"
-                          ? `$${Number(chk.actual).toLocaleString()}`
-                          : chk.field === "seats"
-                            ? `${chk.actual} seats`
-                            : chk.field === "term_months"
-                              ? `${chk.actual} months`
-                              : String(chk.actual)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                    {chk.message}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 font-medium">
-                Click &quot;Verify Vendor Confirmation&quot; below to trigger extraction and comparison.
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Release / Dispute Action Bar */}
-          <div className="mt-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/60 dark:bg-[#141c18]/60">
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 min-w-0">
-              {verification?.transaction?.status === "completed" ||
-              verification?.transaction?.status === "released" ||
-              verification?.transaction?.status === "simulation-only" ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0 ${
-                      verification?.transaction?.is_simulated ||
-                      verification?.transaction?.status === "simulation-only"
-                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
-                        : "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border-emerald-500/20"
-                    }`}
-                  >
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    {verification?.transaction?.is_simulated ||
-                    verification?.transaction?.status === "simulation-only"
-                      ? "Simulated Settlement Completed"
-                      : "Escrow Released on Arc"}
-                  </span>
-                  {verification?.transaction?.tx_hash && (
-                    <TransactionHashBadge
-                      txHash={verification.transaction.tx_hash}
-                      isSimulated={verification.transaction.is_simulated}
-                      status={verification.transaction.status}
-                    />
-                  )}
-                </div>
-              ) : verification?.allPassed === false ||
-                verification?.transaction?.status === "disputed" ? (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 shrink-0 self-start sm:self-auto">
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                    Status: Disputed
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    Requires human supervisor sign-off before releasing funds.
-                  </span>
-                </div>
-              ) : verification?.allPassed ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
-                  <ShieldCheck className="h-4 w-4 shrink-0" />
-                  All Checks Cleared
-                </span>
-              ) : (
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Run verification before releasing escrow payment.
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
-              <button
-                type="button"
-                disabled={verifying}
-                onClick={() => handleRunVerification(selectedTamper, "verify")}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs disabled:opacity-50 w-full sm:w-auto cursor-pointer"
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 shrink-0 ${verifying ? "animate-spin" : ""}`}
-                />
-                <span className="truncate">
-                  {verifying
-                    ? "Extracting & Verifying..."
-                    : "Verify Confirmation"}
-                </span>
-              </button>
-
-              {verification?.allPassed === false && (
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => handleDecision("approve")}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 w-full sm:w-auto cursor-pointer"
-                >
-                  <UserCheck className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">Escalate to Human</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                disabled={
-                  !verification?.allPassed ||
-                  verification?.transaction?.status === "completed" ||
-                  releaseLoading
-                }
-                onClick={() => handleRunVerification(selectedTamper, "release")}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold transition-colors shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto cursor-pointer"
-              >
-                <Lock className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {releaseLoading
-                    ? "Releasing Arc USDC..."
-                    : verification?.transaction?.status === "completed"
-                      ? "Payment Released"
-                      : "Release Escrow (Arc USDC)"}
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Public Verified Receipts Section */}
-          <div className="mt-8 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#111714] p-5 sm:p-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/70 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-[#107e65] dark:text-[#34d399]">
-                  <Receipt className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Public Savings Receipts</span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                      Arc Verified
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Generate an unguessable, read-only proof page for customers
-                    or auditors without logging in.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCreateReceipt}
-                disabled={
-                  creatingReceipt ||
-                  (verification?.transaction?.status !== "completed" &&
-                    receipts.length === 0)
-                }
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
-              >
-                <Receipt className="h-3.5 w-3.5" />
-                <span>
-                  {creatingReceipt
-                    ? "Generating Proof..."
-                    : "Create Public Receipt"}
-                </span>
-              </button>
-            </div>
-
-            {/* Receipts List */}
-            {receipts.length > 0 ? (
-              <div className="mt-4 divide-y divide-slate-100 dark:divide-slate-800/60">
-                {receipts.map((rcpt) => {
-                  const receiptUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/r/${rcpt.token}`;
-                  const isRevoked = Boolean(rcpt.revoked_at);
-
-                  return (
-                    <div
-                      key={rcpt.id}
-                      className="py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            isRevoked
-                              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-                              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
-                          }`}
-                        >
-                          {isRevoked ? "Revoked" : "Active Proof"}
-                        </span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-xs">
-                          /r/{rcpt.token}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {!isRevoked && (
-                          <>
-                            <a
-                              href={`/r/${rcpt.token}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium"
-                            >
-                              <span>Open Proof</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(receiptUrl);
-                                setReceiptCopiedToken(rcpt.token);
-                                setTimeout(
-                                  () => setReceiptCopiedToken(null),
-                                  2000,
-                                );
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium cursor-pointer"
-                            >
-                              {receiptCopiedToken === rcpt.token ? (
-                                <>
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                  <span className="text-emerald-600 font-bold">
-                                    Copied
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="h-3 w-3 text-slate-400" />
-                                  <span>Copy Link</span>
-                                </>
-                              )}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleToggleReceipt(rcpt.token, {
-                                  showBusinessName: !rcpt.show_business_name,
-                                })
-                              }
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors cursor-pointer ${
-                                rcpt.show_business_name
-                                  ? "border-emerald-500/30 text-[#107e65] dark:text-[#34d399] bg-emerald-500/5"
-                                  : "border-slate-200 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-800"
-                              }`}
-                            >
-                              {rcpt.show_business_name ? (
-                                <Eye className="h-3 w-3" />
-                              ) : (
-                                <EyeOff className="h-3 w-3" />
-                              )}
-                              <span>Co Name</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleToggleReceipt(rcpt.token, {
-                                  showVendorName: !rcpt.show_vendor_name,
-                                })
-                              }
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors cursor-pointer ${
-                                rcpt.show_vendor_name
-                                  ? "border-emerald-500/30 text-[#107e65] dark:text-[#34d399] bg-emerald-500/5"
-                                  : "border-slate-200 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-800"
-                              }`}
-                            >
-                              {rcpt.show_vendor_name ? (
-                                <Eye className="h-3 w-3" />
-                              ) : (
-                                <EyeOff className="h-3 w-3" />
-                              )}
-                              <span>Vendor Name</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    "Are you sure you want to revoke this public receipt? It will immediately return 404.",
-                                  )
-                                ) {
-                                  handleToggleReceipt(rcpt.token, {
-                                    revoke: true,
-                                  });
-                                }
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-[11px] font-semibold transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              <span>Revoke</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="mt-4 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
-                {verification?.transaction?.status === "completed"
-                  ? "No public receipts generated yet. Click 'Create Public Receipt' above to share cryptographic proof."
-                  : "Receipts become available once escrow payment has been released on Arc."}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Public Verified Receipts Section */}
+        <PublicReceiptsSection
+          receipts={receipts}
+          creatingReceipt={creatingReceipt}
+          receiptCopiedToken={receiptCopiedToken}
+          isTransactionCompleted={
+            verification?.transaction?.status === "completed"
+          }
+          onCreateReceipt={handleCreateReceipt}
+          onCopyReceipt={(token, url) => {
+            navigator.clipboard.writeText(url);
+            setReceiptCopiedToken(token);
+            setTimeout(() => setReceiptCopiedToken(null), 2000);
+          }}
+          onToggleReceipt={handleToggleReceipt}
+        />
       </div>
     </AppShell>
   );

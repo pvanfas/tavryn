@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "skills": {
+    "accept-agent-payments": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/accept-agent-payments/SKILL.md",
+      "computedHash": "33b27f6039ac52addf6116d01b8301695f603622ecd38c4caa3b937c2038ca8a"
+    },
+    "agent-wallet-policy": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/agent-wallet-policy/SKILL.md",
+      "computedHash": "a5adc4f9565669a0d2c4482d309b742b5ef99e3bc45f80bde9cde5338b74f692"
+    },
+    "bridge-stablecoin": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/bridge-stablecoin/SKILL.md",
+      "computedHash": "eda533caaf7a48261752588d75281120086763e43391711f7244645e4c143724"
+    },
+    "fund-agent-wallet": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/fund-agent-wallet/SKILL.md",
+      "computedHash": "06389fd6b1caf625f7aac26cd0625313343ee9205de2be84330d9ce47ce293b9"
+    },
+    "pay-via-agent-wallet": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/pay-via-agent-wallet/SKILL.md",
+      "computedHash": "8f04d473edf9a1a47d971c0808c5435efb8882024401a1bd4531e6439890e586"
+    },
+    "recover-eco-funds": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/recover-eco-funds/SKILL.md",
+      "computedHash": "4a3c5e241553da5252ba9cb949095d07ca1f90f7058763b4ed29a0f594e72e01"
+    },
+    "swap-tokens": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/swap-tokens/SKILL.md",
+      "computedHash": "1b5735e36ead20016873dafa6984ef212023176552ae63c5f80c9f1ae2794936"
+    },
+    "unify-balance": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/unify-balance/SKILL.md",
+      "computedHash": "34c0f9c7697cff995cf73d22b0f874897e45922beeff71e113b32f92fc955e3c"
+    },
+    "use-agent-wallet": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-agent-wallet/SKILL.md",
+      "computedHash": "838d9adbb915c03f16156c26b5fc95ec840a1e0e56c121a2f6d5b6c69a2375e6"
+    },
+    "use-arc": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-arc/SKILL.md",
+      "computedHash": "a25ae28b57cf5f9609d0aa48b58932b20fd9e2ff43b2789b395d0a5712c5d4d6"
+    },
+    "use-circle-cli": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-circle-cli/SKILL.md",
+      "computedHash": "0cfb94f8e9d3848c5a32bcd8ca2590d0b32a8364b722a0c668208128d55803db"
+    },
+    "use-circle-wallets": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-circle-wallets/SKILL.md",
+      "computedHash": "bb7ef10c0832afb30261e3ffbefd256cf925c2c494a23c489497a2c643be8a41"
+    },
+    "use-developer-controlled-wallets": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-developer-controlled-wallets/SKILL.md",
+      "computedHash": "48b1f3f751d82671e78899a67d80aebe10ae6818c82a3c6bc037a038270cd079"
+    },
+    "use-gateway": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-gateway/SKILL.md",
+      "computedHash": "9665be832ab21dd0c42312236d9e2aea0d0f5ace61a3b1fae52545f769ecd006"
+    },
+    "use-modular-wallets": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-modular-wallets/SKILL.md",
+      "computedHash": "ef6f18eb13a96796a2dcebf37f24ece3e7b9ad57eed1c6943f787ddb69281ece"
+    },
+    "use-smart-contract-platform": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-smart-contract-platform/SKILL.md",
+      "computedHash": "537f1ea7fb4fcfb4894bea770f16ca74b3368e810867c4eda67d6a22578a05bf"
+    },
+    "use-usdc": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-usdc/SKILL.md",
+      "computedHash": "3e8ee3c91832e86eeb71341a699668a6849e0e56a2748f04221e5b2063734ad9"
+    },
+    "use-user-controlled-wallets": {
+      "source": "circlefin/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/circle/skills/use-user-controlled-wallets/SKILL.md",
+      "computedHash": "9274769945a30571b5b53fa4e9149f87e6cc0ab0c046c7ebc390ba1ec202b680"
+    }
+  }
+}

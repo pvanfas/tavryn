@@ -69,7 +69,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
 
   return (
     <>
-      <div className="rounded-xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] p-5 sm:p-6 transition-colors font-sans">
+      <div className="w-full max-w-full overflow-hidden rounded-xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] p-4 sm:p-6 transition-colors font-sans">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/70">
           <div>
@@ -82,9 +82,9 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
             {/* Search Input Box */}
-            <div className="relative">
+            <div className="relative w-full sm:w-64">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
@@ -94,7 +94,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-56 sm:w-64 pl-9 pr-7 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65] transition-all"
+                className="w-full pl-9 pr-7 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65] transition-all"
               />
               {searchQuery && (
                 <button
@@ -114,7 +114,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                 setActionFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="py-1.5 px-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65]"
+              className="w-full sm:w-auto py-1.5 px-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65]"
             >
               <option value="all">All Actions ({blocks.length})</option>
               {actionOptions.map((act) => (
@@ -312,13 +312,13 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
               return (
                 <div
                   key={block.id}
-                  className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/80 dark:bg-[#111714]/80 p-4 space-y-2.5"
+                  className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-white/80 dark:bg-[#111714]/80 p-4 space-y-2.5 overflow-hidden min-w-0 max-w-full"
                 >
                   {/* Header: Block # + Action + Chain Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="font-mono text-xs font-bold text-slate-400 shrink-0">#{absoluteIndex + 1}</span>
-                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 truncate">
                         {block.action}
                       </span>
                     </div>
@@ -329,16 +329,18 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                   </div>
 
                   {/* Timestamp & Reason */}
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    <span>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 min-w-0">
+                    <div>
                       {new Date(block.created_at).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                         second: "2-digit",
                       })}
-                    </span>
+                    </div>
                     {block.reason && (
-                      <span className="ml-2 truncate">{block.reason}</span>
+                      <p className="mt-1 text-slate-600 dark:text-slate-300 break-words line-clamp-2">
+                        {block.reason}
+                      </p>
                     )}
                   </div>
 
