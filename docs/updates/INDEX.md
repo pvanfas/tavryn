@@ -3,6 +3,8 @@
 Newest first. Each entry links to the full stage writeup.
 
 | Stage | Date | Title | Description |
+| :--- | :--- | :--- | :--- |
+| [0012](./0012-modular-subsystems-escrow-locks-and-faucet.md) | Oct 02, 2026 | Modular Architecture, Active Escrow Locks, and Testnet Faucet | Database-enforced active contract escrow locks, in-app Arc testnet Circle faucet, quick invoice dropzone, modular domain refactoring, and pinned agent skills |
 | [0011](./0011-policy-hardening-idempotency-and-typecheck.md) | Oct 01, 2026 | Policy Hardening, Idempotency Locks, and Strict Type Safety | Zero-error strict TypeScript verification, server-side contract savings derivation, unlinked composite partial unique index, and authoritative contract category anti-spoofing |
 | [0010](./0010-hardened-execution-and-honest-labeling.md) | Oct 01, 2026 | Hardened Execution, Real Escrow, and Honest Labeling | Real on-chain ArcEscrow execution, single-use policy authorization burn, server-derived idempotency locks, dynamic multi-round demo pipeline, and honest transaction labeling with zero dead links |
 | [0009](./0009-agentic-governance-and-protocol-economics.md) | Sep 30, 2026 | Agentic Governance & Protocol Economics | Adversarial second-opinion reviewer agent, on-chain ArcEscrow protocol fees, out-of-band HMAC approvals, switching cost NPV matrix, live Arc balance warning, and supervisor override memory |

@@ -57,4 +57,4 @@ Tavryn enforces zero-trust architecture across all autonomous workflows:
 7. **Sanitized Structured Logging:**  
    The structured logger (`lib/logger.ts`) redacts 64-character private keys, Circle API secrets, and JWT tokens to prevent secret exfiltration.
 
-For an extensive threat matrix, attack vector breakdowns, and residual risk analysis, refer to [docs/SECURITY.md](docs/SECURITY.md).
+For an extensive threat matrix, attack vector breakdowns, and residual risk analysis, refer to [docs/architecture/security-model.md](docs/architecture/security-model.md).

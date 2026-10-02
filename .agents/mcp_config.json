@@ -2,6 +2,9 @@
   "mcpServers": {
     "circle": {
       "url": "https://api.circle.com/v1/codegen/mcp"
+    },
+    "Mintlify": {
+      "url": "https://mcp.mintlify.com"
     }
   }
 }
