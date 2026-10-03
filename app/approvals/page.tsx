@@ -275,7 +275,7 @@ export default async function ApprovalsPage({
                       </BodySmall>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                       {amount > 0 && (
                         <div className="text-right">
                           <Caption className="text-slate-400 uppercase">

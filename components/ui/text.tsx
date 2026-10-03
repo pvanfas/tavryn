@@ -77,7 +77,10 @@ export function H1<E extends React.ElementType = "h1">({
   const Tag = (as || "h1") as React.ElementType;
   return (
     <Tag
-      className={cn("text-h1 font-bold tracking-tight", className)}
+      className={cn(
+        "text-xl sm:text-2xl md:text-h1 font-bold tracking-tight",
+        className,
+      )}
       {...rest}
     >
       {children}

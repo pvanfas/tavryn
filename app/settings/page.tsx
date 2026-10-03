@@ -314,7 +314,7 @@ function SettingsContent() {
             {/* Section 1: Arc Treasury Wallet Card */}
             <div
               id="treasury"
-              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-4 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -394,7 +394,7 @@ function SettingsContent() {
             {/* Section 2: Deterministic Policy Configuration */}
             <div
               id="policy"
-              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-6"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-4 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-6"
             >
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65]">
@@ -504,16 +504,16 @@ function SettingsContent() {
             </div>
 
             {/* Section 3: Notification Webhooks */}
-            <div className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65]">
+            <div className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-4 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4">
+              <div className="flex items-start gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65] shrink-0 mt-0.5">
                   <Bell className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                     Per-Business Notification Webhook
                   </h2>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Receive live notifications in Slack, Discord, or custom
                     systems when the agent detects waste or settles contracts
                   </p>
@@ -524,20 +524,20 @@ function SettingsContent() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Webhook Endpoint URL
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     id="settings-webhook-url"
                     type="url"
                     value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://discord.com/api/webhooks/... or https://hooks.slack.com/services/..."
-                    className="flex-1 text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65]"
+                    placeholder="https://discord.com/api/webhooks/..."
+                    className="flex-1 min-w-0 text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65]"
                   />
                   <button
                     type="button"
                     onClick={handleTestWebhook}
                     disabled={testingWebhook || !webhookUrl.trim()}
-                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
                   >
                     {testingWebhook ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -563,7 +563,7 @@ function SettingsContent() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -27,7 +27,7 @@ export function createAgentTools(initialContext?: { businessId?: string }) {
   // Context resolver passed to all sub-tool builders
   const ctx: ToolContext = {
     resolveBusinessId: async (contractId?: string): Promise<string> => {
-      if (currentBusinessId) return currentBusinessId;
+      if (initialContext?.businessId) return initialContext.businessId;
       const supabase = getServiceSupabase();
       if (contractId) {
         const { data } = await supabase
@@ -36,10 +36,10 @@ export function createAgentTools(initialContext?: { businessId?: string }) {
           .eq("id", contractId)
           .maybeSingle();
         if (data?.business_id) {
-          currentBusinessId = data.business_id;
-          return currentBusinessId;
+          return data.business_id;
         }
       }
+      if (currentBusinessId) return currentBusinessId;
       // Fallback: look up Demo Co or first available business
       const { data: firstB } = await supabase
         .from("businesses")

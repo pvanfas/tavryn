@@ -200,6 +200,28 @@ test("5. create_escrow rejects missing or malformed vendor wallet addresses", as
 test("6. create_escrow escalates to human approval when vendor wallet address mutates", async () => {
   const supabase = getServiceSupabase();
 
+  // Create an isolated test business with explicit, sufficient treasury balance
+  const { data: testBiz, error: bizErr } = await supabase
+    .from("businesses")
+    .insert({
+      name: `Escrow Mutation Test Biz ${Date.now()}`,
+      treasury_balance: 100000,
+      wallet_address: null,
+      is_real: false,
+    })
+    .select()
+    .single();
+
+  assert.ok(testBiz && !bizErr, `Failed to setup test business: ${bizErr?.message}`);
+
+  await supabase.from("policies").insert({
+    business_id: testBiz.id,
+    max_auto_transaction: 50000,
+    min_savings: 200,
+    human_approval_required_above: 50000,
+    allowed_categories: ["software", "cloud"],
+  });
+
   // Create a temporary vendor to test mutation
   const { data: tempVendor } = await supabase
     .from("vendors")
@@ -214,64 +236,94 @@ test("6. create_escrow escalates to human approval when vendor wallet address mu
 
   assert.ok(tempVendor);
 
-  const { data: firstBiz } = await supabase
-    .from("businesses")
-    .select("id")
-    .limit(1)
-    .single();
-  assert.ok(firstBiz);
+  let tempContractId: string | null = null;
+  let seededTxId: string | null = null;
 
-  // Seed an initial completed transaction with original address
-  await supabase.from("transactions").insert({
-    business_id: firstBiz.id,
-    vendor_id: tempVendor.id,
-    amount: 1000,
-    currency: "USDC",
-    escrow_address: "0x3333333333333333333333333333333333333333",
-    status: "funded",
-    idempotency_key: `history-seed-${Date.now()}`,
-  });
+  try {
+    // Seed an initial completed transaction with original address
+    const { data: seededTx } = await supabase
+      .from("transactions")
+      .insert({
+        business_id: testBiz.id,
+        vendor_id: tempVendor.id,
+        amount: 1000,
+        currency: "USDC",
+        escrow_address: "0x3333333333333333333333333333333333333333",
+        status: "funded",
+        is_simulated: true,
+        idempotency_key: `history-seed-${Date.now()}`,
+      })
+      .select("id")
+      .single();
 
-  const { data: tempContract } = await supabase
-    .from("contracts")
-    .insert({
-      business_id: firstBiz.id,
-      vendor_id: tempVendor.id,
-      service: `Contract ${Date.now()}`,
-      category: "software",
-      current_price: 2000,
-      renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
-      status: "active",
-    })
-    .select()
-    .single();
+    seededTxId = seededTx?.id || null;
 
-  const tools = createAgentTools({ businessId: firstBiz.id });
+    const { data: tempContract } = await supabase
+      .from("contracts")
+      .insert({
+        business_id: testBiz.id,
+        vendor_id: tempVendor.id,
+        service: `Contract ${Date.now()}`,
+        category: "software",
+        current_price: 2000,
+        renewal_date: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+        status: "active",
+      })
+      .select()
+      .single();
 
-  // Attempt to escrow to mutated address
-  const mutatedAddress = "0x4444444444444444444444444444444444444444";
-  await assert.rejects(async () => {
-    await (tools.create_escrow as any).execute({
-      contractId: tempContract?.id,
-      vendor: tempVendor.id,
-      amount: 1000,
-      category: "software",
-      vendorWallet: mutatedAddress,
-      idempotencyKey: `mutated-${Date.now()}`,
-    });
-  }, /Vendor wallet address changed from/);
+    tempContractId = tempContract?.id || null;
 
-  // Confirm a pending approval was registered for human inspection
-  const { data: approval } = await supabase
-    .from("approvals")
-    .select("*")
-    .eq("business_id", firstBiz.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    const tools = createAgentTools({ businessId: testBiz.id });
 
-  assert.ok(approval);
-  assert.match(approval.reason || "", /mutated|changed/i);
+    // Attempt to escrow to mutated address
+    const mutatedAddress = "0x4444444444444444444444444444444444444444";
+    await assert.rejects(async () => {
+      await (tools.create_escrow as any).execute({
+        contractId: tempContract?.id,
+        vendor: tempVendor.id,
+        amount: 1000,
+        category: "software",
+        vendorWallet: mutatedAddress,
+        idempotencyKey: `mutated-${Date.now()}`,
+      });
+    }, /Vendor wallet address changed from/);
+
+    // Confirm a pending approval was registered for human inspection
+    const { data: approval } = await supabase
+      .from("approvals")
+      .select("*")
+      .eq("business_id", testBiz.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    assert.ok(approval);
+    assert.match(approval.reason || "", /mutated|changed/i);
+  } finally {
+    try {
+      await supabase.from("approvals").delete().eq("business_id", testBiz.id);
+    } catch {}
+    if (seededTxId) {
+      try {
+        await supabase.from("transactions").delete().eq("id", seededTxId);
+      } catch {}
+    }
+    if (tempContractId) {
+      try {
+        await supabase.from("contracts").delete().eq("id", tempContractId);
+      } catch {}
+    }
+    try {
+      await supabase.from("policies").delete().eq("business_id", testBiz.id);
+    } catch {}
+    try {
+      await supabase.from("vendors").delete().eq("id", tempVendor.id);
+    } catch {}
+    try {
+      await supabase.from("businesses").delete().eq("id", testBiz.id);
+    } catch {}
+  }
 });
 
 test("7. create_escrow handles on-chain funding failure and transitions status to failed", async () => {

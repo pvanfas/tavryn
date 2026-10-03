@@ -17,6 +17,10 @@
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.125rem;
 
+  /* ─── 2xs · 11px · compact mobile badges / indicators ───────── */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.875rem;
+
   /* ─── Named type scale ───────────────────────────────────────── */
 
   /* display · 48px · weight 800 · hero numbers, landing headlines */

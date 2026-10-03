@@ -239,7 +239,7 @@ export function DecisionTimelineSection({
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans break-words">
                     {step.summary}
                   </p>
 

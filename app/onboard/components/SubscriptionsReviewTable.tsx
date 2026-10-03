@@ -38,7 +38,7 @@ export function SubscriptionsReviewTable({
           </p>
         </div>
 
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <span className="text-[10px] uppercase font-bold text-slate-400 block">
             Total Selected Spend
           </span>

@@ -66,19 +66,19 @@ export function NegotiationTranscript({
               {/* Agent Proposal */}
               {agentTurn && (
                 <div className="text-xs space-y-1.5 pl-3 border-l-2 border-[#107e65]/80">
-                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 font-bold text-slate-900 dark:text-slate-100">
+                    <div className="flex items-center gap-2 min-w-0">
                       <BodySmall
                         as="span"
                         className="font-bold text-slate-900 dark:text-white"
                       >
                         Tavryn Procurement
                       </BodySmall>
-                      <Caption className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#107e65] dark:text-emerald-400">
+                      <Caption className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#107e65] dark:text-emerald-400 shrink-0">
                         Autonomous Agent
                       </Caption>
                     </div>
-                    <Mono className="text-[#107e65] dark:text-[#34d399] bg-emerald-500/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    <Mono className="text-[#107e65] dark:text-[#34d399] bg-emerald-500/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20 shrink-0 text-right">
                       Offer: ${agentTurn.amount?.toLocaleString()}
                     </Mono>
                   </div>
@@ -91,19 +91,19 @@ export function NegotiationTranscript({
               {/* Vendor Counter */}
               {vendorTurn && (
                 <div className="text-xs space-y-1.5 pl-3 border-l-2 border-slate-400 dark:border-slate-600">
-                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 font-bold text-slate-900 dark:text-slate-100">
+                    <div className="flex items-center gap-2 min-w-0">
                       <BodySmall
                         as="span"
-                        className="font-bold text-slate-900 dark:text-white"
+                        className="font-bold text-slate-900 dark:text-white truncate"
                       >
                         {vendorTurn.speaker}
                       </BodySmall>
-                      <Caption className="px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <Caption className="px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
                         Vendor Account Exec
                       </Caption>
                     </div>
-                    <Mono className="text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/70 dark:border-slate-700/70">
+                    <Mono className="text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/70 dark:border-slate-700/70 shrink-0 text-right">
                       {vendorTurn.accepted ? "Agreed:" : "Counter:"} $
                       {vendorTurn.amount?.toLocaleString()}
                     </Mono>

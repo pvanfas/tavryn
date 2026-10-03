@@ -224,49 +224,32 @@ export function MobileTabBar({
 
             {/* Business Switcher in Sheet */}
             {businesses.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#151c19] border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#151c19] border border-slate-200/80 dark:border-slate-800/80">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">
+                  Active Business
+                </span>
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#107e65] dark:text-[#34d399]">
+                  <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#107e65] dark:text-[#34d399] shrink-0">
                     <Building2 className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      Active Business
-                    </span>
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900 dark:text-white">
-                      <span>
-                        {formatBusinessName(activeBusiness?.name || "Demo Co")}
-                      </span>
-                      {activeBusiness?.is_real ? (
-                        <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
-                          Real
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[9px] font-bold">
-                          Demo
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <select
+                    value={activeBusinessId}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      if (newId) {
+                        router.push(`/?businessId=${newId}`);
+                        setMoreOpen(false);
+                      }
+                    }}
+                    className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden truncate"
+                  >
+                    {businesses.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {formatBusinessName(b.name)} {b.is_real ? "(Real)" : "(Demo)"}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-
-                <select
-                  value={activeBusinessId}
-                  onChange={(e) => {
-                    const newId = e.target.value;
-                    if (newId) {
-                      router.push(`/?businessId=${newId}`);
-                      setMoreOpen(false);
-                    }
-                  }}
-                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-hidden"
-                >
-                  {businesses.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {formatBusinessName(b.name)}
-                    </option>
-                  ))}
-                </select>
               </div>
             )}
 

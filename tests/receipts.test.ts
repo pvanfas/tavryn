@@ -85,8 +85,8 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
         negotiation_id: negotiationId,
         amount: 9600,
         status: "completed",
-        tx_hash:
-          "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        is_simulated: true,
+        tx_hash: "0xsimulated_receipt_test_tx_hash",
         idempotency_key: `receipt_test_tx_${Date.now()}`,
       })
       .select("id")
@@ -96,9 +96,19 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
   });
 
   after(async () => {
-    // Cleanup
+    // Explicitly clean up test child fixtures.
+    // Note: agent_actions has an immutable append-only ledger trigger (trg_agent_actions_no_delete)
+    // preventing DELETE/CASCADE from businesses, so child test rows must be cleaned up directly.
     if (businessId) {
-      await admin.from("businesses").delete().eq("id", businessId);
+      await admin.from("receipts").delete().eq("business_id", businessId);
+      await admin.from("transactions").delete().eq("business_id", businessId);
+      if (contractId) {
+        await admin.from("negotiations").delete().eq("contract_id", contractId);
+        await admin.from("contracts").delete().eq("id", contractId);
+      }
+      if (vendorId) {
+        await admin.from("vendors").delete().eq("id", vendorId);
+      }
     }
   });
 
@@ -154,6 +164,7 @@ describe("Public Savings Receipts & Allow-List Isolation", () => {
         business_id: businessId,
         amount: 5000,
         status: "pending",
+        is_simulated: true,
         idempotency_key: `pending_tx_${Date.now()}`,
       })
       .select("id")

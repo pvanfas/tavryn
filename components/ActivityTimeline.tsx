@@ -250,22 +250,24 @@ export function ActivityTimeline({
     <div className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       {/* Header with Run Full Demo CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200/70 dark:border-slate-800/60">
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-[#107e65] animate-ping" />
-            <H3 className="text-slate-900 dark:text-white font-bold">
+            <span className="flex h-2 w-2 rounded-full bg-[#107e65] animate-ping shrink-0" />
+            <H3 className="text-slate-900 dark:text-white font-bold truncate">
               Autonomous Agent Timeline
             </H3>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
               Live Loop
             </span>
+            <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
+              Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
+              <strong className="text-slate-700 dark:text-slate-200">
+                {businessName}
+              </strong>
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
-            <strong className="text-slate-700 dark:text-slate-200">
-              {businessName}
-            </strong>
-          </p>
         </div>
 
         {/* Action Button */}

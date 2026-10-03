@@ -370,12 +370,12 @@ export default function NegotiationDetailPage({
 
       {/* Main Negotiation Container */}
       <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800/70">
-          <div>
-            <div className="flex items-center gap-2">
-              <H1 className="text-slate-900 dark:text-white">
-                {contract?.service || "Contract"}
-              </H1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 pb-6 border-b border-slate-100 dark:border-slate-800/70">
+          <div className="min-w-0">
+            <H1 className="text-slate-900 dark:text-white truncate">
+              {contract?.service || "Contract"}
+            </H1>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
               <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
                 {contract?.category ||
                   activeVendor?.category ||
@@ -393,7 +393,7 @@ export default function NegotiationDetailPage({
                 )
               ) : null}
             </div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1.5 truncate">
               Account Executive:{" "}
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {activeVendor?.name || contract?.service}
@@ -403,38 +403,38 @@ export default function NegotiationDetailPage({
           </div>
 
           {/* Price Stats */}
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+          <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center">
               <Caption className="uppercase text-slate-400 dark:text-slate-500 block text-[10px] sm:text-xs">
                 Original Rate
               </Caption>
               <Mono
                 as="p"
-                className="text-xs sm:text-base text-slate-400 line-through"
+                className="text-xs sm:text-base text-slate-400 line-through truncate"
               >
                 ${baselinePrice.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+            <div className="rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 py-2 sm:py-2.5 text-center">
               <Caption className="uppercase text-slate-500 dark:text-slate-400 block text-[10px] sm:text-xs">
                 Current Counter
               </Caption>
               <Mono
                 as="p"
-                className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold"
+                className="text-xs sm:text-base text-slate-900 dark:text-white font-semibold truncate"
               >
                 ${currentOffer.toLocaleString()}
               </Mono>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-2 sm:px-4 py-2 sm:py-2.5 text-center sm:text-right">
+            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-900/40 bg-emerald-500/10 dark:bg-emerald-950/20 px-2 sm:px-4 py-2 sm:py-2.5 text-center">
               <Caption className="uppercase text-[#107e65] dark:text-[#34d399] block text-[10px] sm:text-xs">
                 Achieved Cut
               </Caption>
               <Mono
                 as="p"
-                className="text-xs sm:text-base text-[#107e65] dark:text-[#34d399] font-bold"
+                className="text-xs sm:text-base text-[#107e65] dark:text-[#34d399] font-bold truncate"
               >
                 ${savings > 0 ? savings.toLocaleString() : 0} (
                 {savingsPct.toFixed(1)}%)

@@ -12,7 +12,7 @@ Tavryn now withstands a zero-context, independent evaluator inspection from fres
 - **Client Key Isolation & Security**: Audited git history and production client bundles in `.next/static`. Discovered and corrected a personal RPC node key leak risk by splitting private RPC node access into server-only `process.env.ARC_RPC_URL` while preserving `NEXT_PUBLIC_ARC_RPC_URL` as the public Arc testnet endpoint.
 - **UI Route Polish & Anchor Navigation**: Linked sidebar navigation items directly to real section anchors on `/dashboard` (`#treasury`, `#negotiations`, `#contracts`) and routed Policy Engine to `/settings#policy`, eliminating dead clicks for users inspecting policies or contracts.
 - **GoTrueClient Singleton Pattern**: Refactored `getBrowserSupabase` in `lib/auth.ts` to cache client instances, eliminating multi-instance warnings in the browser console.
-- **Contract & Explorer Integrity**: Confirmed exact alignment for ArcEscrow (`0x880eF868be5484852086eA9d424b94D673752e50`), USDC precompile (`0x3600000000000000000000000000000000000000`), and live ArcScan links across all UI screens and verification tools.
+- **Contract & Explorer Integrity**: Confirmed exact alignment for ArcEscrow (`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`), USDC precompile (`0x3600000000000000000000000000000000000000`), and live ArcScan links across all UI screens and verification tools.
 
 ## One decision worth explaining
 

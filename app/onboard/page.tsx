@@ -581,49 +581,49 @@ export default function OnboardPage() {
         <FundingResultCard fundingResult={fundingResult} />
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors self-start"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Overview</span>
             </Link>
 
             {/* Quick Demo Sample Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
               <button
                 type="button"
                 onClick={handleLoadRealOrg}
                 disabled={isFileUploading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/40 hover:bg-emerald-500/20 text-xs font-bold text-[#107e65] dark:text-[#34d399] transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/40 hover:bg-emerald-500/20 text-xs font-bold text-[#107e65] dark:text-[#34d399] transition-all shadow-xs cursor-pointer"
                 title="Instantly loads 5 realistic enterprise SaaS subscriptions, $125k treasury, and deterministic policy"
               >
-                <Sparkles className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
+                <Sparkles className="h-3.5 w-3.5 text-emerald-500 animate-pulse shrink-0" />
                 <span>Import Acme Corp Live SaaS Stack</span>
               </button>
               <button
                 type="button"
                 onClick={handleLoadSampleStatement}
                 disabled={isFileUploading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
               >
-                <FileSpreadsheet className="h-3.5 w-3.5 text-[#107e65]" />
+                <FileSpreadsheet className="h-3.5 w-3.5 text-[#107e65] shrink-0" />
                 <span>Try Sample CSV</span>
               </button>
               <button
                 type="button"
                 onClick={handleLoadSampleInvoice}
                 disabled={isFileUploading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
               >
-                <FileText className="h-3.5 w-3.5 text-[#107e65]" />
+                <FileText className="h-3.5 w-3.5 text-[#107e65] shrink-0" />
                 <span>Try Sample PDF</span>
               </button>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-6 sm:p-7 shadow-xs space-y-7">
+          <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-xs space-y-7">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Import Subscriptions &amp; Invoices

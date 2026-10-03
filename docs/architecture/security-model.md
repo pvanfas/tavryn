@@ -53,7 +53,7 @@ As an autonomous agent system, Tavryn maintains absolute transparency on its bou
    - For real businesses (`is_real = true`), real contracts are loaded, but vendor responses remain simulated until email/webhook integrations are plugged in.
 2. **Blockchain Escrow Settlement (Arc Testnet / Sandbox):**
    - Circle Developer-Controlled Wallets SDK is integrated for Arc Testnet.
-   - When testnet credentials or wallet set IDs are unconfigured, `create_escrow` safely falls back to simulated Arc EVM transactions (`0xsimulated_arc_tx_hash_...`) so that demonstration flows succeed reliably.
+   - When testnet credentials or wallet set IDs are unconfigured, `create_escrow` safely records simulated transactions with `status: 'simulation-only'`, `is_simulated: true`, and `tx_hash: null` so that demonstration flows succeed reliably without fabricating artificial on-chain hashes.
 3. **Counterparty OFAC / Compliance Screening:**
    - `screenAddress` in `lib/screening.ts` uses an offline heuristic table and mock blocklist (blocking known malicious addresses such as `0x9999999999999999999999999999999999999999`) rather than a live paid subscription to Chainalysis or Elliptic.
 4. **In-Memory Rate Limiting:**
