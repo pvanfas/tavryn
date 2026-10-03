@@ -93,8 +93,7 @@ export async function verifyPolicyExecutionAuthorization(
 
     if (periodTxs) {
       for (const tx of periodTxs) {
-        const txCategory =
-          (tx.contracts as any)?.category || context.category;
+        const txCategory = (tx.contracts as any)?.category || context.category;
         if (
           txCategory &&
           txCategory.toLowerCase() === (context.category || "").toLowerCase()

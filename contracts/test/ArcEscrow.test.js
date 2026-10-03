@@ -325,7 +325,9 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
 
   it("12. Role separation: Cannot set verifier equal to agent address", async function () {
     await expect(
-      arcEscrow.connect(owner).setRoles(owner.address, agent.address, agent.address),
+      arcEscrow
+        .connect(owner)
+        .setRoles(owner.address, agent.address, agent.address),
     ).to.be.revertedWith("ArcEscrow: Verifier cannot be agent");
   });
 
@@ -333,17 +335,23 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
     const price = ethers.parseUnits("3000", 6);
     const baseline = ethers.parseUnits("4000", 6);
     const idempKey = ethers.encodeBytes32String("idemp-decision-13");
-    const decisionHash = ethers.keccak256(ethers.toUtf8Bytes('{"negotiationId":"neg-123","vendor":"Slack","amount":"3000.000000"}'));
-
-    const tx = await arcEscrow.connect(agent).createAgreementWithDecision(
-      vendor.address,
-      price,
-      baseline,
-      "software",
-      3600,
-      idempKey,
-      decisionHash,
+    const decisionHash = ethers.keccak256(
+      ethers.toUtf8Bytes(
+        '{"negotiationId":"neg-123","vendor":"Slack","amount":"3000.000000"}',
+      ),
     );
+
+    const tx = await arcEscrow
+      .connect(agent)
+      .createAgreementWithDecision(
+        vendor.address,
+        price,
+        baseline,
+        "software",
+        3600,
+        idempKey,
+        decisionHash,
+      );
 
     await expect(tx).to.emit(arcEscrow, "AgreementCreated");
 
@@ -357,31 +365,38 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
     const baseline = ethers.parseUnits("3000", 6);
     const idempKey1 = ethers.encodeBytes32String("idemp-14-a");
     const idempKey2 = ethers.encodeBytes32String("idemp-14-b");
-    const decisionHash = ethers.keccak256(ethers.toUtf8Bytes('{"negotiationId":"neg-456","vendor":"Datadog","amount":"2000.000000"}'));
-
-    // First creation succeeds
-    await arcEscrow.connect(agent).createAgreementWithDecision(
-      vendor.address,
-      price,
-      baseline,
-      "software",
-      3600,
-      idempKey1,
-      decisionHash,
+    const decisionHash = ethers.keccak256(
+      ethers.toUtf8Bytes(
+        '{"negotiationId":"neg-456","vendor":"Datadog","amount":"2000.000000"}',
+      ),
     );
 
-    // Second creation with the same decisionHash reverts even with a different idempotency key
-    await expect(
-      arcEscrow.connect(agent).createAgreementWithDecision(
+    // First creation succeeds
+    await arcEscrow
+      .connect(agent)
+      .createAgreementWithDecision(
         vendor.address,
         price,
         baseline,
         "software",
         3600,
-        idempKey2,
+        idempKey1,
         decisionHash,
-      ),
+      );
+
+    // Second creation with the same decisionHash reverts even with a different idempotency key
+    await expect(
+      arcEscrow
+        .connect(agent)
+        .createAgreementWithDecision(
+          vendor.address,
+          price,
+          baseline,
+          "software",
+          3600,
+          idempKey2,
+          decisionHash,
+        ),
     ).to.be.revertedWith("ArcEscrow: Decision already executed");
   });
 });
-

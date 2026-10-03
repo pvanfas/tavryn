@@ -10,6 +10,7 @@ import {
   ExternalLink,
   FileText,
   LayoutDashboard,
+  Loader2,
   type LucideIcon,
   MessageSquare,
   PlusCircle,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/nav";
 
 import { BusinessItem } from "./BusinessSwitcher";
+import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 interface AppSidebarProps {
@@ -64,6 +66,11 @@ export function AppSidebar({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
+
+  useEffect(() => {
+    setIsSwitchingOrg(false);
+  }, [activeBusinessId]);
 
   const collapsed =
     controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
@@ -152,8 +159,14 @@ export function AppSidebar({
     SettingsIcon,
   };
 
+  const visibleBusinesses = businesses.filter(
+    (b) => (b.is_real || b.name === "Demo Co") && !b.name?.startsWith("[Deleted"),
+  );
   const activeBusiness =
-    businesses.find((b) => b.id === activeBusinessId) || businesses[0];
+    visibleBusinesses.find((b) => b.id === activeBusinessId) ||
+    visibleBusinesses[0] ||
+    businesses.find((b) => b.id === activeBusinessId) ||
+    businesses[0];
   const arcscanUrl = walletAddress
     ? `${ARC_CONFIG.explorerUrl}/address/${walletAddress}`
     : ARC_CONFIG.explorerUrl;
@@ -234,19 +247,27 @@ export function AppSidebar({
             </div>
 
             <div className="flex items-center gap-2">
-              <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+              {isSwitchingOrg ? (
+                <Loader2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] animate-spin shrink-0" />
+              ) : (
+                <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+              )}
               <select
                 value={activeBusinessId || activeBusiness?.id || ""}
+                disabled={isSwitchingOrg}
                 onChange={(e) => {
                   const newId = e.target.value;
-                  if (newId) {
-                    router.push(`/dashboard?businessId=${newId}`);
+                  if (newId && newId !== activeBusinessId) {
+                    setIsSwitchingOrg(true);
+                    startTopLineLoader();
+                    const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
+                    router.push(`${targetPath}?businessId=${newId}`);
                   }
                 }}
-                className="bg-transparent font-bold text-xs text-slate-900 dark:text-white focus:outline-hidden cursor-pointer w-full truncate pr-1"
+                className="bg-transparent font-bold text-xs text-slate-900 dark:text-white focus:outline-hidden cursor-pointer w-full truncate pr-1 disabled:opacity-60"
                 aria-label="Select Active Organization"
               >
-                {businesses.map((b) => (
+                {visibleBusinesses.map((b) => (
                   <option
                     key={b.id}
                     value={b.id}
@@ -296,10 +317,15 @@ export function AppSidebar({
               const showBadge =
                 item.badgeKey === "approvals" && pendingApprovalsCount > 0;
 
+              const navHref =
+                activeBusinessId && item.href !== "/onboard"
+                  ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
+                  : item.href;
+
               return (
                 <div key={item.id} className="relative group">
                   <Link
-                    href={item.href}
+                    href={navHref}
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                       collapsed ? "justify-center px-0 py-2.5" : ""
@@ -363,10 +389,15 @@ export function AppSidebar({
             const Icon = ICON_MAP[item.iconName] || PlusCircle;
             const active = isRouteActive(pathname, item.href);
 
+            const bottomHref =
+              activeBusinessId && item.href !== "/onboard"
+                ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
+                : item.href;
+
             return (
               <div key={item.id} className="relative group">
                 <Link
-                  href={item.href}
+                  href={bottomHref}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                     collapsed ? "justify-center px-0 py-2" : ""

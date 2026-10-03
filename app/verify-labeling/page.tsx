@@ -85,7 +85,9 @@ export default function VerifyLabelingPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Network:</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Network:
+                    </span>
                     <span className="text-slate-800 dark:text-slate-200 font-medium">
                       Arc Testnet (USDC-native EVM)
                     </span>
@@ -172,13 +174,17 @@ export default function VerifyLabelingPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Network:</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Network:
+                    </span>
                     <span className="text-slate-800 dark:text-slate-200 font-medium">
                       Arc Testnet (Simulated Sandbox)
                     </span>
                   </div>
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Mock Hash:</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Mock Hash:
+                    </span>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-mono">
                       <span>0xsimulated_8f7b...1d0e</span>
                       <Copy className="w-3 h-3 text-slate-400" />

@@ -17,12 +17,12 @@ _Oct 03, 2026 · Added an unauthenticated, rate-limited public stats endpoint (`
 
 ## Files changed
 
-| File | What |
-|------|------|
-| `app/api/stats/route.ts` | New public API: Unauthenticated, rate-limited aggregate traction stats |
+| File                          | What                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| `app/api/stats/route.ts`      | New public API: Unauthenticated, rate-limited aggregate traction stats               |
 | `components/LiveStatsBar.tsx` | New client component: 30s auto-refreshing stats banner with pulsing status indicator |
-| `app/page.tsx` | Mounted `LiveStatsBar` between hero metrics and the How-It-Works section |
-| `.github/workflows/stats.yml` | New GitHub Actions workflow: Daily automated public stats fetch and reporting |
+| `app/page.tsx`                | Mounted `LiveStatsBar` between hero metrics and the How-It-Works section             |
+| `.github/workflows/stats.yml` | New GitHub Actions workflow: Daily automated public stats fetch and reporting        |
 
 ## Verification
 

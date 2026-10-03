@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertTriangle, Bot, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import React from "react";
 
 import { DecisionData } from "./types";
@@ -139,8 +145,9 @@ export function ReviewerAuditSection({
         </div>
       ) : (
         <div className="mt-4 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
-          No adversarial audit recorded for this negotiation yet. Click &quot;Run
-          Reviewer Cross-Check&quot; above to trigger independent verification.
+          No adversarial audit recorded for this negotiation yet. Click
+          &quot;Run Reviewer Cross-Check&quot; above to trigger independent
+          verification.
         </div>
       )}
     </div>

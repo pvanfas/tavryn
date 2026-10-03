@@ -64,7 +64,8 @@ export function PublicReceiptsSection({
           type="button"
           onClick={onCreateReceipt}
           disabled={
-            creatingReceipt || (!isTransactionCompleted && receipts.length === 0)
+            creatingReceipt ||
+            (!isTransactionCompleted && receipts.length === 0)
           }
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
         >

@@ -53,10 +53,7 @@ describe("Policy Authorization Hardening Integration Tests", () => {
       })
       .select("id, max_auto_transaction")
       .single();
-    assert.ok(
-      policy && !pErr,
-      `Failed to setup test policy: ${pErr?.message}`,
-    );
+    assert.ok(policy && !pErr, `Failed to setup test policy: ${pErr?.message}`);
 
     const { data: contract, error: cErr } = await supabase
       .from("contracts")
@@ -576,10 +573,7 @@ describe("Policy Authorization Hardening Integration Tests", () => {
         "Transaction exceeding treasury balance must never be authorized",
       );
       assert.equal(auth.decision, "rejected");
-      assert.match(
-        auth.reason,
-        /insufficient treasury balance/i,
-      );
+      assert.match(auth.reason, /insufficient treasury balance/i);
 
       // Also verify via create_escrow tool execution: must throw policy refusal
       const tools = createAgentTools({ businessId: business.id });

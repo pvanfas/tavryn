@@ -32,7 +32,9 @@ export async function getTractionMetrics(options?: {
     throw new Error(`Failed to fetch businesses for metrics: ${bErr.message}`);
   }
 
-  const businesses = rawBusinesses || [];
+  const businesses = (rawBusinesses || []).filter(
+    (b) => !b.name?.startsWith("[Deleted"),
+  );
   const businessIds = businesses.map((b) => b.id);
 
   // If realOnly is true and no real businesses exist yet, return clean zeroed metrics

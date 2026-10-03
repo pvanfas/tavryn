@@ -264,4 +264,3 @@ export async function executeConfirmedAction(
 
   throw new Error(`Unsupported action: ${action}`);
 }
-

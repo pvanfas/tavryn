@@ -310,7 +310,10 @@ export function buildReleaseEscrowTool(ctx: ToolContext) {
           }
         } catch (agErr: any) {
           if (agErr.message?.includes("Escrow release blocked")) throw agErr;
-          console.warn("Could not pre-verify agreement amount on-chain (non-fatal):", agErr);
+          console.warn(
+            "Could not pre-verify agreement amount on-chain (non-fatal):",
+            agErr,
+          );
         }
 
         // Step A: Approve milestone on ArcEscrow (submits milestone if needed first, verifier approves)

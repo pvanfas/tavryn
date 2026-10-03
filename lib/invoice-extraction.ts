@@ -1,7 +1,10 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
+import {
+  getAgentLanguageModel,
+  isLiveLLMConfigured,
+} from "@/lib/agent/provider";
 
 import { SubscriptionCategory } from "./schemas";
 import { redactFinancialData } from "./statement-detection";

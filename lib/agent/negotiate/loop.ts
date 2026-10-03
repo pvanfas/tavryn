@@ -140,7 +140,8 @@ export async function runNegotiationLoop(
   let activeNegotiationId: string | undefined = undefined;
 
   const compNames = competitors.options.map((c) => c.name);
-  const competitorsDesc = compNames.slice(0, 2).join(", ") || "Market competitors";
+  const competitorsDesc =
+    compNames.slice(0, 2).join(", ") || "Market competitors";
   const usageDesc = usage.seat_count
     ? `${usage.active_seats}/${usage.seat_count} seats active`
     : "Telemetry verified";

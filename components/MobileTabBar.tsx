@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileText,
   LayoutDashboard,
+  Loader2,
   MessageSquare,
   MoreHorizontal,
   PlusCircle,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/nav";
 
 import { BusinessItem } from "./BusinessSwitcher";
+import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 interface MobileTabBarProps {
@@ -52,6 +54,11 @@ export function MobileTabBar({
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
+
+  useEffect(() => {
+    setIsSwitchingOrg(false);
+  }, [activeBusinessId]);
 
   // Poll pending approvals count
   useEffect(() => {
@@ -138,11 +145,15 @@ export function MobileTabBar({
               item.highlightNestedPrefixes,
             );
             const showBadge = item.id === "approvals" && pendingCount > 0;
+            const navHref =
+              activeBusinessId && item.href !== "/onboard"
+                ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
+                : item.href;
 
             return (
               <Link
                 key={item.id}
-                href={item.href}
+                href={navHref}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl m-1 ${
                   active
@@ -230,22 +241,32 @@ export function MobileTabBar({
                 </span>
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#107e65] dark:text-[#34d399] shrink-0">
-                    <Building2 className="h-4 w-4" />
+                    {isSwitchingOrg ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Building2 className="h-4 w-4" />
+                    )}
                   </div>
                   <select
                     value={activeBusinessId}
+                    disabled={isSwitchingOrg}
                     onChange={(e) => {
                       const newId = e.target.value;
-                      if (newId) {
-                        router.push(`/?businessId=${newId}`);
+                      if (newId && newId !== activeBusinessId) {
+                        setIsSwitchingOrg(true);
+                        startTopLineLoader();
+                        const targetPath =
+                          pathname && pathname !== "/" ? pathname : "/dashboard";
+                        router.push(`${targetPath}?businessId=${newId}`);
                         setMoreOpen(false);
                       }
                     }}
-                    className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden truncate"
+                    className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden truncate disabled:opacity-60"
                   >
                     {businesses.map((b) => (
                       <option key={b.id} value={b.id}>
-                        {formatBusinessName(b.name)} {b.is_real ? "(Real)" : "(Demo)"}
+                        {formatBusinessName(b.name)}{" "}
+                        {b.is_real ? "(Real)" : "(Demo)"}
                       </option>
                     ))}
                   </select>
@@ -262,11 +283,15 @@ export function MobileTabBar({
                   item.href,
                   item.highlightNestedPrefixes,
                 );
+                const moreHref =
+                  activeBusinessId && item.href !== "/onboard"
+                    ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
+                    : item.href;
 
                 return (
                   <Link
                     key={item.id}
-                    href={item.href}
+                    href={moreHref}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${

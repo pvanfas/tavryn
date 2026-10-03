@@ -10,7 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/lib/auth";
 
 import type { BusinessItem } from "./BusinessSwitcher";
+import { startTopLineLoader } from "./TopLineLoader";
 
 export function formatBusinessName(name?: string | null): string {
   if (!name) return "Demo Co";
@@ -45,6 +46,7 @@ export function UserDropdown({
   activeBusinessId,
 }: UserDropdownProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -113,9 +115,10 @@ export function UserDropdown({
     }
   };
 
-  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses
+  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses, excluding any deleted orgs
   const allowedBusinesses = businesses.filter(
-    (b) => b.is_real || b.name === "Demo Co",
+    (b) =>
+      (b.is_real || b.name === "Demo Co") && !b.name?.startsWith("[Deleted"),
   );
 
   // Deduplicate businesses by clean name, preferring the active business if matched
@@ -137,7 +140,11 @@ export function UserDropdown({
 
   const handleSwitchBusiness = (id: string) => {
     setOpen(false);
-    router.push(`/dashboard?businessId=${id}`);
+    if (id !== activeBusinessId) {
+      startTopLineLoader();
+      const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
+      router.push(`${targetPath}?businessId=${id}`);
+    }
   };
 
   const displayName = fullName || userEmail?.split("@")[0] || "User";

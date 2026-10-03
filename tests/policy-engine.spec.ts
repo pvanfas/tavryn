@@ -279,7 +279,9 @@ describe("Deterministic Policy Engine (Pure Function Edge Cases)", () => {
         (c) => c.name === "runway_liquidity_precheck",
       );
       expect(check?.passed).toBe(false);
-      expect(check?.detail).toContain("recommend scheduling escrow closer to deadline");
+      expect(check?.detail).toContain(
+        "recommend scheduling escrow closer to deadline",
+      );
       expect(result.reasons[0]).toContain("Deferring escrow commitment");
     });
 

@@ -208,7 +208,9 @@ export async function consumeApprovalToken(
     .maybeSingle();
 
   if (!consumedToken && !tokenErr) {
-    throw new Error("This approval link has already been used or consumed concurrently.");
+    throw new Error(
+      "This approval link has already been used or consumed concurrently.",
+    );
   }
 
   // 2. Query or insert/update approvals row

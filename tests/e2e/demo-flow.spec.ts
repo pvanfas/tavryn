@@ -9,11 +9,11 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
     // 1. Verify exact one-line pitch
     const pitchHeading = page.locator("h1");
     await expect(pitchHeading).toContainText(
-      "An agent that finds the waste, negotiates it away, and executes the financial decision",
+      "An agent that uncovers spend inefficiencies, negotiates them away, and executes the financial decision",
     );
 
     // 2. Verify 3-step loop
-    const step1 = page.locator("text=Detect Waste & Renewal Cliffs");
+    const step1 = page.locator("text=Detect Inefficiencies & Renewal Cliffs");
     const step2 = page.locator("text=Autonomous Multi-Round Negotiation");
     const step3 = page.locator("text=Policy Check & Arc Escrow Release");
     await expect(step1).toBeVisible();

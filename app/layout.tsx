@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope } from "next/font/google";
 
+import { TopLineLoader } from "@/components/TopLineLoader";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -23,11 +24,62 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tavryn | Procurement & Treasury Ledger",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://tavryn.io",
+  ),
+  title: {
+    default: "Tavryn | Procurement & Treasury Ledger",
+    template: "%s | Tavryn",
+  },
   description:
-    "Enterprise SaaS and cloud contract procurement with deterministic policy enforcement and Arc testnet escrow.",
+    "An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.",
+  applicationName: "Tavryn",
+  keywords: [
+    "Tavryn",
+    "Procurement",
+    "Treasury Ledger",
+    "Arc",
+    "Circle",
+    "USDC",
+    "Autonomous Agent",
+    "SaaS Spend",
+    "Smart Contracts",
+    "Escrow",
+  ],
+  authors: [{ name: "Tavryn Protocol" }],
+  creator: "Tavryn",
+  publisher: "Tavryn",
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
+  openGraph: {
+    title: "Tavryn | Procurement & Treasury Ledger",
+    description:
+      "An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.",
+    url: "https://tavryn.io",
+    siteName: "Tavryn",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Tavryn | Procurement & Treasury Ledger",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tavryn | Procurement & Treasury Ledger",
+    description:
+      "An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.",
+    images: ["/logo.png"],
   },
 };
 
@@ -52,6 +104,7 @@ export default function RootLayout({
       <body
         className={`${manrope.className} min-h-full flex flex-col bg-[#f7f9f8] dark:bg-[#0b100e] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
       >
+        <TopLineLoader />
         {children}
         <Analytics />
       </body>

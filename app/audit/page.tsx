@@ -24,6 +24,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
     .select(
       "id, name, is_real, treasury_balance, default_currency, wallet_address",
     )
+    .not("name", "ilike", "[Deleted%")
     .order("created_at", { ascending: false });
 
   const businesses = bList || [];

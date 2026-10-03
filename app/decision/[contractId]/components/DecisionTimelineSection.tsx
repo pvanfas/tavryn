@@ -46,19 +46,22 @@ export function DecisionTimelineSection({
   // 2. Extract Alternative Model
   const competitor = switchingMatrix?.competitors?.[0];
   const topAlternative = {
-    name: switchingMatrix?.recommendation?.targetVendor || competitor?.vendorName || (
-      contract.service.toLowerCase().includes("slack")
+    name:
+      switchingMatrix?.recommendation?.targetVendor ||
+      competitor?.vendorName ||
+      (contract.service.toLowerCase().includes("slack")
         ? "Microsoft Teams"
         : contract.service.toLowerCase().includes("jira")
           ? "Linear"
           : contract.service.toLowerCase().includes("salesforce")
             ? "HubSpot Enterprise"
-            : "Market Benchmark Alternative"
-    ),
-    cost1Year: competitor?.estimatedPrice ?? Math.round(contract.baselinePrice * 0.72),
+            : "Market Benchmark Alternative"),
+    cost1Year:
+      competitor?.estimatedPrice ?? Math.round(contract.baselinePrice * 0.72),
   };
 
-  const netNpvSavings = competitor?.netYear1Savings ?? Math.round(contract.annualSavings * 0.85);
+  const netNpvSavings =
+    competitor?.netYear1Savings ?? Math.round(contract.annualSavings * 0.85);
 
   // 3. Negotiated Discount
   const savingsPct = contract.savingsPct || 28;
@@ -126,9 +129,7 @@ export function DecisionTimelineSection({
       status: isPolicyApproved ? "completed" : "warning",
       icon: ShieldCheck,
       color: isDeferred ? "amber" : "emerald",
-      badgeText: isDeferred
-        ? "Deferred Scheduling Advised"
-        : "Liquidity Safe",
+      badgeText: isDeferred ? "Deferred Scheduling Advised" : "Liquidity Safe",
       summary: isDeferred
         ? `Active treasury ($${treasuryBalance.toLocaleString()}) minus renewal escrow ($${contract.proposedPrice.toLocaleString()}) leaves $${projectedLiquidity.toLocaleString()} working capital against $${obligations30d.toLocaleString()} in 30-day obligations. With renewal ${daysUntilRenewal}d away, agent recommends scheduling escrow commitment closer to deadline to preserve operating runway.`
         : `Active treasury ($${treasuryBalance.toLocaleString()}) safely covers 30-day obligations ($${obligations30d.toLocaleString()}) after $${contract.proposedPrice.toLocaleString()} commitment. Operating runway verified healthy (${daysUntilRenewal}d to renewal deadline).`,
@@ -160,7 +161,8 @@ export function DecisionTimelineSection({
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Sequential causal trail: discovery &bull; strategic alternative &bull; concession curve &bull; runway check &bull; onchain escrow
+            Sequential causal trail: discovery &bull; strategic alternative
+            &bull; concession curve &bull; runway check &bull; onchain escrow
           </p>
         </div>
 

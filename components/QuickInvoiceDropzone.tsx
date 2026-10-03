@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle2, FileUp, Loader2, Sparkles, Upload, X } from "lucide-react";
+import {
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import React, { useRef, useState } from "react";
 
 interface QuickInvoiceDropzoneProps {
@@ -51,7 +58,9 @@ export function QuickInvoiceDropzone({
         service: detected.service || `${detected.vendor} License`,
         category: detected.category || "software",
         annualPrice: Number(detected.annual_price) || 12000,
-        renewalDate: detected.renewal_date || new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
+        renewalDate:
+          detected.renewal_date ||
+          new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
         seats: detected.seats || null,
         activeSeats: detected.active_seats || null,
         confidence: detected.confidence || 0.95,
@@ -118,7 +127,9 @@ export function QuickInvoiceDropzone({
   }
 
   return (
-    <div className={`p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#121915]/95 shadow-md ${className}`}>
+    <div
+      className={`p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#121915]/95 shadow-md ${className}`}
+    >
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <div className="p-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -129,7 +140,8 @@ export function QuickInvoiceDropzone({
               Instant PDF Invoice / Statement Parser
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Drag and drop any PDF invoice, receipt, or CSV statement to extract contract terms.
+              Drag and drop any PDF invoice, receipt, or CSV statement to
+              extract contract terms.
             </p>
           </div>
         </div>
@@ -221,7 +233,8 @@ export function QuickInvoiceDropzone({
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Seats:</span>
                 <span className="text-slate-700 dark:text-slate-300">
-                  {parsedItem.seats} seats ({parsedItem.activeSeats || "all"} active)
+                  {parsedItem.seats} seats ({parsedItem.activeSeats || "all"}{" "}
+                  active)
                 </span>
               </div>
             )}
@@ -251,9 +264,7 @@ export function QuickInvoiceDropzone({
       )}
 
       {error && (
-        <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">
-          {error}
-        </p>
+        <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{error}</p>
       )}
     </div>
   );

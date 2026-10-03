@@ -84,10 +84,7 @@ export interface ReplyProcessResult {
   extraction: ExtractedTerms;
   message: string;
   suggested_action:
-    | "escrow"
-    | "record_savings_no_payment"
-    | "await_vendor"
-    | "walk_away";
+    "escrow" | "record_savings_no_payment" | "await_vendor" | "walk_away";
 }
 
 export interface DraftEmailData {

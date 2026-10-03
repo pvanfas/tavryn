@@ -25,16 +25,16 @@ The agent's payment pipeline now has an on-chain defense-in-depth layer that pre
 
 ## Files changed
 
-| File | What |
-|------|------|
-| `contracts/contracts/ArcEscrow.sol` | `usedDecisions` mapping, `decisionHash` in Agreement struct and `AgreementCreated` event, replay rejection in `_createAgreementInternal` |
-| `contracts/test/ArcEscrow.test.js` | Tests 13–14: decision hash recording and replay rejection |
-| `lib/policy/decision-hash.ts` | New module: `canonicalizeDecisionPayload`, `computeEscrowDecisionHash` |
-| `lib/contracts/arc-escrow.ts` | Updated ABI with `decisionHash` parameter |
-| `lib/circle/escrow-contract.ts` | Passes `decisionHash` through contract call |
-| `lib/tools/escrow/create.ts` | Computes and logs `decisionHash` in pipeline |
-| `tests/decision-hash.test.ts` | 4 canonical hash determinism tests |
-| `tests/unlinked-idempotency.test.ts` | Isolated fixture for policy authorization testing |
+| File                                 | What                                                                                                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `contracts/contracts/ArcEscrow.sol`  | `usedDecisions` mapping, `decisionHash` in Agreement struct and `AgreementCreated` event, replay rejection in `_createAgreementInternal` |
+| `contracts/test/ArcEscrow.test.js`   | Tests 13–14: decision hash recording and replay rejection                                                                                |
+| `lib/policy/decision-hash.ts`        | New module: `canonicalizeDecisionPayload`, `computeEscrowDecisionHash`                                                                   |
+| `lib/contracts/arc-escrow.ts`        | Updated ABI with `decisionHash` parameter                                                                                                |
+| `lib/circle/escrow-contract.ts`      | Passes `decisionHash` through contract call                                                                                              |
+| `lib/tools/escrow/create.ts`         | Computes and logs `decisionHash` in pipeline                                                                                             |
+| `tests/decision-hash.test.ts`        | 4 canonical hash determinism tests                                                                                                       |
+| `tests/unlinked-idempotency.test.ts` | Isolated fixture for policy authorization testing                                                                                        |
 
 ## Verification
 

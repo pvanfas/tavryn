@@ -21,21 +21,32 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Subscription Confirmation Challenge Handshake
-    if (payload.Type === "SubscriptionConfirmation" || payload.notificationType === "subscription.confirmation") {
+    if (
+      payload.Type === "SubscriptionConfirmation" ||
+      payload.notificationType === "subscription.confirmation"
+    ) {
       const subscribeUrl = payload.SubscribeURL || payload.subscribeUrl;
       if (subscribeUrl) {
         try {
           await fetch(subscribeUrl);
         } catch (fetchErr) {
-          console.warn("[CircleWebhook] Failed to confirm subscription URL:", fetchErr);
+          console.warn(
+            "[CircleWebhook] Failed to confirm subscription URL:",
+            fetchErr,
+          );
         }
       }
       return apiSuccess({ confirmed: true, message: "Subscription confirmed" });
     }
 
     // 2. Extract Event and Transaction Details
-    const notificationType = payload.notificationType || payload.type || payload.NotificationType || "unknown";
-    const txData = payload.transaction || payload.data?.transaction || payload.data || {};
+    const notificationType =
+      payload.notificationType ||
+      payload.type ||
+      payload.NotificationType ||
+      "unknown";
+    const txData =
+      payload.transaction || payload.data?.transaction || payload.data || {};
     const circleTxId = txData.id || txData.transactionId;
     const txHash = txData.txHash || txData.transactionHash;
     const state = (txData.state || txData.status || "").toUpperCase();
@@ -65,10 +76,18 @@ export async function POST(req: NextRequest) {
     // 4. Update status based on Circle state
     if (matchedTx) {
       let targetStatus: string | null = null;
-      if (state === "CONFIRMED" || state === "COMPLETE" || state === "SUCCESS") {
+      if (
+        state === "CONFIRMED" ||
+        state === "COMPLETE" ||
+        state === "SUCCESS"
+      ) {
         // If it was pending, mark funded or completed
         targetStatus = matchedTx.status === "pending" ? "funded" : "completed";
-      } else if (state === "FAILED" || state === "CANCELLED" || state === "REJECTED") {
+      } else if (
+        state === "FAILED" ||
+        state === "CANCELLED" ||
+        state === "REJECTED"
+      ) {
         targetStatus = "failed";
       }
 

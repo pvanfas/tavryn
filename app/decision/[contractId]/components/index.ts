@@ -5,4 +5,3 @@ export * from "./ReviewerAuditSection";
 export * from "./SwitchingAlternativesSection";
 export * from "./types";
 export * from "./VendorVerificationSection";
-

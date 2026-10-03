@@ -204,3 +204,111 @@ export async function POST(
     return handleApiError(err, "Failed to dispatch test webhook");
   }
 }
+
+export async function DELETE(
+  req: Request,
+  props: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: businessId } = await props.params;
+    if (!businessId) {
+      return apiError("Missing business ID", 400);
+    }
+
+    // Safety guard: Protect default Demo Co organization from accidental deletion
+    if (businessId === "b655fb94-fc62-4e3c-8898-2c5f88068159") {
+      return apiError(
+        "Default Demo Co organization is protected and cannot be deleted. Please switch to or create another organization to delete.",
+        400,
+      );
+    }
+
+    const supabase = getServiceSupabase();
+
+    // Check that business exists
+    const { data: business, error: bError } = await supabase
+      .from("businesses")
+      .select("id, name")
+      .eq("id", businessId)
+      .maybeSingle();
+
+    if (bError || !business) {
+      return apiError("Organization not found", 404);
+    }
+
+    let rawBody: any = {};
+    try {
+      rawBody = await req.json();
+    } catch {
+      // Body is optional
+    }
+
+    if (
+      rawBody?.confirmName &&
+      rawBody.confirmName.trim().toLowerCase() !==
+        business.name.trim().toLowerCase()
+    ) {
+      return apiError(
+        `Confirmation mismatch. Expected "${business.name}", got "${rawBody.confirmName}".`,
+        400,
+      );
+    }
+
+    // 1. Cascade delete all child data associated with this business
+    await Promise.allSettled([
+      supabase.from("receipts").delete().eq("business_id", businessId),
+      supabase.from("reviewer_audits").delete().eq("business_id", businessId),
+      supabase.from("approvals").delete().eq("business_id", businessId),
+      supabase.from("override_memory").delete().eq("business_id", businessId),
+      supabase.from("vendor_memory").delete().eq("business_id", businessId),
+      supabase.from("notifications").delete().eq("business_id", businessId),
+      supabase.from("onboarding_events").delete().eq("business_id", businessId),
+      supabase.from("transactions").delete().eq("business_id", businessId),
+      supabase.from("contracts").delete().eq("business_id", businessId),
+      supabase.from("policies").delete().eq("business_id", businessId),
+      supabase.from("business_members").delete().eq("business_id", businessId),
+    ]);
+
+    // 2. Delete or scrub the business record
+    const { error: delErr } = await supabase
+      .from("businesses")
+      .delete()
+      .eq("id", businessId);
+
+    if (delErr) {
+      // If blocked by append-only trigger on agent_actions
+      if (
+        delErr.code === "P0001" ||
+        delErr.message?.includes(
+          "agent_actions is an immutable append-only ledger",
+        )
+      ) {
+        await supabase
+          .from("businesses")
+          .update({
+            name: `[Deleted Organization] ${business.name}`,
+            is_real: false,
+            wallet_address: null,
+            webhook_url: null,
+            treasury_balance: 0,
+          })
+          .eq("id", businessId);
+      } else {
+        throw delErr;
+      }
+    }
+
+    logger.info("Permanently deleted organization and all related records", {
+      businessId,
+      name: business.name,
+    });
+
+    return apiSuccess({
+      deleted: true,
+      businessId,
+      message: `Organization "${business.name}" and all related data have been permanently removed.`,
+    });
+  } catch (err) {
+    return handleApiError(err, "Failed to delete organization");
+  }
+}

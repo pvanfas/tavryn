@@ -194,9 +194,8 @@ export function checkPolicy(
     const hasSufficientRunway = projectedLiquidity >= obligations30d;
 
     let recommendation:
-      | "execute_now"
-      | "schedule_deferred"
-      | "escalate_low_runway" = "execute_now";
+      "execute_now" | "schedule_deferred" | "escalate_low_runway" =
+      "execute_now";
 
     if (!hasSufficientRunway) {
       if (daysLeft > 7) {

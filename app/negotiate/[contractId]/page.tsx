@@ -81,8 +81,7 @@ export default function NegotiationDetailPage({
 
       if (!res.ok) {
         throw new Error(
-          json?.error ||
-            `Failed to load negotiation data (HTTP ${res.status})`,
+          json?.error || `Failed to load negotiation data (HTTP ${res.status})`,
         );
       }
 
@@ -133,8 +132,7 @@ export default function NegotiationDetailPage({
 
       if (!res.ok) {
         throw new Error(
-          payload?.error ||
-            `Negotiation execution failed (HTTP ${res.status})`,
+          payload?.error || `Negotiation execution failed (HTTP ${res.status})`,
         );
       }
 
@@ -189,8 +187,7 @@ export default function NegotiationDetailPage({
 
       if (!res.ok) {
         throw new Error(
-          data?.error ||
-            `Failed to draft outreach email (HTTP ${res.status})`,
+          data?.error || `Failed to draft outreach email (HTTP ${res.status})`,
         );
       }
 
@@ -237,8 +234,7 @@ export default function NegotiationDetailPage({
 
       if (!res.ok) {
         throw new Error(
-          data?.error ||
-            `Failed to process vendor reply (HTTP ${res.status})`,
+          data?.error || `Failed to process vendor reply (HTTP ${res.status})`,
         );
       }
 
@@ -299,7 +295,10 @@ export default function NegotiationDetailPage({
       }
 
       const savedAmount =
-        data?.result?.savings || data?.savings || extractedResult.extraction.counter_offer || 0;
+        data?.result?.savings ||
+        data?.savings ||
+        extractedResult.extraction.counter_offer ||
+        0;
       setSaveSuccess(
         `Successfully captured $${Number(savedAmount).toLocaleString()} in annual recurring savings off-chain. Traction metrics updated!`,
       );
@@ -377,9 +376,7 @@ export default function NegotiationDetailPage({
             </H1>
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
               <span className="capitalize text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-                {contract?.category ||
-                  activeVendor?.category ||
-                  "Subscription"}
+                {contract?.category || activeVendor?.category || "Subscription"}
               </span>
               {activeVendor ? (
                 activeVendor.is_simulated ? (
@@ -587,9 +584,7 @@ export default function NegotiationDetailPage({
         />
 
         {/* Timeline of Rounds */}
-        <NegotiationTranscript
-          conversation={negotiation?.conversation || []}
-        />
+        <NegotiationTranscript conversation={negotiation?.conversation || []} />
 
         {/* Outcome Justification Grid */}
         {negotiation && (

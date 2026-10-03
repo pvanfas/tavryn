@@ -1,7 +1,11 @@
 import { type Hex, keccak256, parseUnits, toHex } from "viem";
 
 import { ARC_ESCROW_ABI } from "../contracts/arc-escrow";
-import { ensureUsdcAllowance, getArcPublicClient, getArcWalletClient } from "./balances";
+import {
+  ensureUsdcAllowance,
+  getArcPublicClient,
+  getArcWalletClient,
+} from "./balances";
 import { executeCircleContractCall } from "./client";
 import { ARC_CONFIG, isCircleConfigured, isSimulationMode } from "./config";
 
@@ -27,15 +31,16 @@ export async function createArcEscrowAgreement(params: {
   decisionHash: string;
 }> {
   const idKey = params.idempotencyKey
-    ? (params.idempotencyKey.startsWith("0x") && params.idempotencyKey.length === 66
-        ? (params.idempotencyKey as Hex)
-        : keccak256(toHex(params.idempotencyKey)))
+    ? params.idempotencyKey.startsWith("0x") &&
+      params.idempotencyKey.length === 66
+      ? (params.idempotencyKey as Hex)
+      : keccak256(toHex(params.idempotencyKey))
     : keccak256(toHex(`agreement-${Date.now()}`));
 
   const decHash: Hex = params.decisionHash
-    ? (params.decisionHash.startsWith("0x") && params.decisionHash.length === 66
-        ? (params.decisionHash as Hex)
-        : keccak256(toHex(params.decisionHash)))
+    ? params.decisionHash.startsWith("0x") && params.decisionHash.length === 66
+      ? (params.decisionHash as Hex)
+      : keccak256(toHex(params.decisionHash))
     : idKey;
 
   if (isSimulationMode(params.forceRealChain)) {
@@ -106,7 +111,12 @@ export async function createArcEscrowAgreement(params: {
           functionName: "nextAgreementId",
         });
         const agreementId = (nextId - BigInt(1)).toString();
-        return { isSimulation: false, agreementId, txHash: circleRes.txHash, decisionHash: decHash };
+        return {
+          isSimulation: false,
+          agreementId,
+          txHash: circleRes.txHash,
+          decisionHash: decHash,
+        };
       }
     } catch (circleErr) {
       console.warn(

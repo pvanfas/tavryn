@@ -8,9 +8,9 @@ import {
 export const isRealLLM = Boolean(
   (process.env.LLM_PROVIDER === "openai" &&
     (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
-    (process.env.LLM_PROVIDER === "anthropic" &&
-      (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)) ||
-    (process.env.LLM_PROVIDER === "gateway" && process.env.AI_GATEWAY_API_KEY),
+  (process.env.LLM_PROVIDER === "anthropic" &&
+    (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)) ||
+  (process.env.LLM_PROVIDER === "gateway" && process.env.AI_GATEWAY_API_KEY),
 );
 
 export async function determineStrategicConcession(params: {

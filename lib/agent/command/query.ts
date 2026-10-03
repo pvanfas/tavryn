@@ -1,13 +1,14 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
+import {
+  getAgentLanguageModel,
+  isLiveLLMConfigured,
+} from "@/lib/agent/provider";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logAgentAction } from "@/lib/tools/audit";
 
-import {
-  toolProposeNegotiation,
-} from "./action-tools";
+import { toolProposeNegotiation } from "./action-tools";
 import { isPromptInjection } from "./guardrails";
 import {
   toolExplainDecision,
@@ -385,4 +386,3 @@ export async function processCommandQuery(
     success: true,
   };
 }
-

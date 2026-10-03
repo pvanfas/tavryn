@@ -62,7 +62,7 @@ export function AppShell({
 
       {/* Main Content Viewport with dynamic margin-left matching desktop sidebar width */}
       <div
-        className={`flex-1 flex flex-col min-h-screen min-w-0 relative z-10 transition-all duration-300 ${
+        className={`flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ${
           collapsed ? "md:ml-20" : "md:ml-64"
         }`}
       >

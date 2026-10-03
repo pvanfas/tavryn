@@ -6,6 +6,7 @@ const PUBLIC_PATHS = [
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
+  "/auth/change-password",
   "/auth/callback",
 ];
 
@@ -53,6 +54,6 @@ export const config = {
      * Match all request paths except static assets.
      * Auth check runs on all app routes.
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|logo\\.png|icon\\.png|sample-subscriptions\\.csv).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|logo\\.png|icon\\.png|sample-subscriptions\\.csv).*)",
   ],
 };

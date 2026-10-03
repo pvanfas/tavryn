@@ -2,7 +2,7 @@ import { generateObject } from "ai";
 
 import { getAgentLanguageModel } from "@/lib/agent/provider";
 
-import { VendorReplyExtraction,VendorReplyExtractionSchema } from "./types";
+import { VendorReplyExtraction, VendorReplyExtractionSchema } from "./types";
 
 /**
  * Extracts structured contract renewal terms from unstructured vendor email reply text.

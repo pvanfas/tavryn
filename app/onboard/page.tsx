@@ -58,7 +58,9 @@ export default function OnboardPage() {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   // Funding Result State (shown after successful commit)
-  const [fundingResult, setFundingResult] = useState<FundingResultData | null>(null);
+  const [fundingResult, setFundingResult] = useState<FundingResultData | null>(
+    null,
+  );
 
   // Manual Add Form State
   const [manualVendor, setManualVendor] = useState("");

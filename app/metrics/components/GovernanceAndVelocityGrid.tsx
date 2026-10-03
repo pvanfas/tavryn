@@ -3,7 +3,6 @@
 import { Bot, Clock, Receipt, ShieldCheck } from "lucide-react";
 import React from "react";
 
-import { H2 } from "@/components/ui/text";
 import { TractionMetricsResult } from "@/lib/metrics";
 
 interface GovernanceAndVelocityGridProps {
@@ -22,9 +21,9 @@ export function GovernanceAndVelocityGrid({
             <div className="p-2 rounded-xl bg-emerald-500/10 text-[#107e65] dark:text-[#34d399]">
               <ShieldCheck className="h-4 w-4" />
             </div>
-            <H2 className="text-base text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
               Autonomous Governance &amp; Approvals
-            </H2>
+            </h3>
           </div>
         </div>
 
@@ -107,9 +106,9 @@ export function GovernanceAndVelocityGrid({
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
                 <Bot className="h-4 w-4" />
               </div>
-              <H2 className="text-base text-slate-900 dark:text-white">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
                 Multi-Agent Audit Telemetry
-              </H2>
+              </h3>
             </div>
           </div>
 
@@ -215,9 +214,9 @@ export function GovernanceAndVelocityGrid({
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
               <Clock className="h-4 w-4" />
             </div>
-            <H2 className="text-base text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
               Velocity &amp; Negotiation Efficiency
-            </H2>
+            </h3>
           </div>
         </div>
 

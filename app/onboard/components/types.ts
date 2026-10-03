@@ -1,4 +1,3 @@
-
 export interface FundingResultData {
   businessId: string;
   businessName: string;

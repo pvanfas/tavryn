@@ -86,4 +86,3 @@ export interface CommandResponse {
   businessId: string;
   success: boolean;
 }
-

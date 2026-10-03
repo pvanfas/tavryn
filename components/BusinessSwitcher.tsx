@@ -1,10 +1,11 @@
 "use client";
 
-import { Building2, Plus } from "lucide-react";
+import { Building2, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
+import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 export interface BusinessItem {
@@ -26,11 +27,20 @@ export function BusinessSwitcher({
   activeBusinessId,
 }: BusinessSwitcherProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  useEffect(() => {
+    setIsSwitching(false);
+  }, [activeBusinessId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newId = e.target.value;
-    if (newId) {
-      router.push(`/dashboard?businessId=${newId}`);
+    if (newId && newId !== activeBusinessId) {
+      setIsSwitching(true);
+      startTopLineLoader();
+      const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
+      router.push(`${targetPath}?businessId=${newId}`);
     }
   };
 
@@ -46,15 +56,20 @@ export function BusinessSwitcher({
   return (
     <div className="flex items-center gap-2">
       <div className="relative flex items-center">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/70 dark:border-slate-800/70 text-xs text-slate-700 dark:text-slate-200 shadow-2xs">
-          <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/70 dark:border-slate-800/70 text-xs text-slate-700 dark:text-slate-200 shadow-2xs">
+          {isSwitching ? (
+            <Loader2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] animate-spin shrink-0" />
+          ) : (
+            <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+          )}
           <span className="text-slate-500 dark:text-slate-400 font-semibold hidden sm:inline">
             Org:
           </span>
           <select
             value={activeBusinessId}
             onChange={handleChange}
-            className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-1 text-xs"
+            disabled={isSwitching}
+            className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-1 text-xs disabled:opacity-60"
           >
             {displayBusinesses.map((b) => (
               <option
@@ -82,7 +97,7 @@ export function BusinessSwitcher({
 
       <Link
         href="/onboard"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-2xs transition-colors shrink-0"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-2xs transition-colors shrink-0"
       >
         <Plus className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Onboard Business</span>

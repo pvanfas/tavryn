@@ -9,7 +9,6 @@ import {
   Loader2,
   Lock,
   MessageSquare,
-  RefreshCw,
   Search,
   Send,
   ShieldAlert,
@@ -38,10 +37,10 @@ const DEFAULT_STEPS: StepItem[] = [
   {
     step: 1,
     name: "detect",
-    title: "1. Detect Waste",
+    title: "1. Detect Spend Inefficiencies",
     status: "completed",
     summary:
-      "Scanned seat allocation & usage logs: 7 unused Slack seats identified ($2,688 potential waste).",
+      "Scanned seat allocation & usage logs: 7 unused Slack seats identified ($2,688 potential savings opportunity).",
     details: {
       service: "Slack",
       idleSeats: 7,
@@ -166,6 +165,27 @@ interface ActivityTimelineProps {
   businessName?: string;
 }
 
+function getPhaseForStep(stepName?: string): string {
+  switch (stepName) {
+    case "Observe":
+      return "Observing";
+    case "Analyze":
+      return "Analyzing";
+    case "Negotiate":
+      return "Negotiating";
+    case "Review":
+    case "Decide":
+      return "Deciding";
+    case "Lock":
+    case "Execute":
+      return "Executing";
+    case "Learn":
+      return "Learning";
+    default:
+      return "Executing";
+  }
+}
+
 export function ActivityTimeline({
   businessId,
   businessName = "Demo Co",
@@ -176,41 +196,53 @@ export function ActivityTimeline({
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [lastRunNotice, setLastRunNotice] = useState<string | null>(null);
 
+  const runningStep = steps.find((s) => s.status === "running");
+  const currentPhase = runningStep
+    ? getPhaseForStep(runningStep.name)
+    : "Executing";
+
+  // Percentage of Full loop completed based on completed steps count
+  const completedStepsCount = steps.filter((s) => s.status === "completed").length;
+  const totalStepsCount = steps.length || 8;
+  const percentCompleted = Math.round((completedStepsCount / totalStepsCount) * 100);
+
   const handleRunFullDemo = async () => {
     setIsRunning(true);
     setLastRunNotice(null);
 
-    // Initial running state
+    // Initial running state: Step 0 executing, 0 of 8 completed (0%)
     setSteps((prev) =>
       prev.map((s, idx) => ({
         ...s,
         status: idx === 0 ? "running" : "idle",
-        timestamp: idx === 0 ? "Executing..." : s.timestamp,
+        timestamp: idx === 0 ? "Executing..." : "Pending",
       })),
     );
 
-    // Live progress indicator advancing through pipeline steps during execution
+    // Progress monotonically through pipeline steps 0 to 7 as each step completes
     let currentIdx = 0;
     const progressInterval = setInterval(() => {
-      currentIdx = (currentIdx + 1) % 8;
-      setSteps((prev) =>
-        prev.map((s, idx) => ({
-          ...s,
-          status:
-            idx === currentIdx
-              ? "running"
-              : idx < currentIdx
-                ? "completed"
-                : "idle",
-          timestamp:
-            idx === currentIdx
-              ? "Executing..."
-              : idx < currentIdx
-                ? "Done"
-                : s.timestamp,
-        })),
-      );
-    }, 450);
+      if (currentIdx < 7) {
+        currentIdx += 1;
+        setSteps((prev) =>
+          prev.map((s, idx) => ({
+            ...s,
+            status:
+              idx === currentIdx
+                ? "running"
+                : idx < currentIdx
+                  ? "completed"
+                  : "idle",
+            timestamp:
+              idx === currentIdx
+                ? "Executing..."
+                : idx < currentIdx
+                  ? "Done"
+                  : "Pending",
+          })),
+        );
+      }
+    }, 550);
 
     try {
       const res = await fetch("/api/demo/reset-and-run", {
@@ -228,6 +260,14 @@ export function ActivityTimeline({
         setSteps(data.result.steps);
       } else if (data.steps) {
         setSteps(data.steps);
+      } else {
+        setSteps((prev) =>
+          prev.map((s) => ({
+            ...s,
+            status: "completed",
+            timestamp: "Completed",
+          })),
+        );
       }
 
       const savings =
@@ -251,22 +291,59 @@ export function ActivityTimeline({
       {/* Header with Run Full Demo CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200/70 dark:border-slate-800/60">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-[#107e65] animate-ping shrink-0" />
+          <div className="flex items-center gap-2.5">
+            {/* Redesigned Autonomous Agent radar ping */}
+            <span className="relative flex h-3 w-3 shrink-0 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80 duration-1000" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#107e65] dark:bg-[#34d399] shadow-[0_0_8px_rgba(16,126,101,0.8)]" />
+            </span>
             <H3 className="text-slate-900 dark:text-white font-bold truncate">
               Autonomous Agent Timeline
             </H3>
+            {isRunning ? (
+              <span
+                title="Percentage of Full loop completed"
+                className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 animate-pulse flex items-center gap-1.5"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[#107e65] dark:bg-[#34d399] animate-ping" />
+                <span>{percentCompleted}%</span>
+              </span>
+            ) : (
+              <span
+                title="Percentage of Full loop completed"
+                className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
+              >
+                {percentCompleted}%
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
-              Live Loop
-            </span>
-            <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
-              Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
-              <strong className="text-slate-700 dark:text-slate-200">
-                {businessName}
-              </strong>
-            </p>
+            {isRunning ? (
+              <>
+                <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/30 shrink-0 flex items-center gap-1.5 animate-pulse">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#107e65] dark:bg-[#34d399]" />
+                  {currentPhase}
+                </span>
+                <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
+                  {currentPhase} for{" "}
+                  <strong className="text-slate-700 dark:text-slate-200 font-semibold">
+                    {businessName}
+                  </strong>
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                  Live Loop
+                </span>
+                <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
+                  Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
+                  <strong className="text-slate-700 dark:text-slate-200">
+                    {businessName}
+                  </strong>
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -277,12 +354,12 @@ export function ActivityTimeline({
             type="button"
             onClick={handleRunFullDemo}
             disabled={isRunning}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isRunning ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Running Full Demo Loop...</span>
+                <span>Running Full Demo Loop ({percentCompleted}%)...</span>
               </>
             ) : (
               <>
@@ -304,7 +381,7 @@ export function ActivityTimeline({
         </div>
       )}
 
-      {/* 7-Step Interactive Pipeline */}
+      {/* 8-Step Interactive Pipeline */}
       <div className="mt-6 space-y-3">
         {steps.map((item) => {
           const Icon = STEP_ICONS[item.name] || CheckCircle2;
@@ -313,28 +390,55 @@ export function ActivityTimeline({
           return (
             <div
               key={item.step}
-              className={`rounded-xl border transition-all duration-200 ${
-                item.status === "running"
+              className={`rounded-xl border transition-all duration-200 ${item.status === "running"
                   ? "bg-emerald-500/5 border-emerald-500/40 shadow-xs"
                   : "bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/80"
-              }`}
+                }`}
             >
               <div
                 className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none"
                 onClick={() => setExpandedStep(isExpanded ? null : item.step)}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      item.status === "running"
-                        ? "bg-[#107e65] text-white animate-spin"
-                        : "bg-emerald-500/10 dark:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399]"
-                    }`}
-                  >
+                  {/* Rotating green stroke around steady icon */}
+                  <div className="relative h-9 w-9 flex items-center justify-center shrink-0">
                     {item.status === "running" ? (
-                      <RefreshCw className="h-4 w-4" />
+                      <>
+                        {/* Green rotating stroke ring */}
+                        <svg
+                          className="absolute inset-0 h-full w-full -rotate-90 animate-spin text-[#107e65] dark:text-[#34d399]"
+                          viewBox="0 0 36 36"
+                        >
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeOpacity="0.2"
+                            strokeWidth="2.5"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeDasharray="94.2"
+                            strokeDashoffset="60"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        {/* Static icon (not rotating) */}
+                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-[#107e65] dark:text-[#34d399]">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                      </>
                     ) : (
-                      <Icon className="h-4 w-4" />
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399]">
+                        <Icon className="h-4 w-4" />
+                      </div>
                     )}
                   </div>
                   <div className="min-w-0">
@@ -342,6 +446,14 @@ export function ActivityTimeline({
                       <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                         {item.title}
                       </span>
+                      {item.status === "running" && (
+                        <span
+                          title="Percentage of Full loop completed"
+                          className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 animate-pulse"
+                        >
+                          {percentCompleted}%
+                        </span>
+                      )}
                       {item.details?.isSimulated ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                           Simulated (testnet mock)
@@ -360,7 +472,9 @@ export function ActivityTimeline({
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 hidden sm:inline-block">
-                    {item.timestamp || "Instant"}
+                    {item.status === "running"
+                      ? `${percentCompleted}%`
+                      : item.timestamp || "Instant"}
                   </span>
                   <button
                     type="button"

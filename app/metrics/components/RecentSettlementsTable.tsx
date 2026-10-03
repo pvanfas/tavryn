@@ -4,7 +4,6 @@ import { Activity } from "lucide-react";
 import React from "react";
 
 import { TransactionHashBadge } from "@/components/TransactionHashBadge";
-import { H2 } from "@/components/ui/text";
 import { TractionMetricsResult } from "@/lib/metrics";
 
 interface RecentSettlementsTableProps {
@@ -19,9 +18,9 @@ export function RecentSettlementsTable({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-[#107e65] dark:text-[#34d399] shrink-0" />
-          <H2 className="text-base text-slate-900 dark:text-white">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
             Reconciled On-Chain Transactions Ledger
-          </H2>
+          </h2>
         </div>
         <span className="text-xs text-slate-500 pl-7 sm:pl-0">
           {transactions.length} settlement transactions

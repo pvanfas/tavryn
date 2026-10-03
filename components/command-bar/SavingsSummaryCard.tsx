@@ -11,10 +11,7 @@ interface SavingsSummaryCardProps {
   onClose: () => void;
 }
 
-export function SavingsSummaryCard({
-  card,
-  onClose,
-}: SavingsSummaryCardProps) {
+export function SavingsSummaryCard({ card, onClose }: SavingsSummaryCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141b18] p-4 space-y-3 shadow-xs">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">

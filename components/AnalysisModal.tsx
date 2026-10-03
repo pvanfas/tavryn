@@ -66,7 +66,7 @@ export function AnalysisModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#111714] shadow-2xl flex flex-col font-sans">
         {/* Header */}
         <div className="px-6 py-4.5 border-b border-slate-100 dark:border-slate-800/70 flex items-center justify-between">

@@ -84,6 +84,7 @@ export default async function DashboardPage({
       .select(
         "id, name, is_real, treasury_balance, default_currency, wallet_address",
       )
+      .not("name", "ilike", "[Deleted%")
       .order("created_at", { ascending: false });
 
     if (bListError) throw bListError;

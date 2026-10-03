@@ -273,7 +273,9 @@ export async function sendVendorOutreachEmail(params: {
     }
   }
 
-  console.log(`[VendorOutreach] Outbound email dispatched to ${params.to}: ${params.subject}`);
+  console.log(
+    `[VendorOutreach] Outbound email dispatched to ${params.to}: ${params.subject}`,
+  );
   return {
     sent: true,
     messageId: `sim-${Date.now()}`,

@@ -317,7 +317,9 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                   {/* Header: Block # + Action + Chain Badge */}
                   <div className="flex items-start justify-between gap-2 min-w-0">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-mono text-xs font-bold text-slate-400 shrink-0">#{absoluteIndex + 1}</span>
+                      <span className="font-mono text-xs font-bold text-slate-400 shrink-0">
+                        #{absoluteIndex + 1}
+                      </span>
                       <span className="font-mono text-xs font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 truncate">
                         {block.action}
                       </span>
@@ -347,7 +349,9 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
                   {/* Block Hash (monospace, truncated, with copy) */}
                   <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold">Block Hash</span>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                        Block Hash
+                      </span>
                       {block.hash && (
                         <button
                           type="button"
@@ -404,7 +408,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -414,7 +418,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -424,7 +428,7 @@ export function AuditTableClient({ blocks }: AuditTableClientProps) {
 
       {/* Block Payload Modal */}
       {selectedBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="relative w-full max-w-2xl max-h-[85vh] rounded-2xl bg-white dark:bg-[#111714] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
             {/* Modal Header */}
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">

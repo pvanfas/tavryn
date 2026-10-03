@@ -37,10 +37,18 @@ export function DesktopOpportunitiesTable({
             <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[200px]">
               Service &amp; Vendor
             </Caption>
-            <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[110px]">
+            <Caption
+              as="th"
+              scope="col"
+              className="py-3.5 px-3.5 min-w-[110px]"
+            >
               Category
             </Caption>
-            <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[130px]">
+            <Caption
+              as="th"
+              scope="col"
+              className="py-3.5 px-3.5 min-w-[130px]"
+            >
               Contract Ref
             </Caption>
             <Caption
@@ -50,7 +58,11 @@ export function DesktopOpportunitiesTable({
             >
               Annual Spend
             </Caption>
-            <Caption as="th" scope="col" className="py-3.5 px-3.5 min-w-[140px]">
+            <Caption
+              as="th"
+              scope="col"
+              className="py-3.5 px-3.5 min-w-[140px]"
+            >
               Renewal Date
             </Caption>
             <Caption
@@ -185,7 +197,7 @@ export function DesktopOpportunitiesTable({
                   {/* Status */}
                   <td className="py-4 px-3.5 text-center">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-semibold uppercase tracking-wider ${
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         opp.status === "active"
                           ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                           : opp.status === "negotiating"
@@ -208,7 +220,7 @@ export function DesktopOpportunitiesTable({
 
                   {/* Actions */}
                   <td className="py-4 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         type="button"
                         onClick={() =>
@@ -218,19 +230,19 @@ export function DesktopOpportunitiesTable({
                             currentPrice: Number(opp.current_price),
                           })
                         }
-                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs cursor-pointer"
                       >
                         Analyze
                       </button>
                       <Link
                         href={`/negotiate/${opp.id}`}
-                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#142620] hover:bg-[#1b332b] dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 transition-colors shadow-2xs"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#142620] hover:bg-[#1b332b] dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 transition-colors shadow-2xs"
                       >
                         Negotiate
                       </Link>
                       <Link
                         href={`/decision/${opp.id}`}
-                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 transition-colors shadow-2xs"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 transition-colors shadow-2xs"
                       >
                         Decision
                       </Link>

@@ -19,4 +19,3 @@ const INJECTION_PATTERNS = [
 export function isPromptInjection(text: string): boolean {
   return INJECTION_PATTERNS.some((pattern) => pattern.test(text));
 }
-

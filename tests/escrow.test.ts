@@ -212,7 +212,10 @@ test("6. create_escrow escalates to human approval when vendor wallet address mu
     .select()
     .single();
 
-  assert.ok(testBiz && !bizErr, `Failed to setup test business: ${bizErr?.message}`);
+  assert.ok(
+    testBiz && !bizErr,
+    `Failed to setup test business: ${bizErr?.message}`,
+  );
 
   await supabase.from("policies").insert({
     business_id: testBiz.id,

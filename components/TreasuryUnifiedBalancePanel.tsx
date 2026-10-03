@@ -52,7 +52,8 @@ export function TreasuryUnifiedBalancePanel({
                 Treasury Multichain Gateway &amp; USYC Yield
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Consolidated multichain USDC balances &amp; idle treasury reserve yield
+                Consolidated multichain USDC balances &amp; idle treasury
+                reserve yield
               </p>
             </div>
           </div>
@@ -105,7 +106,9 @@ export function TreasuryUnifiedBalancePanel({
                 ${gateway.totalUnifiedUsdc.toLocaleString()} USDC
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xl">
-                Permissionless multichain balance pool. Contracts on Arc can instantly draw upon consolidated balances across Base, Ethereum, and Solana via Gateway burn-and-mint attestations.
+                Permissionless multichain balance pool. Contracts on Arc can
+                instantly draw upon consolidated balances across Base, Ethereum,
+                and Solana via Gateway burn-and-mint attestations.
               </p>
             </div>
 
@@ -149,7 +152,9 @@ export function TreasuryUnifiedBalancePanel({
 
                 <div className="font-mono text-lg font-bold text-slate-900 dark:text-white">
                   ${c.balance.toLocaleString()}{" "}
-                  <span className="text-xs font-normal text-slate-400">USDC</span>
+                  <span className="text-xs font-normal text-slate-400">
+                    USDC
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-[11px]">
@@ -189,7 +194,8 @@ export function TreasuryUnifiedBalancePanel({
                 ${yieldAllocation.activeOperationalLiquidity.toLocaleString()}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                1.5x buffer reserved for immediate 30-day SaaS contract renewals and escrow commitments.
+                1.5x buffer reserved for immediate 30-day SaaS contract renewals
+                and escrow commitments.
               </p>
             </div>
 
@@ -207,7 +213,8 @@ export function TreasuryUnifiedBalancePanel({
                 ${customPrincipal.toLocaleString()}
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                Hashnote USYC tokenized short-term US Treasury bills earning daily compound interest.
+                Hashnote USYC tokenized short-term US Treasury bills earning
+                daily compound interest.
               </p>
             </div>
 
@@ -225,7 +232,8 @@ export function TreasuryUnifiedBalancePanel({
                 {yieldAllocation.cliffRedemptionDays} Days
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                When contracts enter the 45-day window, agent automatically triggers USYC redemption to liquid USDC on Arc.
+                When contracts enter the 45-day window, agent automatically
+                triggers USYC redemption to liquid USDC on Arc.
               </p>
             </div>
           </div>
@@ -239,7 +247,8 @@ export function TreasuryUnifiedBalancePanel({
                   <span>Interactive USYC Yield Projection Engine</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Simulate interest generated on idle capital earmarked for Q3/Q4 renewals
+                  Simulate interest generated on idle capital earmarked for
+                  Q3/Q4 renewals
                 </p>
               </div>
 
@@ -276,8 +285,16 @@ export function TreasuryUnifiedBalancePanel({
               />
               <div className="flex justify-between text-[10px] font-mono text-slate-400">
                 <span>$0</span>
-                <span>Principal Allocated: ${customPrincipal.toLocaleString()} USDC</span>
-                <span>${Math.max(100000, yieldAllocation.totalTreasury * 1.5).toLocaleString()}</span>
+                <span>
+                  Principal Allocated: ${customPrincipal.toLocaleString()} USDC
+                </span>
+                <span>
+                  $
+                  {Math.max(
+                    100000,
+                    yieldAllocation.totalTreasury * 1.5,
+                  ).toLocaleString()}
+                </span>
               </div>
             </div>
           </div>

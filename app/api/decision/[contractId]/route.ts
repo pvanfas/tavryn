@@ -93,7 +93,9 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
       ? Number(contract.businesses.treasury_balance)
       : undefined;
 
-    const renewalDate = contract.renewal_date ? new Date(contract.renewal_date) : null;
+    const renewalDate = contract.renewal_date
+      ? new Date(contract.renewal_date)
+      : null;
     const daysUntilRenewal =
       renewalDate && !isNaN(renewalDate.getTime())
         ? Math.max(

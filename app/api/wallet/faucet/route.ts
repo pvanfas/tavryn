@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid faucet request", 400, validation.error.format());
     }
 
-    const { businessId: requestedBusinessId, address: requestedAddress, amount } = validation.data;
+    const {
+      businessId: requestedBusinessId,
+      address: requestedAddress,
+      amount,
+    } = validation.data;
     const supabase = getServiceSupabase();
 
     let business: any = null;
@@ -55,7 +59,10 @@ export async function POST(req: NextRequest) {
       business = data;
     }
 
-    const targetAddress = requestedAddress || business?.wallet_address || "0x3600000000000000000000000000000000000000";
+    const targetAddress =
+      requestedAddress ||
+      business?.wallet_address ||
+      "0x3600000000000000000000000000000000000000";
     const currentTreasury = Number(business?.treasury_balance) || 0;
     const updatedTreasury = currentTreasury + amount;
 

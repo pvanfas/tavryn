@@ -21,10 +21,10 @@ _Oct 03, 2026 · Formulated a centralized adversarial test matrix in `docs/ADVER
 
 ## Files changed
 
-| File | What |
-|------|------|
+| File                  | What                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
 | `docs/ADVERSARIAL.md` | New document: Comprehensive adversarial attack matrix with reproducible tests and verbatim outputs |
-| `docs/SECURITY.md` | Linked to `docs/ADVERSARIAL.md` in Quick Links |
+| `docs/SECURITY.md`    | Linked to `docs/ADVERSARIAL.md` in Quick Links                                                     |
 
 ## Verification
 
@@ -38,4 +38,5 @@ npx tsx --env-file=.env.local --test tests/wrong-vendor.test.ts
 npx tsx --env-file=.env.local --test tests/decision-hash.test.ts
 npm --prefix contracts test
 ```
+
 All 7 suites pass with 0 failures.

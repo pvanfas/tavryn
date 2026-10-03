@@ -228,6 +228,3 @@ Integration tests generated 31 temporary businesses and 498 records across contr
 
 - **Positive:** Eradicates database pollution without weakening immutable ledger security or altering production trigger definitions.
 - **Trade-off:** Administrative database operations require superuser/authenticated postgres session.
-
-
-

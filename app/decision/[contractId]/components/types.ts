@@ -51,7 +51,8 @@ export interface DecisionData {
       projectedLiquidity: number;
       daysUntilRenewal: number;
       liquidityRatio: number;
-      recommendation: "execute_now" | "schedule_deferred" | "escalate_low_runway";
+      recommendation:
+        "execute_now" | "schedule_deferred" | "escalate_low_runway";
       reasoning: string;
     };
   };

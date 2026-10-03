@@ -3,7 +3,6 @@
 import { Building2, Layers, TrendingDown, Wallet } from "lucide-react";
 import React from "react";
 
-import { Display } from "@/components/ui/text";
 import { TractionMetricsResult } from "@/lib/metrics";
 
 interface MetricsHeroGridProps {
@@ -20,14 +19,14 @@ export function MetricsHeroGrid({ metrics }: MetricsHeroGridProps) {
           <span>Total USDC Escrowed</span>
           <Wallet className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <Display className="text-2xl sm:text-3xl text-slate-900 dark:text-white font-extrabold">
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
             $
             {metrics.usdcVolume.escrowed.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </Display>
+          </span>
           <span className="text-xs font-bold text-slate-400">USDC</span>
         </div>
         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
@@ -53,15 +52,15 @@ export function MetricsHeroGrid({ metrics }: MetricsHeroGridProps) {
           <span>Savings Realized</span>
           <TrendingDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <Display className="text-2xl sm:text-3xl text-slate-900 dark:text-white font-extrabold">
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
             $
             {metrics.savings.realized.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </Display>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+          </span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
             ({metrics.savings.savingsRatePct}% rate)
           </span>
         </div>
@@ -89,9 +88,9 @@ export function MetricsHeroGrid({ metrics }: MetricsHeroGridProps) {
           <Building2 className="h-4 w-4 text-blue-500" />
         </div>
         <div className="flex items-baseline gap-1.5">
-          <Display className="text-2xl sm:text-3xl text-slate-900 dark:text-white font-extrabold">
+          <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
             {metrics.businesses.totalCount}
-          </Display>
+          </span>
           <span className="text-xs font-medium text-slate-400">tenants</span>
         </div>
         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
@@ -117,10 +116,10 @@ export function MetricsHeroGrid({ metrics }: MetricsHeroGridProps) {
           <span>Contracts Optimized</span>
           <Layers className="h-4 w-4 text-purple-500" />
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <Display className="text-2xl sm:text-3xl text-slate-900 dark:text-white font-extrabold">
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white">
             {metrics.contractsAndNegotiations.contractsOptimized}
-          </Display>
+          </span>
           <span className="text-xs font-medium text-slate-400">
             / {metrics.contractsAndNegotiations.contractsTotal} contracts
           </span>

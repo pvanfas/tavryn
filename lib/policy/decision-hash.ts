@@ -17,10 +17,14 @@ export interface EscrowDecisionInput {
  * Keys are strictly sorted in alphabetical order, amounts are fixed to 6-decimal USDC precision,
  * and addresses are normalized to lowercase.
  */
-export function canonicalizeDecisionPayload(input: EscrowDecisionInput): string {
+export function canonicalizeDecisionPayload(
+  input: EscrowDecisionInput,
+): string {
   const normalizedVendor = input.vendorWallet.trim().toLowerCase();
   const normalizedAmount = Number(input.amount).toFixed(6);
-  const normalizedBaseline = Number(input.baselinePrice ?? input.amount).toFixed(6);
+  const normalizedBaseline = Number(
+    input.baselinePrice ?? input.amount,
+  ).toFixed(6);
 
   const payload: Record<string, string> = {
     amount: normalizedAmount,

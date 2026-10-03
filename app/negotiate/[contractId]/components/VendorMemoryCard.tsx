@@ -43,7 +43,8 @@ export function VendorMemoryCard({
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-              Deterministic memory injected into autonomous negotiation intelligence
+              Deterministic memory injected into autonomous negotiation
+              intelligence
             </p>
           </div>
         </div>

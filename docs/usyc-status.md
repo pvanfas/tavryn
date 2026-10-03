@@ -9,9 +9,10 @@ _Oct 03, 2026 · Assessed feasibility of live USYC mint/redeem integration for T
 USYC is Circle's tokenized money market fund (Hashnote International Short Duration Yield Fund Ltd.), deployed on Arc and other chains. It provides yield-bearing exposure to short-term US Treasury bills and reverse repos.
 
 **Contract addresses on Arc Testnet** (confirmed via Circle developer docs):
-| Contract | Address |
-|----------|---------|
-| USYC Token | `0xe9185F0c5F296Ed1797AaE4238D26CCaBEadb86C` |
+
+| Contract             | Address                                      |
+| -------------------- | -------------------------------------------- |
+| USYC Token           | `0xe9185F0c5F296Ed1797AaE4238D26CCaBEadb86C` |
 | Teller (USDC ↔ USYC) | `0x9fdF14c5B14173D74C08Af27AebFf39240dC105A` |
 
 ---
@@ -27,6 +28,7 @@ Our developer-controlled wallet on Arc Testnet (`ARC_WALLET_ADDRESS`) is **not a
 ### 2. Institutional Eligibility Requirements
 
 USYC access requires:
+
 - **Non-U.S. person** or qualified institutional investor
 - **Minimum $100,000 USD** investment (typical)
 - **KYC/accreditation** through Circle's compliance pipeline
@@ -43,12 +45,13 @@ Unlike USDC (which has a testnet faucet on Arc), there is no USYC testnet faucet
 ## What We Have Today
 
 `lib/circle/balances.ts` exports `calculateIdleTreasuryUsycYield()` — a **deterministic analytical model** that:
+
 - Calculates 30-day operational reserve (1.5× upcoming obligations)
 - Identifies surplus idle capital beyond the operational buffer
 - Projects yield at 5.12% APY (current USYC rate) over 30/365-day horizons
 - Triggers a 45-day cliff redemption lookahead to ensure liquidity ahead of renewal dates
 
-This model is fully functional and used in the dashboard treasury view. It accurately forecasts what USYC yield *would* produce — it just doesn't execute real on-chain mint/redeem transactions.
+This model is fully functional and used in the dashboard treasury view. It accurately forecasts what USYC yield _would_ produce — it just doesn't execute real on-chain mint/redeem transactions.
 
 ---
 

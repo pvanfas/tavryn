@@ -1,4 +1,6 @@
+import fs from "fs";
 import { ImageResponse } from "next/og";
+import path from "path";
 
 import { getPublicReceipt } from "@/lib/receipt";
 
@@ -17,6 +19,16 @@ export default async function Image({
 }) {
   const { token } = await params;
   const receipt = await getPublicReceipt(token);
+
+  let logoDataUrl = "";
+  try {
+    const logoBuffer = fs.readFileSync(
+      path.join(process.cwd(), "public", "logo.png"),
+    );
+    logoDataUrl = `data:image/png;base64,${logoBuffer.toString("base64")}`;
+  } catch {
+    // fallback if file not readable
+  }
 
   const savingsFormatted = receipt
     ? `$${receipt.annualSavings.toLocaleString()}`
@@ -49,22 +61,39 @@ export default async function Image({
           gap: "16px",
         }}
       >
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "12px",
-            backgroundColor: "#107E65",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 900,
-            fontSize: "26px",
-            color: "#FFFFFF",
-          }}
-        >
-          T
-        </div>
+        {logoDataUrl ? (
+          <img
+            src={logoDataUrl}
+            alt="Tavryn Logo"
+            width="48"
+            height="48"
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              objectFit: "contain",
+              backgroundColor: "#FFFFFF",
+              padding: "4px",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              backgroundColor: "#107E65",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 900,
+              fontSize: "26px",
+              color: "#FFFFFF",
+            }}
+          >
+            T
+          </div>
+        )}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <span
             style={{

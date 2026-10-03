@@ -241,7 +241,8 @@ export async function executeCircleContractCall(params: {
   }
 
   // Poll for txHash
-  const resData = response.data as { txHash?: string; state?: string } | undefined;
+  const resData = response.data as
+    { txHash?: string; state?: string } | undefined;
   let txHash = resData?.txHash;
   let state = resData?.state;
   for (let i = 0; i < 15 && !txHash; i++) {

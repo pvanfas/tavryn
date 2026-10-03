@@ -40,30 +40,12 @@ function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
   );
 }
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Page(props: {
   searchParams: Promise<{ businessId?: string }>;
 }) {
-  const cookieStore = await cookies();
-  const hasAuth = cookieStore
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
-
-  if (hasAuth) {
-    const { businessId } = await props.searchParams;
-    redirect(
-      businessId
-        ? `/dashboard?businessId=${encodeURIComponent(businessId)}`
-        : "/dashboard",
-    );
-  }
-
   const supabase = getServiceSupabase();
   const [featuredReceiptRes, metricsAll, metricsReal] = await Promise.all([
     supabase
@@ -183,8 +165,8 @@ function LandingPage({
 
             {/* Main Catchphrase Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15] sm:leading-[1.12]">
-              An agent that finds the waste, negotiates it away, and executes
-              the financial decision.
+              An agent that uncovers spend inefficiencies, negotiates them away,
+              and executes the financial decision.
             </h1>
 
             {/* Subtitle */}
@@ -291,7 +273,8 @@ function LandingPage({
             : "Aggregate concession yield across all active and benchmarked contracts.";
 
           // 3. Deterministic Policy:
-          const realDecisions = metricsReal?.governance.agentDecisionsCount ?? 0;
+          const realDecisions =
+            metricsReal?.governance.agentDecisionsCount ?? 0;
           const allDecisions = metricsAll?.governance.agentDecisionsCount ?? 0;
           const card3IsReal = realDecisions > 0;
           const decisionsCount = card3IsReal
@@ -334,7 +317,6 @@ function LandingPage({
                           <TrendingDown className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Waste Identified</span>
                         </div>
-
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card1Formatted}
@@ -353,7 +335,6 @@ function LandingPage({
                           <Zap className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Negotiation Yield</span>
                         </div>
-
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-[#107e65] dark:text-[#34d399]">
                         {card2Formatted}
@@ -372,7 +353,6 @@ function LandingPage({
                           <ShieldCheck className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Deterministic Policy</span>
                         </div>
-
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card3Formatted}
@@ -391,7 +371,6 @@ function LandingPage({
                           <Lock className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Arc Escrow</span>
                         </div>
-
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card4Formatted}
@@ -408,7 +387,8 @@ function LandingPage({
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     <span>
-                      Reconciled live from postgres audit telemetry and Arc Testnet contracts.
+                      Reconciled live from postgres audit telemetry and Arc
+                      Testnet contracts.
                     </span>
                   </div>
                   <Link
@@ -456,7 +436,7 @@ function LandingPage({
                   Step 01
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-2">
-                  Detect Waste & Renewal Cliffs
+                  Detect Inefficiencies & Renewal Cliffs
                 </h3>
                 <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                   Continuously monitors subscription renewal dates and

@@ -60,8 +60,7 @@ export async function GET(req: NextRequest) {
     const stats = {
       generatedAt: metrics.generatedAt,
       totalRealBusinesses: metrics.businesses.realCount,
-      totalContractsAnalyzed:
-        metrics.contractsAndNegotiations.contractsTotal,
+      totalContractsAnalyzed: metrics.contractsAndNegotiations.contractsTotal,
       totalNegotiations: metrics.contractsAndNegotiations.negotiationsRun,
       totalUsdcMoved: metrics.usdcVolume.released,
       totalUsdcEscrowed: metrics.usdcVolume.escrowed,
@@ -71,8 +70,7 @@ export async function GET(req: NextRequest) {
       reviewerAgreementRatePct:
         metrics.reviewer.totalReviews > 0
           ? Math.round(
-              (metrics.reviewer.agreedCount /
-                metrics.reviewer.totalReviews) *
+              (metrics.reviewer.agreedCount / metrics.reviewer.totalReviews) *
                 1000,
             ) / 10
           : 100,

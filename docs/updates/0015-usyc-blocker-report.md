@@ -16,8 +16,8 @@ _Oct 03, 2026 · Researched Circle USYC on-chain contracts and access requiremen
 
 ## Files changed
 
-| File | What |
-|------|------|
+| File                  | What                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------- |
 | `docs/usyc-status.md` | New document: Technical and regulatory blocker report for live USYC mint/redeem on Arc |
 
 ## Verification

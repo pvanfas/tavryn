@@ -33,9 +33,9 @@ export function isLiveLLMConfigured(providerOverride?: string): boolean {
     return Boolean(process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY);
   return Boolean(
     process.env.AI_GATEWAY_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      process.env.ANTHROPIC_API_KEY ||
-      process.env.LLM_API_KEY,
+    process.env.OPENAI_API_KEY ||
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.LLM_API_KEY,
   );
 }
 

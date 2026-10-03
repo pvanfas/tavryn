@@ -255,3 +255,19 @@ body {
   mask: url("/agent.svg") no-repeat center / contain;
   -webkit-mask: url("/agent.svg") no-repeat center / contain;
 }
+
+@keyframes topline-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-topline {
+  animation: topline-progress 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

@@ -121,10 +121,7 @@ export function H3<E extends React.ElementType = "h3">({
 }: PropsWithAs<E>) {
   const Tag = (as || "h3") as React.ElementType;
   return (
-    <Tag
-      className={cn("text-sm sm:text-h3 font-bold", className)}
-      {...rest}
-    >
+    <Tag className={cn("text-sm sm:text-h3 font-bold", className)} {...rest}>
       {children}
     </Tag>
   );

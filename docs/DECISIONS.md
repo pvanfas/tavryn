@@ -21,3 +21,5 @@
 - **ADR-015**: Document Circle USYC institutional KYC/minimum balance constraints in `docs/usyc-status.md` and preserve analytical yield modeling without phantom testnet contract calls.
 - **ADR-016**: Expose public traction counts at `/api/stats` using an in-memory sliding-window rate limiter, and render client-side via `LiveStatsBar.tsx` for real-time judge visibility.
 - **ADR-017**: Maintain a centralized adversarial verification document (`docs/ADVERSARIAL.md`) cross-referencing live passing tests for prompt injection, double payments, forged tokens, wallet mutations, and decision replays.
+- **ADR-018**: Redesign `LiveStatsBar` into a 4-pillar bento telemetry console with glassmorphic styling, tactile manual sync, visual auto/escalated progress bar, and layout-matched hydration skeleton.
+- **ADR-019**: Replace full-page loading spinners with a top-of-viewport progress line, and provide an organization deletion route that cascades through 11 child tables while respecting the PostgreSQL append-only audit invariant.

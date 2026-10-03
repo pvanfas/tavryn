@@ -234,11 +234,7 @@ const matrices: MatrixTarget[] = [
   },
 ];
 
-async function captureMatrix(
-  browser: any,
-  matrix: MatrixTarget,
-  urlObj: URL,
-) {
+async function captureMatrix(browser: any, matrix: MatrixTarget, urlObj: URL) {
   const dirName = `${matrix.platform}/${matrix.theme}`;
   const outDir = path.join(BASE_OUTPUT_DIR, dirName);
   const artifactDir = path.join(ARTIFACT_BASE_DIR, dirName);
@@ -251,8 +247,12 @@ async function captureMatrix(
   }
 
   console.log(`\n======================================================`);
-  console.log(`📸 Running Matrix: ${matrix.platform.toUpperCase()} [${matrix.theme.toUpperCase()}]`);
-  console.log(`   Viewport: ${matrix.viewport.width}x${matrix.viewport.height} | Dir: ${dirName}`);
+  console.log(
+    `📸 Running Matrix: ${matrix.platform.toUpperCase()} [${matrix.theme.toUpperCase()}]`,
+  );
+  console.log(
+    `   Viewport: ${matrix.viewport.width}x${matrix.viewport.height} | Dir: ${dirName}`,
+  );
   console.log(`======================================================`);
 
   const context = await browser.newContext({
@@ -327,24 +327,30 @@ async function captureMatrix(
         ]);
       }
 
-      await page.goto(targetUrl, {
-        waitUntil: "networkidle",
-        timeout: 25000,
-      }).catch(async () => {
-        await page.goto(targetUrl, {
-          waitUntil: "load",
-          timeout: 15000,
+      await page
+        .goto(targetUrl, {
+          waitUntil: "networkidle",
+          timeout: 25000,
+        })
+        .catch(async () => {
+          await page.goto(targetUrl, {
+            waitUntil: "load",
+            timeout: 15000,
+          });
         });
-      });
 
       if (route.waitForSelector) {
-        await page.waitForSelector(route.waitForSelector, { timeout: 5000 }).catch(() => {});
+        await page
+          .waitForSelector(route.waitForSelector, { timeout: 5000 })
+          .catch(() => {});
       }
 
       // Hide mobile navbar on mobile, dev portal badges, etc.
       await page.addStyleTag({
         content: `
-          ${matrix.isMobile ? `
+          ${
+            matrix.isMobile
+              ? `
           nav[aria-label="Mobile Bottom Navigation"],
           nav[aria-label="Mobile Bottom Navigation"] *,
           .mobile-tab-bar,
@@ -357,7 +363,9 @@ async function captureMatrix(
           main {
             padding-bottom: 2rem !important;
           }
-          ` : ""}
+          `
+              : ""
+          }
           nextjs-portal,
           [data-nextjs-toast],
           [data-nextjs-dev-overlay-portal],
@@ -382,7 +390,7 @@ async function captureMatrix(
 
           // Remove Next.js dev portals
           const portals = document.querySelectorAll(
-            'nextjs-portal, [data-nextjs-toast], [data-nextjs-dev-overlay-portal], #__next-build-watcher',
+            "nextjs-portal, [data-nextjs-toast], [data-nextjs-dev-overlay-portal], #__next-build-watcher",
           );
           portals.forEach((p) => p.remove());
         } catch {}
@@ -419,7 +427,10 @@ async function captureMatrix(
       // Backward-compatible copy for mobile light
       if (matrix.platform === "mobile" && matrix.theme === "light") {
         try {
-          fs.copyFileSync(outputPath, path.join(BASE_OUTPUT_DIR, "mobile", filename));
+          fs.copyFileSync(
+            outputPath,
+            path.join(BASE_OUTPUT_DIR, "mobile", filename),
+          );
         } catch {}
       }
 
@@ -435,7 +446,9 @@ async function captureMatrix(
 }
 
 async function main() {
-  console.log("📸 Starting Full Application Multi-Viewport & Multi-Theme Screenshot Engine");
+  console.log(
+    "📸 Starting Full Application Multi-Viewport & Multi-Theme Screenshot Engine",
+  );
   console.log(`Target URL: ${BASE_URL}`);
 
   const urlObj = new URL(BASE_URL);

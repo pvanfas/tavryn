@@ -1,6 +1,11 @@
 "use client";
 
-import { AlertTriangle, ArrowRightLeft, CheckCircle2, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRightLeft,
+  CheckCircle2,
+  RefreshCw,
+} from "lucide-react";
 import React from "react";
 
 import { Caption, Mono } from "@/components/ui/text";
@@ -38,8 +43,8 @@ export function SwitchingAlternativesSection({
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Calculates category migration engineering effort, downtime
-              risk, and retraining cost vs renegotiated incumbent rates.
+              Calculates category migration engineering effort, downtime risk,
+              and retraining cost vs renegotiated incumbent rates.
             </p>
           </div>
         </div>
@@ -159,9 +164,7 @@ export function SwitchingAlternativesSection({
                     className="font-bold text-[#107e65] dark:text-[#34d399]"
                   >
                     +$
-                    {(
-                      switchingMatrix.renegotiatedSavings * 2
-                    ).toLocaleString()}
+                    {(switchingMatrix.renegotiatedSavings * 2).toLocaleString()}
                   </Mono>
                 </div>
               </div>
@@ -209,7 +212,8 @@ export function SwitchingAlternativesSection({
                       as="span"
                       className="text-rose-600 dark:text-rose-400 font-semibold"
                     >
-                      -${comp.switchingCosts.totalSwitchingCost.toLocaleString()}
+                      -$
+                      {comp.switchingCosts.totalSwitchingCost.toLocaleString()}
                     </Mono>
                   </div>
                   <div
@@ -311,9 +315,7 @@ export function SwitchingAlternativesSection({
                   </td>
                   <td className="py-3 px-3.5 text-right font-mono font-bold text-[#107e65] dark:text-[#34d399]">
                     +$
-                    {(
-                      switchingMatrix.renegotiatedSavings * 2
-                    ).toLocaleString()}
+                    {(switchingMatrix.renegotiatedSavings * 2).toLocaleString()}
                   </td>
                   <td className="py-3 px-3.5 text-center text-slate-400 font-mono">
                     Immediate

@@ -2,7 +2,10 @@ import { streamText } from "ai";
 import { z } from "zod";
 
 import { processCommandQuery } from "@/lib/agent/command";
-import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
+import {
+  getAgentLanguageModel,
+  isLiveLLMConfigured,
+} from "@/lib/agent/provider";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -180,8 +183,7 @@ async function emitTypewriterChunks(
       const chunkPayload = JSON.stringify({
         type: "chunk",
         chunk:
-          (i > 0 ? " " : "") +
-          words.slice(Math.max(0, i - 2), i + 1).join(" "),
+          (i > 0 ? " " : "") + words.slice(Math.max(0, i - 2), i + 1).join(" "),
         fullText: current,
       });
       controller.enqueue(encoder.encode(`data: ${chunkPayload}\n\n`));

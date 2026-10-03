@@ -57,11 +57,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       const json = await req.json().catch(() => null);
       if (json) {
         rawReply =
-          json.rawReply ||
-          json.text ||
-          json.body ||
-          json.message ||
-          "";
+          json.rawReply || json.text || json.body || json.message || "";
         acceptsUsdcOverride = json.acceptsUsdcOverride;
       }
     }

@@ -48,6 +48,7 @@ export default async function NegotiationsPage({
     .select(
       "id, name, is_real, treasury_balance, default_currency, wallet_address",
     )
+    .not("name", "ilike", "[Deleted%")
     .order("created_at", { ascending: true });
 
   const businesses = bData || [];
@@ -195,7 +196,7 @@ export default async function NegotiationsPage({
             </div>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
             >
               <Bot className="h-3.5 w-3.5" />
               <span>Go to Overview</span>
@@ -304,14 +305,10 @@ export default async function NegotiationsPage({
                 const currentPrice = Number(
                   neg.final_price || neg.current_offer || baseline,
                 );
-                const savings = Number(
-                  neg.savings || baseline - currentPrice,
+                const savings = Number(neg.savings || baseline - currentPrice);
+                const isSuccess = ["agreed", "succeeded", "completed"].includes(
+                  neg.status,
                 );
-                const isSuccess = [
-                  "agreed",
-                  "succeeded",
-                  "completed",
-                ].includes(neg.status);
 
                 return (
                   <div key={neg.id} className="p-4 space-y-3">
@@ -322,7 +319,8 @@ export default async function NegotiationsPage({
                           {neg.contracts?.service || "Vendor Agreement"}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {neg.contracts?.vendors?.name || "Direct Vendor"} · {neg.rounds ?? 1}/3 rounds
+                          {neg.contracts?.vendors?.name || "Direct Vendor"} ·{" "}
+                          {neg.rounds ?? 1}/3 rounds
                         </div>
                       </div>
                       <span
@@ -341,17 +339,29 @@ export default async function NegotiationsPage({
                     {/* Metrics Row */}
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Baseline</div>
-                        <div className="font-mono font-medium text-slate-600 dark:text-slate-300">${baseline.toLocaleString()}</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">
+                          Baseline
+                        </div>
+                        <div className="font-mono font-medium text-slate-600 dark:text-slate-300">
+                          ${baseline.toLocaleString()}
+                        </div>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Agreed</div>
-                        <div className="font-mono font-bold text-slate-900 dark:text-white">${currentPrice.toLocaleString()}</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">
+                          Agreed
+                        </div>
+                        <div className="font-mono font-bold text-slate-900 dark:text-white">
+                          ${currentPrice.toLocaleString()}
+                        </div>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Savings</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">
+                          Savings
+                        </div>
                         {savings > 0 ? (
-                          <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">+${savings.toLocaleString()}</div>
+                          <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            +${savings.toLocaleString()}
+                          </div>
                         ) : (
                           <div className="text-slate-400">—</div>
                         )}
@@ -361,7 +371,7 @@ export default async function NegotiationsPage({
                     {/* Action */}
                     <Link
                       href={`/decision/${neg.contract_id}`}
-                      className="block w-full text-center px-3 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors"
+                      className="block w-full text-center px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors"
                     >
                       Inspect Policy →
                     </Link>
