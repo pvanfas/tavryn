@@ -1,7 +1,11 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import {
+  getAgentLanguageModel,
+  isLiveLLMConfigured,
+} from "@/lib/agent/provider";
+import { DEFAULT_GATEWAY_REVIEWER_MODEL } from "@/lib/constants";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -166,11 +170,7 @@ export async function runReviewerAgent(
   ctx: ReviewerContext,
 ): Promise<ReviewerOutput> {
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.LLM_API_KEY,
-  );
+  const hasKey = isLiveLLMConfigured();
 
   let output: ReviewerOutput;
   const reviewerProvider =
@@ -180,11 +180,16 @@ export async function runReviewerAgent(
       : provider === "anthropic" && process.env.OPENAI_API_KEY
         ? "openai"
         : provider);
+
+  const defaultReviewerModel =
+    reviewerProvider === "gateway"
+      ? DEFAULT_GATEWAY_REVIEWER_MODEL
+      : reviewerProvider === "anthropic"
+        ? "claude-3-5-sonnet-20241022"
+        : process.env.LLM_MODEL || "gpt-4o";
+
   const reviewerModelName =
-    process.env.REVIEWER_LLM_MODEL ||
-    (reviewerProvider === "anthropic"
-      ? "claude-3-5-sonnet-20241022"
-      : process.env.LLM_MODEL || "gpt-4o");
+    process.env.REVIEWER_LLM_MODEL || defaultReviewerModel;
 
   if (hasKey && provider !== "mock") {
     try {
@@ -229,7 +234,21 @@ INSTRUCTIONS:
       });
 
       output = object;
-    } catch (err) {
+    } catch (err: any) {
+      const isAuthOrRateLimit =
+        err?.status === 401 ||
+        err?.status === 402 ||
+        err?.status === 403 ||
+        err?.status === 429 ||
+        err?.name === "GatewayInternalServerError" ||
+        /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+          err?.message || "",
+        );
+
+      if (isAuthOrRateLimit && provider === "gateway") {
+        throw err;
+      }
+
       console.warn(
         "[ReviewerAgent] LLM review failed, falling back to deterministic review:",
         err,

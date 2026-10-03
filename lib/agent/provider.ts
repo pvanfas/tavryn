@@ -1,9 +1,11 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGateway } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 
 import {
   DEFAULT_ANTHROPIC_MODEL,
+  DEFAULT_GATEWAY_MODEL,
   DEFAULT_MOCK_MODEL_ID,
   DEFAULT_MOCK_PROVIDER,
   DEFAULT_OPENAI_MODEL,
@@ -17,8 +19,29 @@ export interface AgentModelOptions {
 }
 
 /**
+ * Returns true if a live LLM provider is explicitly selected and has its corresponding API key.
+ */
+export function isLiveLLMConfigured(providerOverride?: string): boolean {
+  const defaultProvider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
+  const provider = (providerOverride || defaultProvider).toLowerCase();
+
+  if (provider === "mock") return false;
+  if (provider === "gateway") return Boolean(process.env.AI_GATEWAY_API_KEY);
+  if (provider === "openai")
+    return Boolean(process.env.OPENAI_API_KEY || process.env.LLM_API_KEY);
+  if (provider === "anthropic")
+    return Boolean(process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY);
+  return Boolean(
+    process.env.AI_GATEWAY_API_KEY ||
+      process.env.OPENAI_API_KEY ||
+      process.env.ANTHROPIC_API_KEY ||
+      process.env.LLM_API_KEY,
+  );
+}
+
+/**
  * Returns a configured LanguageModel based on environment variables or options.
- * Supported LLM_PROVIDER: 'openai', 'anthropic', 'mock'.
+ * Supported LLM_PROVIDER: 'gateway', 'openai', 'anthropic', 'mock'.
  * Fallback to intelligent mock model if no provider API key is present.
  */
 export function getAgentLanguageModel(
@@ -33,8 +56,14 @@ export function getAgentLanguageModel(
   const provider = (opts.provider || defaultProvider).toLowerCase();
   const modelName = opts.modelName || process.env.LLM_MODEL;
 
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY;
+
+  if (provider === "gateway" && gatewayKey) {
+    const gw = createGateway({ apiKey: gatewayKey });
+    return gw(modelName || DEFAULT_GATEWAY_MODEL);
+  }
 
   if (provider === "openai" && openaiKey) {
     const openai = createOpenAI({ apiKey: openaiKey });
@@ -48,6 +77,10 @@ export function getAgentLanguageModel(
 
   // Cross-provider fallback if specific provider requested but key absent
   if (provider !== "mock") {
+    if (gatewayKey) {
+      const gw = createGateway({ apiKey: gatewayKey });
+      return gw(modelName || DEFAULT_GATEWAY_MODEL);
+    }
     if (openaiKey) {
       const openai = createOpenAI({ apiKey: openaiKey });
       return openai(modelName || DEFAULT_OPENAI_MODEL);

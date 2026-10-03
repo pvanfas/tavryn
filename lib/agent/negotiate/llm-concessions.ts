@@ -1,12 +1,16 @@
 import { generateText } from "ai";
 
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import {
+  getAgentLanguageModel,
+  isLiveLLMConfigured,
+} from "@/lib/agent/provider";
 
 export const isRealLLM = Boolean(
   (process.env.LLM_PROVIDER === "openai" &&
     (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
     (process.env.LLM_PROVIDER === "anthropic" &&
-      (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)),
+      (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)) ||
+    (process.env.LLM_PROVIDER === "gateway" && process.env.AI_GATEWAY_API_KEY),
 );
 
 export async function determineStrategicConcession(params: {
@@ -30,7 +34,7 @@ export async function determineStrategicConcession(params: {
     Math.min(params.lastCounter, params.previousOffer + baselineConcession),
   );
 
-  if (!isRealLLM) {
+  if (!isLiveLLMConfigured()) {
     return baselineOffer;
   }
 
@@ -64,7 +68,21 @@ Respond ONLY with the integer dollar amount, e.g. 7450.`;
     ) {
       return parsed;
     }
-  } catch (err) {
+  } catch (err: any) {
+    const isAuthOrRateLimit =
+      err?.status === 401 ||
+      err?.status === 402 ||
+      err?.status === 403 ||
+      err?.status === 429 ||
+      err?.name === "GatewayInternalServerError" ||
+      /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+        err?.message || "",
+      );
+
+    if (isAuthOrRateLimit && process.env.LLM_PROVIDER === "gateway") {
+      throw err;
+    }
+
     console.warn(
       "[Negotiate] LLM concession calculation fallback to dynamic baseline:",
       err,
@@ -91,7 +109,7 @@ export async function getDynamicMessage(params: {
   vendorHistorySummary?: string;
   overridePrompt?: string;
 }): Promise<string> {
-  if (!isRealLLM) {
+  if (!isLiveLLMConfigured()) {
     return params.defaultTemplate;
   }
 
@@ -122,7 +140,21 @@ Draft a concise, professional 1-2 sentence procurement negotiation message to th
     if (text && text.trim().length > 15) {
       return text.trim();
     }
-  } catch (err) {
+  } catch (err: any) {
+    const isAuthOrRateLimit =
+      err?.status === 401 ||
+      err?.status === 402 ||
+      err?.status === 403 ||
+      err?.status === 429 ||
+      err?.name === "GatewayInternalServerError" ||
+      /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+        err?.message || "",
+      );
+
+    if (isAuthOrRateLimit && process.env.LLM_PROVIDER === "gateway") {
+      throw err;
+    }
+
     console.warn(
       "[Negotiate] LLM message generation fallback to template:",
       err,

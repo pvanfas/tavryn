@@ -331,6 +331,7 @@ export function buildNegotiationTools(ctx: ToolContext) {
       });
 
       return {
+        negotiation_id: negotiation.id,
         counter_offer: simResponse.counter_offer,
         message: simResponse.message,
         accepted: simResponse.accepted,
@@ -345,16 +346,31 @@ export function buildNegotiationTools(ctx: ToolContext) {
       "Retrieve active negotiation state, rounds count, current offer, and conversation history for a contract.",
     inputSchema: z.object({
       contractId: z.string().describe("Contract UUID"),
+      negotiationId: z
+        .string()
+        .optional()
+        .describe("Optional negotiation UUID to retrieve exact record"),
     }),
-    execute: async ({ contractId }: { contractId: string }) => {
+    execute: async ({
+      contractId,
+      negotiationId,
+    }: {
+      contractId: string;
+      negotiationId?: string;
+    }) => {
       const supabase = getServiceSupabase();
-      const { data: neg } = await supabase
+      let query = supabase
         .from("negotiations")
         .select("*")
-        .eq("contract_id", contractId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .eq("contract_id", contractId);
+
+      if (negotiationId) {
+        query = query.eq("id", negotiationId);
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+
+      const { data: neg } = await query.limit(1).maybeSingle();
 
       const businessId = await ctx.resolveBusinessId(contractId);
 
@@ -363,7 +379,7 @@ export function buildNegotiationTools(ctx: ToolContext) {
         action: "get_negotiation_status",
         reason: "Inspect current negotiation status and conversation history",
         confidence: 1.0,
-        input: { contractId },
+        input: { contractId, negotiationId },
         result: {
           exists: !!neg,
           status: neg?.status,

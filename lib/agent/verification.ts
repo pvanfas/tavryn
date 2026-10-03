@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel } from "./provider";
+import { getAgentLanguageModel, isLiveLLMConfigured } from "./provider";
 
 /**
  * Strict schema for extracted vendor confirmation fields.
@@ -59,11 +59,7 @@ export async function extractVendorConfirmation(
   documentText: string,
 ): Promise<VendorConfirmationData> {
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.LLM_API_KEY,
-  );
+  const hasKey = isLiveLLMConfigured();
 
   // If a live AI key is provided, use structured extraction with Vercel AI SDK
   if (hasKey && provider !== "mock") {
@@ -75,7 +71,21 @@ export async function extractVendorConfirmation(
         prompt: `You are an automated procurement auditor. Extract the agreed terms from this vendor confirmation document into the specified schema. Extract ONLY the exact values stated in the document without altering or interpreting them:\n\n${documentText}`,
       });
       return object;
-    } catch (err) {
+    } catch (err: any) {
+      const isAuthOrRateLimit =
+        err?.status === 401 ||
+        err?.status === 402 ||
+        err?.status === 403 ||
+        err?.status === 429 ||
+        err?.name === "GatewayInternalServerError" ||
+        /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+          err?.message || "",
+        );
+
+      if (isAuthOrRateLimit && provider === "gateway") {
+        throw err;
+      }
+
       console.warn(
         "LLM extraction failed, falling back to deterministic extractor:",
         err,

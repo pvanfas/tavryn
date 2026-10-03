@@ -137,6 +137,7 @@ export async function runNegotiationLoop(
   let roundsCompleted = 0;
   let isAgreed = false;
   let finalAgreedPrice: number | null = null;
+  let activeNegotiationId: string | undefined = undefined;
 
   const compNames = competitors.options.map((c) => c.name);
   const competitorsDesc = compNames.slice(0, 2).join(", ") || "Market competitors";
@@ -348,6 +349,10 @@ export async function runNegotiationLoop(
       },
     );
 
+    if (vendorResponse.negotiation_id) {
+      activeNegotiationId = vendorResponse.negotiation_id;
+    }
+
     if (
       vendorResponse.accepted &&
       vendorResponse.counter_offer <= walkAwayCeiling
@@ -393,7 +398,7 @@ export async function runNegotiationLoop(
   // 5. Append system explanation card to negotiation conversation
   const statusRes = await execTool<NegotiationStatusOutput>(
     get_negotiation_status,
-    { contractId },
+    { contractId, negotiationId: activeNegotiationId },
   );
   const supabase = getServiceSupabase();
 
@@ -501,7 +506,7 @@ export async function runNegotiationLoop(
   // 7. Return complete structured response with business memory payload
   const finalStatus = await execTool<NegotiationStatusOutput>(
     get_negotiation_status,
-    { contractId },
+    { contractId, negotiationId: activeNegotiationId },
   );
 
   const memoryUsed: MemoryUsedInfo = {

@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -243,11 +243,7 @@ export async function processCommandQuery(
 
   // 4g. Dynamic LLM Intent Routing for unstructured or complex queries
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.LLM_API_KEY,
-  );
+  const hasKey = isLiveLLMConfigured();
 
   if (hasKey && provider !== "mock") {
     try {
@@ -360,7 +356,21 @@ export async function processCommandQuery(
           success: true,
         };
       }
-    } catch (err) {
+    } catch (err: any) {
+      const isAuthOrRateLimit =
+        err?.status === 401 ||
+        err?.status === 402 ||
+        err?.status === 403 ||
+        err?.status === 429 ||
+        err?.name === "GatewayInternalServerError" ||
+        /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+          err?.message || "",
+        );
+
+      if (isAuthOrRateLimit && provider === "gateway") {
+        throw err;
+      }
+
       console.warn("LLM command router error, falling back to overview:", err);
     }
   }

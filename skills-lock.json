@@ -13,6 +13,12 @@
       "skillPath": "plugins/circle/skills/agent-wallet-policy/SKILL.md",
       "computedHash": "a5adc4f9565669a0d2c4482d309b742b5ef99e3bc45f80bde9cde5338b74f692"
     },
+    "ai-gateway": {
+      "source": "vercel/vercel-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/ai-gateway/SKILL.md",
+      "computedHash": "70f2636a2b6559f8c5974b010ddd9b08f4288af5eaa42761937876db91ca4c8e"
+    },
     "bridge-stablecoin": {
       "source": "circlefin/skills",
       "sourceType": "github",

@@ -75,7 +75,7 @@ npm run seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard) in your browser.
 
 ---
 

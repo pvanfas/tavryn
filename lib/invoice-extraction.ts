@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
 
 import { SubscriptionCategory } from "./schemas";
 import { redactFinancialData } from "./statement-detection";
@@ -148,11 +148,7 @@ export async function extractInvoiceData(
   const sanitizedText = redactFinancialData(documentText);
 
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.LLM_API_KEY,
-  );
+  const hasKey = isLiveLLMConfigured();
 
   let extractedData: ExtractedInvoiceData | null = null;
 
@@ -173,7 +169,21 @@ Invoice Document (${fileName}):
 ${sanitizedText}`,
       });
       extractedData = object;
-    } catch (err) {
+    } catch (err: any) {
+      const isAuthOrRateLimit =
+        err?.status === 401 ||
+        err?.status === 402 ||
+        err?.status === 403 ||
+        err?.status === 429 ||
+        err?.name === "GatewayInternalServerError" ||
+        /credit card|verification|rate limit|quota|unauthorized|forbidden|insufficient|customer_verification/i.test(
+          err?.message || "",
+        );
+
+      if (isAuthOrRateLimit && provider === "gateway") {
+        throw err;
+      }
+
       console.warn(
         "LLM invoice extraction failed, applying deterministic fallback:",
         err,

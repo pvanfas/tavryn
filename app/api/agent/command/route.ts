@@ -2,7 +2,7 @@ import { streamText } from "ai";
 import { z } from "zod";
 
 import { processCommandQuery } from "@/lib/agent/command";
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -83,12 +83,7 @@ export async function POST(req: Request) {
       const customReadable = new ReadableStream({
         async start(controller) {
           try {
-            const isRealLLM = Boolean(
-              (process.env.LLM_PROVIDER === "openai" &&
-                (process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)) ||
-                (process.env.LLM_PROVIDER === "anthropic" &&
-                  (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY)),
-            );
+            const isRealLLM = isLiveLLMConfigured();
 
             if (isRealLLM && !result.card) {
               try {

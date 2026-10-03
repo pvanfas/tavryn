@@ -112,6 +112,7 @@ export interface PolicyCheckOutput {
 }
 
 export interface SendVendorMessageOutput {
+  negotiation_id?: string;
   counter_offer: number;
   message: string;
   accepted: boolean;

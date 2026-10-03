@@ -174,6 +174,12 @@ export const DEFAULT_OPENAI_MODEL = "gpt-4o";
 /** Default Anthropic model identifier */
 export const DEFAULT_ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022";
 
+/** Default Vercel AI Gateway model identifier (negotiation messaging, extraction) */
+export const DEFAULT_GATEWAY_MODEL = "google/gemini-2.5-flash";
+
+/** Default Vercel AI Gateway reviewer model identifier (high-stakes auditor verdicts) */
+export const DEFAULT_GATEWAY_REVIEWER_MODEL = "google/gemini-2.5-pro";
+
 /** Mock Language Model provider name */
 export const DEFAULT_MOCK_PROVIDER = "tavryn-mock-provider";
 

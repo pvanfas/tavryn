@@ -16,3 +16,4 @@
 - **ADR-010**: Wire landing page hero cards directly to live `getTractionMetrics()` telemetry with visible honest-labeling badges (`Live Verified` vs `Demo Data`) and zero caching (`revalidate = 0`).
 - **ADR-011**: Calibrate mobile decision checklist badges to 11px font size with compact pill padding and register `--text-2xs` in Tailwind `@theme` to prevent unstyled layout degradation on small viewports.
 - **ADR-012**: Atomically mute and re-enable immutable ledger triggers during transactional database cleanup to purge dangling CI test organizations while strictly protecting production tamper resistance.
+- **ADR-013**: Wire Vercel AI Gateway with Gemini (`google/gemini-2.5-flash` for extraction/negotiation, `google/gemini-2.5-pro` for reviewer audits) and propagate rate-limit/verification errors without silent fallback.
