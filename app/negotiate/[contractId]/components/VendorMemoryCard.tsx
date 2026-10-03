@@ -21,48 +21,44 @@ export function VendorMemoryCard({
 }: VendorMemoryCardProps) {
   return (
     <div className="mt-6 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-gradient-to-br from-slate-50/70 via-white to-slate-50/40 dark:from-[#111714] dark:via-[#131b17] dark:to-[#0f1412] p-4 sm:p-6 shadow-2xs">
-      <div className="flex flex-col gap-2.5 pb-4 border-b border-slate-200/60 dark:border-slate-800/60">
-        {/* Title row: icon + title inline */}
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 sm:p-2 rounded-lg bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div className="flex items-start gap-2.5 min-w-0">
+          <div className="p-2 rounded-lg bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 shrink-0 mt-0.5">
             <Brain className="h-4 w-4" />
           </div>
-          <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
-            Business Memory Used
-          </h3>
-        </div>
-
-        {/* Badge + Reputation row */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {vendorMemory?.has_history ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20">
-                <AgentIcon className="h-3 w-3" />
-                Prior Deal Anchored
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                Initial Baseline
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Reputation:
-            </span>
-            <span className="font-mono text-[11px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-              {vendorMemory?.reputation_score ??
-                contract?.vendors?.reputation_score ??
-                50}{" "}
-              / 100
-            </span>
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base sm:text-h3 font-bold text-slate-900 dark:text-white leading-tight">
+                Business Memory Used
+              </h3>
+              {vendorMemory?.has_history ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
+                  <AgentIcon className="h-3 w-3" />
+                  Prior Deal Anchored
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
+                  Initial Baseline
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
+              Deterministic memory injected into autonomous negotiation intelligence
+            </p>
           </div>
         </div>
 
-        {/* Subtitle — desktop only */}
-        <Caption className="text-slate-500 dark:text-slate-400 hidden sm:block -mt-0.5">
-          Deterministic memory injected into autonomous negotiation intelligence
-        </Caption>
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pl-10 sm:pl-0">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Reputation:
+          </span>
+          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+            {vendorMemory?.reputation_score ??
+              contract?.vendors?.reputation_score ??
+              50}{" "}
+            / 100
+          </span>
+        </div>
       </div>
 
       {/* Memory Metrics Grid */}

@@ -40,7 +40,7 @@ export function PublicReceiptsSection({
   onToggleReceipt,
 }: PublicReceiptsSectionProps) {
   return (
-    <div className="mt-8 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#111714] p-5 sm:p-6 shadow-xs">
+    <div className="mt-8 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#111714] p-4 sm:p-6 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/70 pb-4">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-emerald-500/10 text-[#107e65] dark:text-[#34d399]">

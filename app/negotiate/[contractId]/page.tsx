@@ -369,7 +369,7 @@ export default function NegotiationDetailPage({
       </div>
 
       {/* Main Negotiation Container */}
-      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 pb-6 border-b border-slate-100 dark:border-slate-800/70">
           <div className="min-w-0">
             <H1 className="text-slate-900 dark:text-white truncate">
@@ -496,19 +496,21 @@ export default function NegotiationDetailPage({
                 Status:
               </span>
               <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                className={`inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-wider ${
                   negotiation?.status === "agreed"
                     ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
                     : negotiation?.status === "savings_recorded_no_payment"
                       ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20"
                       : negotiation?.status === "walked_away"
-                        ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
+                        ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20"
                         : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
                 }`}
               >
                 {negotiation?.status === "savings_recorded_no_payment"
                   ? "Savings Recorded (Off-Chain)"
-                  : negotiation?.status || "Ready to Negotiate"}
+                  : negotiation?.status
+                    ? negotiation.status.replace(/_/g, " ")
+                    : "Ready to Negotiate"}
               </span>
             </div>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium ml-2">

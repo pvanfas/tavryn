@@ -358,7 +358,7 @@ export default function DecisionDetailPage({
       </div>
 
       {/* Contract Overview Card */}
-      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 pb-6 border-b border-slate-100 dark:border-slate-800/70">
           <div className="min-w-0">
             <H1 className="text-slate-900 dark:text-white truncate">
@@ -552,32 +552,35 @@ export default function DecisionDetailPage({
             </div>
           )}
         </div>
+      </div>
 
-        {/* Step-by-Step Decision Reasoning Tree & Liquidity Runway Timeline */}
-        <DecisionTimelineSection
-          contract={contract}
-          policy={policy}
-          evaluation={evaluation}
-          approval={approval}
-          review={data?.review}
-          switchingMatrix={switchingMatrix}
-        />
+      {/* Step-by-Step Decision Reasoning Tree & Liquidity Runway Timeline */}
+      <DecisionTimelineSection
+        contract={contract}
+        policy={policy}
+        evaluation={evaluation}
+        approval={approval}
+        review={data?.review}
+        switchingMatrix={switchingMatrix}
+      />
 
-        {/* Dual-Agent Reviewer Audit Card */}
-        <ReviewerAuditSection
-          review={data?.review}
-          reviewing={reviewing}
-          onRunReviewer={handleRunReviewer}
-        />
+      {/* Dual-Agent Reviewer Audit Card */}
+      <ReviewerAuditSection
+        review={data?.review}
+        reviewing={reviewing}
+        onRunReviewer={handleRunReviewer}
+      />
 
-        {/* Strategic Alternatives Matrix: Switch vs Renegotiate */}
-        <SwitchingAlternativesSection
-          contract={contract}
-          switchingMatrix={switchingMatrix}
-          loadingSwitching={loadingSwitching}
-          onRefresh={fetchSwitchingMatrix}
-        />
+      {/* Strategic Alternatives Matrix: Switch vs Renegotiate */}
+      <SwitchingAlternativesSection
+        contract={contract}
+        switchingMatrix={switchingMatrix}
+        loadingSwitching={loadingSwitching}
+        onRefresh={fetchSwitchingMatrix}
+      />
 
+      {/* Policy Verification & Release Engine */}
+      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] mt-6 sm:mt-8">
         {/* Deterministic Policy Checklist Table */}
         <PolicyChecklistSection evaluation={evaluation} policy={policy} />
 
@@ -594,24 +597,24 @@ export default function DecisionDetailPage({
           onRunVerification={handleRunVerification}
           onEscalateToHuman={() => handleDecision("approve")}
         />
-
-        {/* Public Verified Receipts Section */}
-        <PublicReceiptsSection
-          receipts={receipts}
-          creatingReceipt={creatingReceipt}
-          receiptCopiedToken={receiptCopiedToken}
-          isTransactionCompleted={
-            verification?.transaction?.status === "completed"
-          }
-          onCreateReceipt={handleCreateReceipt}
-          onCopyReceipt={(token, url) => {
-            navigator.clipboard.writeText(url);
-            setReceiptCopiedToken(token);
-            setTimeout(() => setReceiptCopiedToken(null), 2000);
-          }}
-          onToggleReceipt={handleToggleReceipt}
-        />
       </div>
+
+      {/* Public Verified Receipts Section */}
+      <PublicReceiptsSection
+        receipts={receipts}
+        creatingReceipt={creatingReceipt}
+        receiptCopiedToken={receiptCopiedToken}
+        isTransactionCompleted={
+          verification?.transaction?.status === "completed"
+        }
+        onCreateReceipt={handleCreateReceipt}
+        onCopyReceipt={(token, url) => {
+          navigator.clipboard.writeText(url);
+          setReceiptCopiedToken(token);
+          setTimeout(() => setReceiptCopiedToken(null), 2000);
+        }}
+        onToggleReceipt={handleToggleReceipt}
+      />
     </AppShell>
   );
 }

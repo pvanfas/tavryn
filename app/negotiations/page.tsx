@@ -278,7 +278,7 @@ export default async function NegotiationsPage({
                                   : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
                             }`}
                           >
-                            {neg.status}
+                            {neg.status.replace(/_/g, " ")}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -334,7 +334,7 @@ export default async function NegotiationsPage({
                               : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
                         }`}
                       >
-                        {neg.status}
+                        {neg.status.replace(/_/g, " ")}
                       </span>
                     </div>
 

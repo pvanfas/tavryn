@@ -54,7 +54,7 @@ export function Display<E extends React.ElementType = "p">({
   return (
     <Tag
       className={cn(
-        "text-display font-extrabold tracking-tight leading-none",
+        "text-2xl sm:text-3xl md:text-display font-extrabold tracking-tight leading-none",
         className,
       )}
       {...rest}
@@ -89,7 +89,7 @@ export function H1<E extends React.ElementType = "h1">({
 }
 
 // ─── H2 ───────────────────────────────────────────────────────────────────────
-// 24px | bold | letter-spacing -0.01em
+// 24px | bold | letter-spacing -0.01em (scales to text-base on mobile)
 // Use for: section headers, panel titles
 
 export function H2<E extends React.ElementType = "h2">({
@@ -101,7 +101,7 @@ export function H2<E extends React.ElementType = "h2">({
   const Tag = (as || "h2") as React.ElementType;
   return (
     <Tag
-      className={cn("text-h2 font-bold tracking-tight", className)}
+      className={cn("text-base sm:text-h2 font-bold tracking-tight", className)}
       {...rest}
     >
       {children}
@@ -110,7 +110,7 @@ export function H2<E extends React.ElementType = "h2">({
 }
 
 // ─── H3 ───────────────────────────────────────────────────────────────────────
-// 18px | semibold | letter-spacing 0
+// 18px | semibold | letter-spacing 0 (scales to text-sm on mobile)
 // Use for: card titles, table column headers
 
 export function H3<E extends React.ElementType = "h3">({
@@ -121,7 +121,10 @@ export function H3<E extends React.ElementType = "h3">({
 }: PropsWithAs<E>) {
   const Tag = (as || "h3") as React.ElementType;
   return (
-    <Tag className={cn("text-h3 font-bold", className)} {...rest}>
+    <Tag
+      className={cn("text-sm sm:text-h3 font-bold", className)}
+      {...rest}
+    >
       {children}
     </Tag>
   );

@@ -149,7 +149,7 @@ export function DecisionTimelineSection({
   ];
 
   return (
-    <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] mt-6">
+    <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] mt-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800/70">
         <div>
@@ -175,21 +175,20 @@ export function DecisionTimelineSection({
       {/* Reasoning Tree Nodes */}
       <div className="mt-6 relative">
         {/* Continuous Connecting Line */}
-        <div className="absolute left-[19px] sm:left-[23px] top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+        <div className="absolute left-[17px] sm:left-[23px] top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
-        <div className="space-y-4">
+        <div className="space-y-3.5 sm:space-y-4">
           {timelineSteps.map((step, idx) => {
             const IconComponent = step.icon;
-            const isLast = idx === timelineSteps.length - 1;
 
             return (
               <div
                 key={step.id}
-                className="relative flex items-start gap-4 p-4 sm:p-5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                className="relative flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               >
                 {/* Node Step Icon */}
                 <div
-                  className={`relative z-10 shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs border ${
+                  className={`relative z-10 shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs border ${
                     step.color === "emerald"
                       ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border-emerald-500/20"
                       : step.color === "sky"
@@ -204,21 +203,21 @@ export function DecisionTimelineSection({
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                    <div className="flex items-baseline gap-2 min-w-0 flex-wrap">
+                      <span className="font-mono text-[11px] font-bold text-slate-400 dark:text-slate-500 shrink-0">
                         {step.number}
                       </span>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug">
                         {step.title}
                       </h3>
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden md:inline">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden md:inline shrink-0">
                         &bull; {step.subtitle}
                       </span>
                     </div>
 
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 self-start sm:self-auto border ${
+                      className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 self-start sm:self-auto border ${
                         step.color === "emerald"
                           ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border-emerald-500/20"
                           : step.color === "sky"
@@ -244,7 +243,7 @@ export function DecisionTimelineSection({
                   </p>
 
                   <div className="mt-2.5 flex items-center gap-2 flex-wrap text-[11px]">
-                    <span className="font-mono px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-medium">
+                    <span className="font-mono text-[10px] sm:text-[11px] px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-medium break-words inline-block max-w-full">
                       {step.highlight}
                     </span>
                   </div>

@@ -16,14 +16,14 @@ export function OnboardedOrganizationsTable({
 }: OnboardedOrganizationsTableProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
+          <Building2 className="h-5 w-5 text-[#107e65] dark:text-[#34d399] shrink-0" />
           <H2 className="text-base text-slate-900 dark:text-white">
             Onboarded Organizations
           </H2>
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 pl-7 sm:pl-0">
           {businesses.list.length} organizations registered
         </span>
       </div>

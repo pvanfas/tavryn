@@ -68,6 +68,12 @@ Tavryn's testing infrastructure, telemetry transparency, responsive presentation
 - **`app/onboard/components/SubscriptionsReviewTable.tsx`:** Updated spend summary block alignment from `text-right` to `text-left sm:text-right`.
 - **`app/approvals/page.tsx`:** Updated card action bar container to `flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto`.
 - **`app/settings/page.tsx`:** Converted all card containers (`#treasury`, `#policy`, `#notifications`) to `p-4 sm:p-7` and made the save button `w-full sm:w-auto`.
+- **`app/decision/[contractId]/page.tsx` & `DecisionTimelineSection.tsx`:** Unnested standalone cards from the Contract Overview Card, closing it immediately after the Decision Status Banner to eliminate double-border nesting and wasted lateral padding. In `DecisionTimelineSection`, normalized container padding to `p-4 sm:p-7`, adjusted step item padding to `p-3.5 sm:p-5`, aligned step number and title baselines, and added break-word constraints to highlight chips to prevent layout squeeze on narrow phone screens.
+- **`app/negotiate/[contractId]/page.tsx`:** Normalized main container padding from `p-6 sm:p-7` to `p-4 sm:p-7`.
+- **`components/ui/text.tsx` Typography Scaling:** Scaled `<H2>` to `text-base sm:text-h2 font-bold tracking-tight` (16px on mobile viewports scaling to 24px on desktop), `<H3>` to `text-sm sm:text-h3 font-bold`, and `<Display>` to `text-2xl sm:text-3xl md:text-display`, eliminating oversized section titles across all mobile screens.
+- **`app/negotiate/[contractId]/components/VendorMemoryCard.tsx`:** Refactored header layout using `items-start`, `min-w-0`, and `flex-wrap` with `shrink-0` badge pills, preventing "Business Memory Used" from breaking into multiple vertical lines on mobile screens.
+- **`app/negotiate/[contractId]/page.tsx` & `app/negotiations/page.tsx`:** Calibrated `walked_away` and `Ready to Negotiate` status badges to `text-[10px] sm:text-xs font-semibold uppercase tracking-wider`, formatted status text cleanly (`walked away` without raw underscores), and applied rose warning colors.
+- **`app/metrics/components/OnboardedOrganizationsTable.tsx` & `RecentSettlementsTable.tsx`:** Refactored table headers with `flex-col sm:flex-row sm:items-center gap-1 sm:gap-2` so titles and registered count chips stack naturally on mobile viewports without crowding or premature line breaking.
 
 ### 4. Database Cleansing & Ledger Integrity Script
 

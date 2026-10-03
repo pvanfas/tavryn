@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { describe, test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
+import { describe, test } from "node:test";
+
 import { POST as decisionApprovePost } from "../app/api/decision/[contractId]/approve/route";
 import { POST as decisionDirectPost } from "../app/api/decision/[contractId]/route";
 import { getTractionMetrics } from "../lib/metrics";
@@ -43,7 +44,7 @@ describe("Landing Page Metrics & Approvals Endpoint", () => {
     );
   });
 
-  test("3. components/ui/text.tsx H1 includes responsive font sizes for mobile", async () => {
+  test("3. components/ui/text.tsx H1 and H2 include responsive font sizes for mobile", async () => {
     const textContent = fs.readFileSync(
       path.join(process.cwd(), "components/ui/text.tsx"),
       "utf8",
@@ -51,6 +52,10 @@ describe("Landing Page Metrics & Approvals Endpoint", () => {
     assert.ok(
       textContent.includes("text-xl sm:text-2xl md:text-h1"),
       "H1 must include responsive text classes for smaller screens",
+    );
+    assert.ok(
+      textContent.includes("text-base sm:text-h2"),
+      "H2 must scale to text-base on mobile screens",
     );
   });
 
