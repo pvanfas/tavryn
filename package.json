@@ -24,6 +24,7 @@
     "@base-ui/react": "^1.8.0",
     "@circle-fin/developer-controlled-wallets": "^10.8.1",
     "@supabase/supabase-js": "^2.117.1",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.116",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
