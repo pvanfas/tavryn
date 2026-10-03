@@ -36,6 +36,7 @@ contract ArcEscrow {
         Status status;
         string milestoneDescription;
         uint256 createdAt;
+        bytes32 decisionHash;
     }
 
     IERC20 public immutable usdcToken;
@@ -55,6 +56,7 @@ contract ArcEscrow {
     uint256 public nextAgreementId = 1;
     mapping(uint256 => Agreement) public agreements;
     mapping(bytes32 => uint256) public agreementByIdempotencyKey;
+    mapping(bytes32 => bool) public usedDecisions;
 
     bool private _locked;
 
@@ -65,7 +67,8 @@ contract ArcEscrow {
         address indexed vendor,
         uint256 amount,
         string category,
-        uint256 deadline
+        uint256 deadline,
+        bytes32 decisionHash
     );
     event AgreementFunded(uint256 indexed agreementId, uint256 amount);
     event MilestoneSubmitted(uint256 indexed agreementId, string description);
@@ -155,7 +158,8 @@ contract ArcEscrow {
         uint256 baselinePrice,
         string calldata category,
         uint256 durationSeconds,
-        bytes32 idempotencyKey
+        bytes32 idempotencyKey,
+        bytes32 decisionHash
     ) internal returns (uint256) {
         require(vendor != address(0), "Invalid vendor address");
         require(amount > 0, "Amount must be positive");
@@ -165,6 +169,13 @@ contract ArcEscrow {
             require(
                 agreementByIdempotencyKey[idempotencyKey] == 0,
                 "ArcEscrow: Idempotent agreement already exists"
+            );
+        }
+
+        if (decisionHash != bytes32(0)) {
+            require(
+                !usedDecisions[decisionHash],
+                "ArcEscrow: Decision already executed"
             );
         }
 
@@ -200,16 +211,21 @@ contract ArcEscrow {
             deadline: deadline,
             status: Status.Created,
             milestoneDescription: "",
-            createdAt: block.timestamp
+            createdAt: block.timestamp,
+            decisionHash: decisionHash
         });
 
         if (idempotencyKey != bytes32(0)) {
             agreementByIdempotencyKey[idempotencyKey] = agreementId;
         }
 
+        if (decisionHash != bytes32(0)) {
+            usedDecisions[decisionHash] = true;
+        }
+
         categorySpent[category] += totalDeposit;
 
-        emit AgreementCreated(agreementId, msg.sender, vendor, amount, category, deadline);
+        emit AgreementCreated(agreementId, msg.sender, vendor, amount, category, deadline, decisionHash);
         return agreementId;
     }
 
@@ -219,7 +235,7 @@ contract ArcEscrow {
         string calldata category,
         uint256 durationSeconds
     ) external onlyAgentOrOwner returns (uint256) {
-        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, bytes32(0));
+        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, bytes32(0), bytes32(0));
     }
 
     function createAgreementWithIdempotency(
@@ -229,7 +245,7 @@ contract ArcEscrow {
         uint256 durationSeconds,
         bytes32 idempotencyKey
     ) external onlyAgentOrOwner returns (uint256) {
-        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, idempotencyKey);
+        return _createAgreementInternal(vendor, amount, amount, category, durationSeconds, idempotencyKey, bytes32(0));
     }
 
     function createAgreementWithSavings(
@@ -240,7 +256,19 @@ contract ArcEscrow {
         uint256 durationSeconds,
         bytes32 idempotencyKey
     ) external onlyAgentOrOwner returns (uint256) {
-        return _createAgreementInternal(vendor, amount, baselinePrice, category, durationSeconds, idempotencyKey);
+        return _createAgreementInternal(vendor, amount, baselinePrice, category, durationSeconds, idempotencyKey, bytes32(0));
+    }
+
+    function createAgreementWithDecision(
+        address vendor,
+        uint256 amount,
+        uint256 baselinePrice,
+        string calldata category,
+        uint256 durationSeconds,
+        bytes32 idempotencyKey,
+        bytes32 decisionHash
+    ) external onlyAgentOrOwner returns (uint256) {
+        return _createAgreementInternal(vendor, amount, baselinePrice, category, durationSeconds, idempotencyKey, decisionHash);
     }
 
     function fundAgreement(uint256 agreementId) external nonReentrant {

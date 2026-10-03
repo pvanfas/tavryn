@@ -328,4 +328,60 @@ describe("ArcEscrow On-Chain Spending Limits & Policy Suite", function () {
       arcEscrow.connect(owner).setRoles(owner.address, agent.address, agent.address),
     ).to.be.revertedWith("ArcEscrow: Verifier cannot be agent");
   });
+
+  it("13. Decision hash: Agreement records decisionHash and emits it in AgreementCreated", async function () {
+    const price = ethers.parseUnits("3000", 6);
+    const baseline = ethers.parseUnits("4000", 6);
+    const idempKey = ethers.encodeBytes32String("idemp-decision-13");
+    const decisionHash = ethers.keccak256(ethers.toUtf8Bytes('{"negotiationId":"neg-123","vendor":"Slack","amount":"3000.000000"}'));
+
+    const tx = await arcEscrow.connect(agent).createAgreementWithDecision(
+      vendor.address,
+      price,
+      baseline,
+      "software",
+      3600,
+      idempKey,
+      decisionHash,
+    );
+
+    await expect(tx).to.emit(arcEscrow, "AgreementCreated");
+
+    const ag = await arcEscrow.getAgreement(1);
+    expect(ag.decisionHash).to.equal(decisionHash);
+    expect(await arcEscrow.usedDecisions(decisionHash)).to.equal(true);
+  });
+
+  it("14. Decision hash: Replay of same decisionHash strictly reverts on-chain (defense-in-depth)", async function () {
+    const price = ethers.parseUnits("2000", 6);
+    const baseline = ethers.parseUnits("3000", 6);
+    const idempKey1 = ethers.encodeBytes32String("idemp-14-a");
+    const idempKey2 = ethers.encodeBytes32String("idemp-14-b");
+    const decisionHash = ethers.keccak256(ethers.toUtf8Bytes('{"negotiationId":"neg-456","vendor":"Datadog","amount":"2000.000000"}'));
+
+    // First creation succeeds
+    await arcEscrow.connect(agent).createAgreementWithDecision(
+      vendor.address,
+      price,
+      baseline,
+      "software",
+      3600,
+      idempKey1,
+      decisionHash,
+    );
+
+    // Second creation with the same decisionHash reverts even with a different idempotency key
+    await expect(
+      arcEscrow.connect(agent).createAgreementWithDecision(
+        vendor.address,
+        price,
+        baseline,
+        "software",
+        3600,
+        idempKey2,
+        decisionHash,
+      ),
+    ).to.be.revertedWith("ArcEscrow: Decision already executed");
+  });
 });
+

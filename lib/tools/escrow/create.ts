@@ -9,6 +9,7 @@ import {
 } from "@/lib/circle";
 import { SIMULATED_VENDOR_WALLET } from "@/lib/constants";
 import {
+  computeEscrowDecisionHash,
   createApprovalRecord,
   verifyPolicyExecutionAuthorization,
 } from "@/lib/policy";
@@ -667,6 +668,22 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
         );
       }
 
+      // Compute canonical decision hash for on-chain binding and cryptographic idempotency
+      const baselinePrice = contractRecord?.current_price
+        ? Number(contractRecord.current_price)
+        : input.amount;
+
+      const decisionHash = computeEscrowDecisionHash({
+        businessId,
+        contractId: input.contractId,
+        negotiationId: negId,
+        vendorWallet: resolvedWallet,
+        amount: input.amount,
+        baselinePrice,
+        category: resolvedCategory,
+        policyDecision: "approved",
+      });
+
       // 8. Simulation-Only Guard: If in mock mode or credentials absent, mark simulation-only
       if (isSimulationMode(input.forceRealChain)) {
         await supabase
@@ -691,6 +708,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
             amount: input.amount,
             savings: effectiveSavings,
             idempotencyKey,
+            decisionHash,
             vendorWallet: resolvedWallet,
           },
           result: {
@@ -699,6 +717,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
             txHash: null,
             escrowAddress: ARC_CONFIG.escrowContractAddress,
             explorerUrl: null,
+            decisionHash,
             isSimulated: true,
           },
         });
@@ -713,6 +732,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
           txHash: null,
           explorerUrl: null,
           idempotencyKey,
+          decisionHash,
           idempotentHit: false,
           isSimulation: true,
           isSimulated: true,
@@ -731,16 +751,13 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
         }
 
         // Create Agreement on ArcEscrow.sol (funds move into contract, not vendor)
-        const baselinePrice = contractRecord?.current_price
-          ? Number(contractRecord.current_price)
-          : input.amount;
-
         const createRes = await createArcEscrowAgreement({
           vendorWallet: resolvedWallet,
           amount: input.amount,
           baselinePrice,
           category: resolvedCategory,
           idempotencyKey,
+          decisionHash,
           forceRealChain: input.forceRealChain,
         });
 
@@ -788,6 +805,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
             amount: input.amount,
             savings: effectiveSavings,
             idempotencyKey,
+            decisionHash,
             vendorWallet: resolvedWallet,
             agreementId: createRes.agreementId,
           },
@@ -798,6 +816,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
             escrowAddress: ARC_CONFIG.escrowContractAddress,
             explorerUrl: `${ARC_CONFIG.explorerUrl}/tx/${fundingTxHash}`,
             agreementId: createRes.agreementId,
+            decisionHash,
             isSimulated: false,
           },
         });
@@ -812,6 +831,7 @@ export function buildCreateEscrowTool(ctx: ToolContext) {
           txHash: fundingTxHash,
           explorerUrl: `${ARC_CONFIG.explorerUrl}/tx/${fundingTxHash}`,
           idempotencyKey,
+          decisionHash,
           agreementId: createRes.agreementId,
           idempotentHit: false,
           isSimulation: false,

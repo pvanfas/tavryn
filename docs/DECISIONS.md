@@ -17,3 +17,4 @@
 - **ADR-011**: Calibrate mobile decision checklist badges to 11px font size with compact pill padding and register `--text-2xs` in Tailwind `@theme` to prevent unstyled layout degradation on small viewports.
 - **ADR-012**: Atomically mute and re-enable immutable ledger triggers during transactional database cleanup to purge dangling CI test organizations while strictly protecting production tamper resistance.
 - **ADR-013**: Wire Vercel AI Gateway with Gemini (`google/gemini-2.5-flash` for extraction/negotiation, `google/gemini-2.5-pro` for reviewer audits) and propagate rate-limit/verification errors without silent fallback.
+- **ADR-014**: Commit a keccak256 `decisionHash` on-chain in `ArcEscrow.usedDecisions` before funds move — canonical JSON encoding of 9 decision fields, replay-rejected even for the owner. Inspired by STEWARD's `AllowanceManager.usedDecision` pattern.

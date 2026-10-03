@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { after, before, describe, it } from "node:test";
 
 import { getServiceSupabase } from "@/lib/supabase";
 import { create_escrow } from "@/lib/tools";
@@ -7,21 +7,50 @@ import { create_escrow } from "@/lib/tools";
 describe("Unlinked Transaction Idempotency Tests", () => {
   const supabase = getServiceSupabase();
 
-  it("1. create_escrow rejects outright when neither contractId nor negotiationId is provided", async () => {
-    const { data: business } = await supabase
-      .from("businesses")
-      .select("id")
-      .limit(1)
-      .single();
-    assert.ok(business, "Business must exist");
+  let testBizId: string;
 
+  before(async () => {
+    const { data: business, error: bErr } = await supabase
+      .from("businesses")
+      .insert({
+        name: `Unlinked Idemp Test Biz ${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        treasury_balance: 1000000,
+        wallet_address: null,
+        is_real: false,
+      })
+      .select("id")
+      .single();
+    if (bErr || !business) {
+      throw new Error(`Failed to create test business: ${bErr?.message}`);
+    }
+    testBizId = business.id;
+
+    await supabase.from("policies").insert({
+      business_id: testBizId,
+      max_auto_transaction: 5000,
+      min_savings: 100,
+      human_approval_required_above: 5000,
+      allowed_categories: ["software", "cloud"],
+    });
+  });
+
+  after(async () => {
+    if (testBizId) {
+      await supabase.from("transactions").delete().eq("business_id", testBizId);
+      await supabase.from("contracts").delete().eq("business_id", testBizId);
+      await supabase.from("policies").delete().eq("business_id", testBizId);
+      await supabase.from("businesses").delete().eq("id", testBizId);
+    }
+  });
+
+  it("1. create_escrow rejects outright when neither contractId nor negotiationId is provided", async () => {
     await assert.rejects(async () => {
       await (create_escrow as any).execute(
         {
           amount: 1000,
           vendorWallet: "0x000000000000000000000000000000000000dEaD",
           category: "software",
-          businessId: business.id,
+          businessId: testBizId,
           // Both contractId and negotiationId omitted!
         },
         { messages: [], toolCallId: "t-reject-unlinked" },
@@ -30,18 +59,11 @@ describe("Unlinked Transaction Idempotency Tests", () => {
   });
 
   it("2. Two sequential create_escrow calls for the same contract with no negotiation_id, amounts differing by $0.01, result in exactly one non-failed transaction", async () => {
-    const { data: business } = await supabase
-      .from("businesses")
-      .select("id")
-      .limit(1)
-      .single();
-    assert.ok(business, "Business must exist");
-
     // Create a contract with enough savings to pass min_savings ($2,000 current price vs $1,000 tx = $1,000 savings)
     const { data: contract, error: cErr } = await supabase
       .from("contracts")
       .insert({
-        business_id: business.id,
+        business_id: testBizId,
         service: `Unlinked Contract Idempotency Test ${Date.now()}`,
         category: "software",
         current_price: 2000,
@@ -60,7 +82,7 @@ describe("Unlinked Transaction Idempotency Tests", () => {
           amount: 1000,
           vendorWallet: "0x1234567890123456789012345678901234567890",
           category: "software",
-          businessId: business.id,
+          businessId: testBizId,
           // negotiationId explicitly omitted
         },
         { messages: [], toolCallId: "t-unlinked-1" },
@@ -77,7 +99,7 @@ describe("Unlinked Transaction Idempotency Tests", () => {
           amount: 1000.01,
           vendorWallet: "0x1234567890123456789012345678901234567890",
           category: "software",
-          businessId: business.id,
+          businessId: testBizId,
           // negotiationId explicitly omitted
         },
         { messages: [], toolCallId: "t-unlinked-2" },
@@ -121,17 +143,10 @@ describe("Unlinked Transaction Idempotency Tests", () => {
   });
 
   it("3. Concurrent create_escrow calls differing by $0.01 for the same contract resolve to exactly one non-failed transaction via database partial unique index", async () => {
-    const { data: business } = await supabase
-      .from("businesses")
-      .select("id")
-      .limit(1)
-      .single();
-    assert.ok(business, "Business must exist");
-
     const { data: contract, error: cErr } = await supabase
       .from("contracts")
       .insert({
-        business_id: business.id,
+        business_id: testBizId,
         service: `Concurrent Unlinked Test ${Date.now()}`,
         category: "software",
         current_price: 2500,
@@ -151,7 +166,7 @@ describe("Unlinked Transaction Idempotency Tests", () => {
             amount: 1200.0,
             vendorWallet: "0x2222222222222222222222222222222222222222",
             category: "software",
-            businessId: business.id,
+            businessId: testBizId,
           },
           { messages: [], toolCallId: "t-race-a" },
         ),
@@ -161,7 +176,7 @@ describe("Unlinked Transaction Idempotency Tests", () => {
             amount: 1200.01,
             vendorWallet: "0x2222222222222222222222222222222222222222",
             category: "software",
-            businessId: business.id,
+            businessId: testBizId,
           },
           { messages: [], toolCallId: "t-race-b" },
         ),

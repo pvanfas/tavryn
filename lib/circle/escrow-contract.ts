@@ -16,6 +16,7 @@ export async function createArcEscrowAgreement(params: {
   category: string;
   durationSeconds?: bigint;
   idempotencyKey?: string;
+  decisionHash?: Hex | string;
   privateKey?: Hex;
   walletId?: string;
   forceRealChain?: boolean;
@@ -23,12 +24,26 @@ export async function createArcEscrowAgreement(params: {
   isSimulation: boolean;
   agreementId: string;
   txHash: string | null;
+  decisionHash: string;
 }> {
+  const idKey = params.idempotencyKey
+    ? (params.idempotencyKey.startsWith("0x") && params.idempotencyKey.length === 66
+        ? (params.idempotencyKey as Hex)
+        : keccak256(toHex(params.idempotencyKey)))
+    : keccak256(toHex(`agreement-${Date.now()}`));
+
+  const decHash: Hex = params.decisionHash
+    ? (params.decisionHash.startsWith("0x") && params.decisionHash.length === 66
+        ? (params.decisionHash as Hex)
+        : keccak256(toHex(params.decisionHash)))
+    : idKey;
+
   if (isSimulationMode(params.forceRealChain)) {
     return {
       isSimulation: true,
       agreementId: `sim-${Date.now()}`,
       txHash: null,
+      decisionHash: decHash,
     };
   }
 
@@ -39,31 +54,49 @@ export async function createArcEscrowAgreement(params: {
       ? parseUnits(params.baselinePrice.toFixed(6), 6)
       : amountUnits;
   const duration = params.durationSeconds || BigInt(2592000); // 30 days
-  const idKey = params.idempotencyKey
-    ? keccak256(toHex(params.idempotencyKey))
-    : keccak256(toHex(`agreement-${Date.now()}`));
 
   const targetWalletId = params.walletId || process.env.CIRCLE_WALLET_ID;
 
   // Prefer Circle Developer-Controlled Wallets contract execution
   if (isCircleConfigured() && targetWalletId && !params.privateKey) {
     try {
-      const circleRes = await executeCircleContractCall({
-        walletId: targetWalletId,
-        contractAddress: escrowAddress,
-        abiFunctionSignature:
-          "createAgreementWithSavings(address,uint256,uint256,string,uint256,bytes32)",
-        abiParameters: [
-          params.vendorWallet,
-          amountUnits.toString(),
-          baselineUnits.toString(),
-          params.category,
-          duration.toString(),
-          idKey,
-        ],
-        idempotencyKey: params.idempotencyKey,
-        refId: `create-ag-${Date.now()}`,
-      });
+      let circleRes;
+      try {
+        circleRes = await executeCircleContractCall({
+          walletId: targetWalletId,
+          contractAddress: escrowAddress,
+          abiFunctionSignature:
+            "createAgreementWithDecision(address,uint256,uint256,string,uint256,bytes32,bytes32)",
+          abiParameters: [
+            params.vendorWallet,
+            amountUnits.toString(),
+            baselineUnits.toString(),
+            params.category,
+            duration.toString(),
+            idKey,
+            decHash,
+          ],
+          idempotencyKey: params.idempotencyKey,
+          refId: `create-ag-${Date.now()}`,
+        });
+      } catch {
+        circleRes = await executeCircleContractCall({
+          walletId: targetWalletId,
+          contractAddress: escrowAddress,
+          abiFunctionSignature:
+            "createAgreementWithSavings(address,uint256,uint256,string,uint256,bytes32)",
+          abiParameters: [
+            params.vendorWallet,
+            amountUnits.toString(),
+            baselineUnits.toString(),
+            params.category,
+            duration.toString(),
+            idKey,
+          ],
+          idempotencyKey: params.idempotencyKey,
+          refId: `create-ag-${Date.now()}`,
+        });
+      }
 
       if (circleRes.txHash) {
         const publicClient = getArcPublicClient();
@@ -73,7 +106,7 @@ export async function createArcEscrowAgreement(params: {
           functionName: "nextAgreementId",
         });
         const agreementId = (nextId - BigInt(1)).toString();
-        return { isSimulation: false, agreementId, txHash: circleRes.txHash };
+        return { isSimulation: false, agreementId, txHash: circleRes.txHash, decisionHash: decHash };
       }
     } catch (circleErr) {
       console.warn(
@@ -85,19 +118,38 @@ export async function createArcEscrowAgreement(params: {
 
   const { walletClient, publicClient } = getArcWalletClient(params.privateKey);
 
-  const txHash = await walletClient.writeContract({
-    address: escrowAddress,
-    abi: ARC_ESCROW_ABI,
-    functionName: "createAgreementWithSavings",
-    args: [
-      params.vendorWallet as `0x${string}`,
-      amountUnits,
-      baselineUnits,
-      params.category,
-      duration,
-      idKey,
-    ],
-  });
+  let txHash: `0x${string}`;
+  try {
+    txHash = await walletClient.writeContract({
+      address: escrowAddress,
+      abi: ARC_ESCROW_ABI,
+      functionName: "createAgreementWithDecision",
+      args: [
+        params.vendorWallet as `0x${string}`,
+        amountUnits,
+        baselineUnits,
+        params.category,
+        duration,
+        idKey,
+        decHash,
+      ],
+    });
+  } catch (contractErr) {
+    // If deployed contract bytecode lacks createAgreementWithDecision, fall back to createAgreementWithSavings
+    txHash = await walletClient.writeContract({
+      address: escrowAddress,
+      abi: ARC_ESCROW_ABI,
+      functionName: "createAgreementWithSavings",
+      args: [
+        params.vendorWallet as `0x${string}`,
+        amountUnits,
+        baselineUnits,
+        params.category,
+        duration,
+        idKey,
+      ],
+    });
+  }
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: txHash,
@@ -115,7 +167,7 @@ export async function createArcEscrowAgreement(params: {
   });
   const agreementId = (nextId - BigInt(1)).toString();
 
-  return { isSimulation: false, agreementId, txHash };
+  return { isSimulation: false, agreementId, txHash, decisionHash: decHash };
 }
 
 /**

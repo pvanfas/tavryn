@@ -17,6 +17,7 @@ import Link from "next/link";
 import React from "react";
 
 import { AgentIcon } from "@/components/AgentIcon";
+import { LiveStatsBar } from "@/components/LiveStatsBar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ARC_CONFIG } from "@/lib/circle";
 import { getTractionMetrics, type TractionMetricsResult } from "@/lib/metrics";
@@ -333,16 +334,7 @@ function LandingPage({
                           <TrendingDown className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Waste Identified</span>
                         </div>
-                        {card1IsReal ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 uppercase tracking-wide">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Live Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wide">
-                            Demo Data
-                          </span>
-                        )}
+
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card1Formatted}
@@ -361,16 +353,7 @@ function LandingPage({
                           <Zap className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Negotiation Yield</span>
                         </div>
-                        {card2IsReal ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 uppercase tracking-wide">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Live Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wide">
-                            Demo Data
-                          </span>
-                        )}
+
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-[#107e65] dark:text-[#34d399]">
                         {card2Formatted}
@@ -389,16 +372,7 @@ function LandingPage({
                           <ShieldCheck className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Deterministic Policy</span>
                         </div>
-                        {card3IsReal ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 uppercase tracking-wide">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Live Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wide">
-                            Demo Data
-                          </span>
-                        )}
+
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card3Formatted}
@@ -417,16 +391,7 @@ function LandingPage({
                           <Lock className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
                           <span>Arc Escrow</span>
                         </div>
-                        {card4IsReal ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 uppercase tracking-wide">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Live Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wide">
-                            Demo Data
-                          </span>
-                        )}
+
                       </div>
                       <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
                         {card4Formatted}
@@ -458,6 +423,9 @@ function LandingPage({
             </section>
           );
         })()}
+
+        {/* Live Stats — client-side auto-refreshing from /api/stats */}
+        <LiveStatsBar />
 
         {/* The 3-Step Agent Loop */}
         <section
