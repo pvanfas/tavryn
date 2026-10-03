@@ -18,3 +18,6 @@
 - **ADR-012**: Atomically mute and re-enable immutable ledger triggers during transactional database cleanup to purge dangling CI test organizations while strictly protecting production tamper resistance.
 - **ADR-013**: Wire Vercel AI Gateway with Gemini (`google/gemini-2.5-flash` for extraction/negotiation, `google/gemini-2.5-pro` for reviewer audits) and propagate rate-limit/verification errors without silent fallback.
 - **ADR-014**: Commit a keccak256 `decisionHash` on-chain in `ArcEscrow.usedDecisions` before funds move — canonical JSON encoding of 9 decision fields, replay-rejected even for the owner. Inspired by STEWARD's `AllowanceManager.usedDecision` pattern.
+- **ADR-015**: Document Circle USYC institutional KYC/minimum balance constraints in `docs/usyc-status.md` and preserve analytical yield modeling without phantom testnet contract calls.
+- **ADR-016**: Expose public traction counts at `/api/stats` using an in-memory sliding-window rate limiter, and render client-side via `LiveStatsBar.tsx` for real-time judge visibility.
+- **ADR-017**: Maintain a centralized adversarial verification document (`docs/ADVERSARIAL.md`) cross-referencing live passing tests for prompt injection, double payments, forged tokens, wallet mutations, and decision replays.
