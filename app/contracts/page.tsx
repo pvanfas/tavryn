@@ -53,40 +53,11 @@ export default async function ContractsPage({
   const business =
     businesses.find((b) => b.id === businessId) || businesses[0] || null;
 
-  // Real-time on-chain balance
+  // 2. Fetch contracts, status counts, and on-chain balance concurrently
   let liveTreasuryBalance = business?.treasury_balance
     ? Number(business.treasury_balance)
     : 0;
-  if (business?.wallet_address) {
-    try {
-      liveTreasuryBalance = await getOnChainUSDCBalance(
-        business.wallet_address,
-      );
-    } catch {
-      // fallback to database snapshot
-    }
-  }
-
-  // 2. Fetch contracts
   let rawContracts: ContractRecord[] = [];
-  if (business) {
-    let query = supabase
-      .from("contracts")
-      .select("*, vendors(*)")
-      .eq("business_id", business.id)
-      .order("renewal_date", { ascending: true });
-
-    if (selectedStatus && selectedStatus !== "all") {
-      query = query.eq("status", selectedStatus);
-    }
-
-    const { data: cData } = await query;
-    if (cData) {
-      rawContracts = cData as unknown as ContractRecord[];
-    }
-  }
-
-  // 3. Status tab counts (fetch total counts per status for active business)
   const statusCounts = {
     all: 0,
     active: 0,
@@ -94,20 +65,45 @@ export default async function ContractsPage({
     renewed: 0,
     cancelled: 0,
   };
+
   if (business) {
-    const { data: allStatuses } = await supabase
+    let contractsQuery = supabase
+      .from("contracts")
+      .select("*, vendors(*)")
+      .eq("business_id", business.id)
+      .order("renewal_date", { ascending: true });
+
+    if (selectedStatus && selectedStatus !== "all") {
+      contractsQuery = contractsQuery.eq("status", selectedStatus);
+    }
+
+    const statusesQuery = supabase
       .from("contracts")
       .select("status")
       .eq("business_id", business.id);
 
-    if (allStatuses) {
-      statusCounts.all = allStatuses.length;
-      for (const item of allStatuses) {
+    const balancePromise = business.wallet_address
+      ? getOnChainUSDCBalance(business.wallet_address).catch(() => liveTreasuryBalance)
+      : Promise.resolve(liveTreasuryBalance);
+
+    const [cRes, sRes, balRes] = await Promise.all([
+      contractsQuery,
+      statusesQuery,
+      balancePromise,
+    ]);
+
+    if (cRes.data) {
+      rawContracts = cRes.data as unknown as ContractRecord[];
+    }
+    if (sRes.data) {
+      statusCounts.all = sRes.data.length;
+      for (const item of sRes.data) {
         if (item.status in statusCounts) {
           statusCounts[item.status as keyof typeof statusCounts]++;
         }
       }
     }
+    liveTreasuryBalance = balRes;
   }
 
   const currentFilter = selectedStatus || "all";

@@ -1,10 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
-if (!supabaseUrl) {
+if (!supabaseUrl && process.env.NODE_ENV !== "test") {
   console.warn("Warning: NEXT_PUBLIC_SUPABASE_URL is not set.");
 }
 
@@ -17,10 +17,20 @@ export const supabase = createClient(
 );
 
 /**
+ * Cached singleton instance of the service-role client.
+ * Prevents allocating new HTTP connection pools and client instances on every request.
+ */
+let cachedServiceClient: SupabaseClient | null = null;
+
+/**
  * Admin Supabase client with service role key (Server-only)
  * Bypasses RLS for deterministic agent execution and backend scripts.
  */
-export function getServiceSupabase() {
+export function getServiceSupabase(): SupabaseClient {
+  if (cachedServiceClient) {
+    return cachedServiceClient;
+  }
+
   const url =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     supabaseUrl ||
@@ -30,10 +40,13 @@ export function getServiceSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     supabaseAnonKey ||
     "placeholder";
-  return createClient(url, serviceKey, {
+
+  cachedServiceClient = createClient(url, serviceKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
   });
+
+  return cachedServiceClient;
 }

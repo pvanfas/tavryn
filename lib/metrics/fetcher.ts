@@ -87,101 +87,98 @@ export async function getTractionMetrics(options?: {
     };
   }
 
-  // 2. Fetch contracts
-  const { data: rawContracts, error: cErr } = await supabase
-    .from("contracts")
-    .select("*, vendors ( id, name )")
-    .order("created_at", { ascending: false });
+  // 2. Fetch contracts, negotiations, transactions, actions, approvals, receipts, and reviews concurrently
+  const [
+    cRes,
+    nRes,
+    tRes,
+    aRes,
+    apRes,
+    rRes,
+    revRes,
+  ] = await Promise.all([
+    supabase
+      .from("contracts")
+      .select("*, vendors ( id, name )")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("negotiations")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("transactions")
+      .select("*, businesses ( name, is_real ), vendors ( name )")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("agent_actions")
+      .select("id, business_id, action, created_at"),
+    supabase
+      .from("approvals")
+      .select("id, business_id, status, created_at, decided_at"),
+    supabase
+      .from("receipts")
+      .select("id, business_id")
+      .is("revoked_at", null),
+    supabase
+      .from("reviews")
+      .select("id, business_id, verdict, created_at"),
+  ]);
 
-  if (cErr) {
-    throw new Error(`Failed to fetch contracts for metrics: ${cErr.message}`);
+  if (cRes.error) {
+    throw new Error(`Failed to fetch contracts for metrics: ${cRes.error.message}`);
   }
-  let contracts = rawContracts || [];
+  if (nRes.error) {
+    throw new Error(`Failed to fetch negotiations for metrics: ${nRes.error.message}`);
+  }
+  if (tRes.error) {
+    throw new Error(`Failed to fetch transactions for metrics: ${tRes.error.message}`);
+  }
+  if (aRes.error) {
+    throw new Error(`Failed to fetch agent_actions for metrics: ${aRes.error.message}`);
+  }
+  if (apRes.error) {
+    throw new Error(`Failed to fetch approvals for metrics: ${apRes.error.message}`);
+  }
+
+  let contracts = cRes.data || [];
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     contracts = contracts.filter((c) => bIdSet.has(c.business_id));
   }
   const contractIds = new Set(contracts.map((c) => c.id));
 
-  // 3. Fetch negotiations
-  const { data: rawNegotiations, error: nErr } = await supabase
-    .from("negotiations")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (nErr) {
-    throw new Error(
-      `Failed to fetch negotiations for metrics: ${nErr.message}`,
-    );
-  }
-  let negotiations = rawNegotiations || [];
+  let negotiations = nRes.data || [];
   if (realOnly) {
     negotiations = negotiations.filter((n) => contractIds.has(n.contract_id));
   }
 
-  // 4. Fetch transactions
-  const { data: rawTransactions, error: tErr } = await supabase
-    .from("transactions")
-    .select("*, businesses ( name, is_real ), vendors ( name )")
-    .order("created_at", { ascending: false });
-
-  if (tErr) {
-    throw new Error(
-      `Failed to fetch transactions for metrics: ${tErr.message}`,
-    );
-  }
-  let transactions = rawTransactions || [];
+  let transactions = tRes.data || [];
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     transactions = transactions.filter((t) => bIdSet.has(t.business_id));
   }
 
-  // 5. Fetch agent actions
-  const { data: rawActions, error: aErr } = await supabase
-    .from("agent_actions")
-    .select("id, business_id, action, created_at");
-  if (aErr) {
-    throw new Error(
-      `Failed to fetch agent_actions for metrics: ${aErr.message}`,
-    );
-  }
-  let agentActions = rawActions || [];
+  let agentActions = aRes.data || [];
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     agentActions = agentActions.filter((a) => bIdSet.has(a.business_id));
   }
 
-  // 6. Fetch approvals
-  const { data: rawApprovals, error: apErr } = await supabase
-    .from("approvals")
-    .select("id, business_id, status, created_at, decided_at");
-  if (apErr) {
-    throw new Error(`Failed to fetch approvals for metrics: ${apErr.message}`);
-  }
-  let approvals = rawApprovals || [];
+  let approvals = apRes.data || [];
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     approvals = approvals.filter((ap) => bIdSet.has(ap.business_id));
   }
 
-  // 7. Fetch receipts
-  const { data: rawReceipts } = await supabase
-    .from("receipts")
-    .select("id, business_id")
-    .is("revoked_at", null);
-  let receiptsCount = (rawReceipts || []).length;
+  let receiptsCount = (rRes.data || []).length;
   if (realOnly) {
     const bIdSet = new Set(businessIds);
-    receiptsCount = (rawReceipts || []).filter((r) =>
+    receiptsCount = (rRes.data || []).filter((r) =>
       bIdSet.has(r.business_id),
     ).length;
   }
 
-  // 8. Fetch reviews
-  const { data: rawReviews } = await supabase
-    .from("reviews")
-    .select("id, business_id, verdict, created_at");
-  let reviews = rawReviews || [];
+  let reviews = revRes.data || [];
   if (realOnly) {
     const bIdSet = new Set(businessIds);
     reviews = reviews.filter((r) => bIdSet.has(r.business_id));

@@ -1,9 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 
-import { AnalysisModal } from "./AnalysisModal";
+const AnalysisModal = dynamic(
+  () => import("./AnalysisModal").then((m) => m.AnalysisModal),
+  { ssr: false },
+);
 import {
   DesktopOpportunitiesTable,
   MobileOpportunitiesList,

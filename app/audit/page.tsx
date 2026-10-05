@@ -33,8 +33,8 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
     business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
   }
 
-  // 2. Perform server-side cryptographic audit chain verification
-  const verification = await verifyAuditChain(business?.id, 1000);
+  // 2. Perform server-side cryptographic audit chain verification (latest 250 blocks)
+  const verification = await verifyAuditChain(business?.id, 250);
 
   return (
     <AppShell

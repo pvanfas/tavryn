@@ -59,44 +59,43 @@ export default async function ApprovalsPage({
   const business =
     businesses.find((b) => b.id === businessId) || businesses[0] || null;
 
-  // Real-time on-chain balance
+  // Real-time on-chain balance & data queries in parallel
   let liveTreasuryBalance = business?.treasury_balance
     ? Number(business.treasury_balance)
     : 0;
-  if (business?.wallet_address) {
-    try {
-      liveTreasuryBalance = await getOnChainUSDCBalance(
-        business.wallet_address,
-      );
-    } catch {
-      // fallback
-    }
-  }
-
-  // 2. Fetch approvals for active business
   let approvals: ApprovalItem[] = [];
+  let policyCeiling = 2000;
+
   if (business) {
-    const { data: aData } = await supabase
+    const approvalsQuery = supabase
       .from("approvals")
       .select("*, negotiations(*, contracts(*, vendors(*)))")
       .eq("business_id", business.id)
       .order("created_at", { ascending: false });
 
-    if (aData) {
-      approvals = aData as unknown as ApprovalItem[];
-    }
-  }
-
-  let policyCeiling = 2000;
-  if (business) {
-    const { data: pol } = await supabase
+    const policyQuery = supabase
       .from("policies")
       .select("max_auto_transaction")
       .eq("business_id", business.id)
       .maybeSingle();
-    if (pol?.max_auto_transaction) {
-      policyCeiling = Number(pol.max_auto_transaction);
+
+    const balancePromise = business.wallet_address
+      ? getOnChainUSDCBalance(business.wallet_address).catch(() => liveTreasuryBalance)
+      : Promise.resolve(liveTreasuryBalance);
+
+    const [aRes, polRes, balRes] = await Promise.all([
+      approvalsQuery,
+      policyQuery,
+      balancePromise,
+    ]);
+
+    if (aRes.data) {
+      approvals = aRes.data as unknown as ApprovalItem[];
     }
+    if (polRes.data?.max_auto_transaction) {
+      policyCeiling = Number(polRes.data.max_auto_transaction);
+    }
+    liveTreasuryBalance = balRes;
   }
 
   const currentFilter = selectedFilter || "pending";

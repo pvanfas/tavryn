@@ -8,16 +8,25 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 import { AgentIcon } from "@/components/AgentIcon";
-import { CommandBar } from "@/components/CommandBar";
 
 import { BusinessItem } from "./BusinessSwitcher";
-import { NotificationPanel } from "./NotificationPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserDropdown } from "./UserDropdown";
+
+const CommandBar = dynamic(
+  () => import("@/components/CommandBar").then((mod) => mod.CommandBar),
+  { ssr: false },
+);
+
+const NotificationPanel = dynamic(
+  () => import("./NotificationPanel").then((mod) => mod.NotificationPanel),
+  { ssr: false },
+);
 
 interface AppHeaderProps {
   breadcrumbs?: Array<{ label: string; href?: string }>;

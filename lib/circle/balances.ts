@@ -68,6 +68,7 @@ export async function getOnChainUSDCBalance(
   const response = await fetch(rpcUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(3000),
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 1,
@@ -266,8 +267,9 @@ export async function getCircleGatewayUnifiedBalance(
   walletAddress?: string | null,
   activeTreasury: number = 42850,
 ): Promise<CircleGatewayUnifiedBalanceResult> {
-  let arcLiveBalance = 0;
-  if (walletAddress && walletAddress.startsWith("0x")) {
+  // Reuse activeTreasury if provided, or query live on-chain balance on Arc
+  let arcLiveBalance = activeTreasury > 0 ? activeTreasury : 0;
+  if (arcLiveBalance === 0 && walletAddress && walletAddress.startsWith("0x")) {
     arcLiveBalance = await getArcUsdcBalance(walletAddress);
   }
 

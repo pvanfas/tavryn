@@ -55,32 +55,32 @@ export default async function NegotiationsPage({
   const business =
     businesses.find((b) => b.id === businessId) || businesses[0] || null;
 
-  // Real-time on-chain balance
+  // Real-time on-chain balance & negotiations in parallel
   let liveTreasuryBalance = business?.treasury_balance
     ? Number(business.treasury_balance)
     : 0;
-  if (business?.wallet_address) {
-    try {
-      liveTreasuryBalance = await getOnChainUSDCBalance(
-        business.wallet_address,
-      );
-    } catch {
-      // fallback
-    }
-  }
-
-  // 2. Fetch negotiations
   let negotiations: NegotiationRecord[] = [];
+
   if (business) {
-    const { data: nData } = await supabase
+    const negotiationsQuery = supabase
       .from("negotiations")
       .select("*, contracts!inner(*, vendors(*))")
       .eq("contracts.business_id", business.id)
       .order("created_at", { ascending: false });
 
-    if (nData) {
-      negotiations = nData as unknown as NegotiationRecord[];
+    const balancePromise = business.wallet_address
+      ? getOnChainUSDCBalance(business.wallet_address).catch(() => liveTreasuryBalance)
+      : Promise.resolve(liveTreasuryBalance);
+
+    const [nRes, balRes] = await Promise.all([
+      negotiationsQuery,
+      balancePromise,
+    ]);
+
+    if (nRes.data) {
+      negotiations = nRes.data as unknown as NegotiationRecord[];
     }
+    liveTreasuryBalance = balRes;
   }
 
   // Filter logic

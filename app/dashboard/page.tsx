@@ -76,6 +76,8 @@ export default async function DashboardPage({
     tx_hash: string | null;
     is_simulated: boolean | null;
   } | null = null;
+  let treasuryBalance = 0;
+  let balanceSource: "chain" | "db_fallback" = "db_fallback";
 
   try {
     // 1. Fetch all businesses
@@ -98,9 +100,9 @@ export default async function DashboardPage({
       business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
     }
 
-    // 3. Fetch Contracts for the active business
+    // 3. Fetch Contracts, Latest Transaction, and On-Chain Balance in parallel
     if (business?.id) {
-      const { data: cData, error: cError } = await supabase
+      const contractsPromise = supabase
         .from("contracts")
         .select(
           "*, vendors ( name, category, contact, reputation_score, is_simulated )",
@@ -108,8 +110,42 @@ export default async function DashboardPage({
         .eq("business_id", business.id)
         .order("renewal_date", { ascending: true });
 
-      if (cError) throw cError;
-      contracts = (cData as unknown as ContractRecord[]) || [];
+      const latestTxPromise = supabase
+        .from("transactions")
+        .select("id, status, tx_hash, is_simulated")
+        .eq("business_id", business.id)
+        .not("status", "eq", "failed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const balancePromise = business.wallet_address
+        ? getOnChainUSDCBalance(business.wallet_address).catch((chainErr) => {
+            console.warn(
+              "Direct Arc RPC balance check failed, using DB fallback:",
+              (chainErr as Error).message,
+            );
+            return Number(business?.treasury_balance ?? 0);
+          })
+        : Promise.resolve(Number(business?.treasury_balance ?? 0));
+
+      const [cResult, txResult, liveBal] = await Promise.all([
+        contractsPromise,
+        latestTxPromise,
+        balancePromise,
+      ]);
+
+      if (cResult.error) throw cResult.error;
+      contracts = (cResult.data as unknown as ContractRecord[]) || [];
+
+      if (txResult.data) {
+        latestTx = txResult.data;
+      }
+
+      treasuryBalance = liveBal;
+      balanceSource = business.wallet_address && liveBal !== Number(business.treasury_balance ?? 0)
+        ? "chain"
+        : "db_fallback";
 
       // 4. Fetch Realized Savings from Negotiations
       if (contracts.length > 0) {
@@ -126,42 +162,10 @@ export default async function DashboardPage({
             0,
           );
         }
-
-        // Fetch latest settlement transaction for honest status display
-        const { data: tRow } = await supabase
-          .from("transactions")
-          .select("id, status, tx_hash, is_simulated")
-          .eq("business_id", business.id)
-          .not("status", "eq", "failed")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (tRow) {
-          latestTx = tRow;
-        }
       }
     }
   } catch (err) {
     console.warn("Database query notice:", (err as Error).message);
-  }
-
-  // Live On-Chain Balance with DB Fallback
-  let treasuryBalance = Number(business?.treasury_balance ?? 0);
-  let balanceSource: "chain" | "db_fallback" = "db_fallback";
-
-  if (business?.wallet_address) {
-    try {
-      treasuryBalance = await getOnChainUSDCBalance(business.wallet_address);
-      balanceSource = "chain";
-    } catch (chainErr) {
-      console.warn(
-        "Direct Arc RPC balance check failed, using DB fallback:",
-        (chainErr as Error).message,
-      );
-      treasuryBalance = Number(business?.treasury_balance ?? 0);
-      balanceSource = "db_fallback";
-    }
   }
   const currency = business?.default_currency || "USDC";
 
