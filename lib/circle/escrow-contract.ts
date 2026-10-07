@@ -5,7 +5,7 @@ import {
   ensureUsdcAllowance,
   getArcPublicClient,
   getArcWalletClient,
-} from "./balances";
+} from "./arc-client";
 import { executeCircleContractCall } from "./client";
 import { ARC_CONFIG, isCircleConfigured, isSimulationMode } from "./config";
 

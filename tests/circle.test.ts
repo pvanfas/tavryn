@@ -3,7 +3,10 @@ import test from "node:test";
 
 import {
   ARC_CONFIG,
+  calculateIdleTreasuryUsycYield,
+  getArcUsdcBalance,
   getCircleClient,
+  getCircleGatewayUnifiedBalance,
   getOnChainUSDCBalance,
   getTreasuryUSDCBalance,
   isCircleConfigured,
@@ -80,4 +83,66 @@ test("getCircleClient requires CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET when unco
     assert.ok(client);
     assert.equal(typeof client.createWallets, "function");
   }
+});
+
+test("getArcUsdcBalance safely returns 0 for invalid addresses without throwing", async () => {
+  const invalidResult = await getArcUsdcBalance("invalid-address");
+  assert.equal(invalidResult, 0);
+
+  const emptyResult = await getArcUsdcBalance("");
+  assert.equal(emptyResult, 0);
+});
+
+test("getArcUsdcBalance queries live Arc Testnet JSON-RPC and returns valid numeric balance", async () => {
+  const balance = await getArcUsdcBalance(
+    "0x0000000000000000000000000000000000000000",
+  );
+  assert.equal(typeof balance, "number");
+  assert.ok(Number.isFinite(balance));
+  assert.ok(balance >= 0);
+});
+
+test("calculateIdleTreasuryUsycYield computes operational reserve and surplus allocation", () => {
+  const yieldResult = calculateIdleTreasuryUsycYield({
+    treasuryBalance: 50000,
+    upcomingObligations30d: 10000,
+  });
+
+  // 1.5x of 10000 = 15000 operational reserve
+  assert.equal(yieldResult.activeOperationalLiquidity, 15000);
+  assert.equal(yieldResult.idleReserveYieldPrincipal, 35000);
+  assert.equal(yieldResult.usycApyPct, 5.12);
+  assert.equal(yieldResult.status, "yielding");
+  assert.equal(
+    yieldResult.estimatedAnnualYield,
+    Math.round(35000 * (5.12 / 100)),
+  );
+});
+
+test("calculateIdleTreasuryUsycYield shifts status to rebalancing when obligations match or exceed treasury", () => {
+  const tightYield = calculateIdleTreasuryUsycYield({
+    treasuryBalance: 6000,
+    upcomingObligations30d: 5000,
+  });
+
+  assert.equal(tightYield.idleReserveYieldPrincipal, 0);
+  assert.equal(tightYield.status, "rebalancing");
+  assert.equal(tightYield.estimatedAnnualYield, 0);
+});
+
+test("getCircleGatewayUnifiedBalance aggregates cross-chain liquidity across 4 supported networks", async () => {
+  const unified = await getCircleGatewayUnifiedBalance(
+    "0x0000000000000000000000000000000000000000",
+    40000,
+  );
+
+  assert.equal(unified.chains.length, 4);
+  assert.equal(
+    unified.architecture,
+    "Circle Gateway Permissionless Multichain Unified Balance Pool",
+  );
+  assert.ok(unified.gatewayMinterAddress.startsWith("0x"));
+
+  const sumChains = unified.chains.reduce((acc, c) => acc + c.balance, 0);
+  assert.equal(unified.totalUnifiedUsdc, sumChains);
 });

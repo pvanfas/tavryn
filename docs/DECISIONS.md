@@ -23,3 +23,4 @@
 - **ADR-017**: Maintain a centralized adversarial verification document (`docs/ADVERSARIAL.md`) cross-referencing live passing tests for prompt injection, double payments, forged tokens, wallet mutations, and decision replays.
 - **ADR-018**: Redesign `LiveStatsBar` into a 4-pillar bento telemetry console with glassmorphic styling, tactile manual sync, visual auto/escalated progress bar, and layout-matched hydration skeleton.
 - **ADR-019**: Replace full-page loading spinners with a top-of-viewport progress line, and provide an organization deletion route that cascades through 11 child tables while respecting the PostgreSQL append-only audit invariant.
+- **ADR-020**: Decompose monolithic `lib/circle/balances.ts` into single-responsibility domain submodules (`arc-client.ts`, `balances.ts`, `gateway.ts`, `usyc.ts`) with a unified, deduplicated `eth_call` RPC executor and full backwards-compatible re-exports.
