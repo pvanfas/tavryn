@@ -354,17 +354,18 @@ export function ActivityTimeline({
             type="button"
             onClick={handleRunFullDemo}
             disabled={isRunning}
+            title="Simulate Tavryn's full 7-step autonomous loop: Detect → Negotiate → AI Review → Policy → Arc Escrow → Verify → Settle"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isRunning ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Running Full Demo Loop ({percentCompleted}%)...</span>
+                <span>Simulating 7-Step Loop ({percentCompleted}%)...</span>
               </>
             ) : (
               <>
                 <AgentIcon className="h-4 w-4" />
-                <span>Run full demo</span>
+                <span>Simulate 7-Step Loop</span>
               </>
             )}
           </button>

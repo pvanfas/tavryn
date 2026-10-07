@@ -21,6 +21,7 @@ import React, { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { BusinessItem } from "@/components/BusinessSwitcher";
+import { clearAuthCookie, getBrowserSupabase } from "@/lib/auth";
 import { ARC_CONFIG } from "@/lib/circle";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 
@@ -176,12 +177,15 @@ export function SettingsClient({
 
   const isDemo = business?.id === "b655fb94-fc62-4e3c-8898-2c5f88068159";
 
-  const handleDeleteOrganization = async () => {
+  const handleDeleteAccount = async () => {
     if (!business) return;
-    if (
-      confirmInput.trim().toLowerCase() !== business.name.trim().toLowerCase()
-    ) {
-      setDeleteError(`Please type "${business.name}" exactly to confirm.`);
+    const normalizedInput = confirmInput.trim().toLowerCase();
+    const isConfirmed =
+      normalizedInput === "delete my account" ||
+      normalizedInput === business.name.trim().toLowerCase();
+
+    if (!isConfirmed) {
+      setDeleteError(`Please type "delete my account" exactly to confirm.`);
       return;
     }
 
@@ -198,19 +202,26 @@ export function SettingsClient({
       const data = await res.json();
       if (!res.ok) {
         throw new Error(
-          data.error?.message || data.error || "Failed to delete organization",
+          data.error?.message || data.error || "Failed to delete account",
         );
       }
 
       setShowDeleteModal(false);
       setSuccessMsg(
-        `Organization "${business.name}" and all related data have been permanently deleted.`,
+        "Your account and all associated workspace data have been permanently deleted.",
       );
 
+      // Sign out and redirect to login
+      clearAuthCookie();
+      try {
+        const supabase = getBrowserSupabase();
+        await supabase.auth.signOut();
+      } catch {}
+
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/auth/login");
         router.refresh();
-      }, 1200);
+      }, 1000);
     } catch (err) {
       setDeleteError((err as Error).message);
     } finally {
@@ -553,22 +564,22 @@ export function SettingsClient({
 
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                <p className="font-semibold text-slate-800 dark:text-slate-200">
-                  Delete this organization
+                <p className="font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider text-[11px]">
+                  Delete my Account
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Once deleted, all contracts, negotiations, transactions,
-                  receipts, and policy rules for{" "}
+                  Permanently delete your account, authentication credentials,
+                  and all associated workspace data for{" "}
                   <span className="font-semibold text-slate-700 dark:text-slate-300">
                     {business?.name || "this organization"}
-                  </span>{" "}
-                  will be permanently removed. This action is irreversible.
+                  </span>
+                  . This action is irreversible.
                 </p>
               </div>
 
               {isDemo ? (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-500 cursor-not-allowed shrink-0 border border-slate-200/60 dark:border-slate-700">
-                  Protected Demo Org
+                  Protected Demo Account
                 </div>
               ) : (
                 <button
@@ -581,7 +592,7 @@ export function SettingsClient({
                   className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 shadow-xs"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete Organization</span>
+                  <span>Delete my Account</span>
                 </button>
               )}
             </div>
@@ -620,7 +631,7 @@ export function SettingsClient({
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Delete Organization
+                    Delete my Account
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     This action is permanent and cannot be undone.
@@ -630,33 +641,33 @@ export function SettingsClient({
 
               <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300 space-y-1.5">
                 <p className="font-semibold">
-                  All associated records will be permanently wiped:
+                  All account access and records will be permanently wiped:
                 </p>
                 <ul className="list-disc list-inside text-[11px] space-y-0.5 text-rose-700 dark:text-rose-400">
-                  <li>All active and historical contracts</li>
-                  <li>All vendor negotiations and conversation logs</li>
+                  <li>Your user login credentials and session tokens</li>
+                  <li>All active contracts, negotiations, and conversation logs</li>
                   <li>All on-chain settlement receipts and transactions</li>
-                  <li>Spending policies, category budgets, and member links</li>
+                  <li>Spending policies, category budgets, and treasury settings</li>
                 </ul>
               </div>
 
               <div className="space-y-2">
                 <label
-                  htmlFor="confirm-org-name"
+                  htmlFor="confirm-delete-account"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Please type{" "}
                   <span className="font-bold text-slate-900 dark:text-white select-all">
-                    &quot;{business.name}&quot;
+                    &quot;delete my account&quot;
                   </span>{" "}
                   to confirm:
                 </label>
                 <input
-                  id="confirm-org-name"
+                  id="confirm-delete-account"
                   type="text"
                   value={confirmInput}
                   onChange={(e) => setConfirmInput(e.target.value)}
-                  placeholder={business.name}
+                  placeholder="delete my account"
                   autoFocus
                   className="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
                 />
@@ -680,11 +691,12 @@ export function SettingsClient({
                 </button>
                 <button
                   type="button"
-                  onClick={handleDeleteOrganization}
+                  onClick={handleDeleteAccount}
                   disabled={
                     deleting ||
-                    confirmInput.trim().toLowerCase() !==
-                      business.name.trim().toLowerCase()
+                    (confirmInput.trim().toLowerCase() !== "delete my account" &&
+                      confirmInput.trim().toLowerCase() !==
+                        business.name.trim().toLowerCase())
                   }
                   className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs"
                 >
@@ -696,7 +708,7 @@ export function SettingsClient({
                   ) : (
                     <>
                       <Trash2 className="h-3.5 w-3.5" />
-                      <span>Delete Organization</span>
+                      <span>Delete my Account</span>
                     </>
                   )}
                 </button>

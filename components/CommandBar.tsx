@@ -20,6 +20,7 @@ import {
   ChatMessage,
   CommandBarProps,
   DecisionExplanationCard,
+  FormattedMessage,
   RenewalsCard,
   SavingsCard,
   SavingsSummaryCard,
@@ -376,7 +377,11 @@ export function CommandBar({
                       : "bg-slate-100/90 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 rounded-bl-xs border border-slate-200/60 dark:border-slate-700/60"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <FormattedMessage
+                    text={msg.text}
+                    role={msg.role}
+                    isStreaming={msg.isStreaming}
+                  />
                 </div>
 
                 {/* Structured Cards */}

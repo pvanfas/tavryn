@@ -12,7 +12,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-import { AgentIcon } from "@/components/AgentIcon";
 
 import { BusinessItem } from "./BusinessSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
@@ -242,32 +241,6 @@ export function AppHeader({
             aria-label="Ask Tavryn"
           >
             <Sparkles className="h-4 w-4" />
-          </button>
-
-          {/* Run Agent Now Button */}
-          <button
-            id="header-run-agent-btn"
-            type="button"
-            onClick={async () => {
-              try {
-                const targetUrl = activeBusinessId
-                  ? `/api/agent/run?businessId=${encodeURIComponent(activeBusinessId)}`
-                  : "/api/demo/reset-and-run";
-                await fetch(targetUrl, { method: "POST" });
-                window.location.reload();
-              } catch {
-                // ignore
-              }
-            }}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 h-8 rounded-lg bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
-            title="Execute autonomous procurement run immediately"
-            aria-label="Run agent now"
-          >
-            <AgentIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden sm:inline">Run agent now</span>
-            <span className="inline sm:hidden font-semibold text-[11px]">
-              Run
-            </span>
           </button>
 
           {/* Theme Toggle */}

@@ -54,7 +54,7 @@ export function OpportunitiesTable({
       const started = data.result?.totalNegotiationsStarted ?? 0;
       const notifs = data.result?.totalNotificationsCreated ?? 0;
       setAgentNotice(
-        `Autonomous agent completed: ${started} negotiation(s) initiated, ${notifs} notification(s) created.`,
+        `Portfolio renewal scan completed: ${started} negotiation(s) initiated, ${notifs} notification(s) created.`,
       );
       router.refresh();
     } catch (err) {

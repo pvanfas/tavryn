@@ -243,13 +243,15 @@ export async function DELETE(
       // Body is optional
     }
 
-    if (
-      rawBody?.confirmName &&
-      rawBody.confirmName.trim().toLowerCase() !==
-        business.name.trim().toLowerCase()
-    ) {
+    const confirmName = rawBody?.confirmName?.trim()?.toLowerCase();
+    const isConfirmed =
+      !confirmName ||
+      confirmName === "delete my account" ||
+      confirmName === business.name.trim().toLowerCase();
+
+    if (!isConfirmed) {
       return apiError(
-        `Confirmation mismatch. Expected "${business.name}", got "${rawBody.confirmName}".`,
+        `Confirmation mismatch. Expected "delete my account" or "${business.name}", got "${rawBody?.confirmName}".`,
         400,
       );
     }

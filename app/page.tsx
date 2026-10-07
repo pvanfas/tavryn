@@ -633,7 +633,7 @@ await release_escrow({
             </h2>
             <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
               Launch Demo Co with one click. No registration required. Click
-              &quot;Run full demo&quot; on the dashboard to watch the agent
+              &quot;Simulate 7-Step Loop&quot; on the dashboard to watch the agent
               analyze, negotiate, escrow, and settle in real time.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">

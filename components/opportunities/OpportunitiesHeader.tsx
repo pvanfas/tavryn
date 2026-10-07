@@ -86,23 +86,24 @@ export function OpportunitiesHeader({
             )}
           </div>
 
-          {/* Run Agent Now Button */}
+          {/* Scan for Savings Button */}
           <button
+            id="contracts-scan-savings-btn"
             type="button"
             onClick={onRunAgentNow}
             disabled={isRunningAgent}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5745] text-white text-xs font-bold shadow-2xs transition-all disabled:opacity-60 cursor-pointer shrink-0"
-            title="Run autonomous proactive procurement agent across renewing contracts"
+            title="Scan renewing contracts for idle seats, usage drops, and autonomous negotiation opportunities"
           >
             {isRunningAgent ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Scanning...</span>
+                <span>Scanning Contracts...</span>
               </>
             ) : (
               <>
                 <AgentIcon className="h-3.5 w-3.5 shrink-0" />
-                <span>Run agent now</span>
+                <span>Scan for Savings</span>
               </>
             )}
           </button>
