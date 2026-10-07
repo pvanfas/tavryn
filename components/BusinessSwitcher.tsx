@@ -57,33 +57,13 @@ export function BusinessSwitcher({
     <div className="flex items-center gap-2">
       <div className="relative flex items-center">
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/70 dark:border-slate-800/70 text-xs text-slate-700 dark:text-slate-200 shadow-2xs">
-          {isSwitching ? (
-            <Loader2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] animate-spin shrink-0" />
-          ) : (
-            <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
-          )}
-          <span className="text-slate-500 dark:text-slate-400 font-semibold hidden sm:inline">
-            Org:
+          <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+          <span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[150px]">
+            {formatBusinessName(activeBusiness?.name || "Demo Co")}
           </span>
-          <select
-            value={activeBusinessId}
-            onChange={handleChange}
-            disabled={isSwitching}
-            className="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-1 text-xs disabled:opacity-60"
-          >
-            {displayBusinesses.map((b) => (
-              <option
-                key={b.id}
-                value={b.id}
-                className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
-              >
-                {formatBusinessName(b.name)}
-              </option>
-            ))}
-          </select>
           {activeBusiness?.is_real ? (
             <span
-              className="h-2 w-2 rounded-full bg-[#107e65] animate-pulse ml-0.5"
+              className="h-2 w-2 rounded-full bg-[#107e65] ml-0.5"
               title="Verified Real Business"
             />
           ) : (
@@ -96,12 +76,12 @@ export function BusinessSwitcher({
       </div>
 
       <Link
-        href="/onboard"
+        href="/import-bills"
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-2xs transition-colors shrink-0"
       >
         <Plus className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Onboard Business</span>
-        <span className="sm:hidden">New</span>
+        <span className="hidden sm:inline">Import Bills</span>
+        <span className="sm:hidden">Import</span>
       </Link>
     </div>
   );

@@ -24,7 +24,7 @@ test.describe("Mobile Viewport Auditing & Responsiveness Across All Core Pages",
     { name: "audit", path: "/audit" },
     { name: "metrics", path: "/metrics" },
     { name: "settings", path: "/settings" },
-    { name: "onboard", path: "/onboard" },
+    { name: "import-bills", path: "/import-bills" },
   ];
 
   for (const route of routes) {

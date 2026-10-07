@@ -6,6 +6,7 @@ import {
   Building2,
   CheckSquare,
   ExternalLink,
+  FileSpreadsheet,
   FileText,
   LayoutDashboard,
   Loader2,
@@ -32,7 +33,6 @@ import {
 } from "@/lib/nav";
 
 import { BusinessItem } from "./BusinessSwitcher";
-import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 interface MobileTabBarProps {
@@ -54,11 +54,6 @@ export function MobileTabBar({
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
-  const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
-
-  useEffect(() => {
-    setIsSwitchingOrg(false);
-  }, [activeBusinessId]);
 
   // Poll pending approvals count
   useEffect(() => {
@@ -103,6 +98,7 @@ export function MobileTabBar({
     BarChart3,
     PlusCircle,
     SettingsIcon,
+    FileSpreadsheet,
   };
 
   // Collect all nav items
@@ -145,15 +141,11 @@ export function MobileTabBar({
               item.highlightNestedPrefixes,
             );
             const showBadge = item.id === "approvals" && pendingCount > 0;
-            const navHref =
-              activeBusinessId && item.href !== "/onboard"
-                ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
-                : item.href;
 
             return (
               <Link
                 key={item.id}
-                href={navHref}
+                href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl m-1 ${
                   active
@@ -233,43 +225,30 @@ export function MobileTabBar({
               </button>
             </div>
 
-            {/* Business Switcher in Sheet */}
-            {businesses.length > 0 && (
+            {/* Organization Info in Sheet (Read-only, single account) */}
+            {activeBusiness && (
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#151c19] border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">
-                  Active Business
-                </span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    Organization
+                  </span>
+                  {activeBusiness.is_real ? (
+                    <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
+                      Real
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[9px] font-bold">
+                      Demo
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#107e65] dark:text-[#34d399] shrink-0">
-                    {isSwitchingOrg ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Building2 className="h-4 w-4" />
-                    )}
+                    <Building2 className="h-4 w-4" />
                   </div>
-                  <select
-                    value={activeBusinessId}
-                    disabled={isSwitchingOrg}
-                    onChange={(e) => {
-                      const newId = e.target.value;
-                      if (newId && newId !== activeBusinessId) {
-                        setIsSwitchingOrg(true);
-                        startTopLineLoader();
-                        const targetPath =
-                          pathname && pathname !== "/" ? pathname : "/dashboard";
-                        router.push(`${targetPath}?businessId=${newId}`);
-                        setMoreOpen(false);
-                      }
-                    }}
-                    className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden truncate disabled:opacity-60"
-                  >
-                    {businesses.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {formatBusinessName(b.name)}{" "}
-                        {b.is_real ? "(Real)" : "(Demo)"}
-                      </option>
-                    ))}
-                  </select>
+                  <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                    {formatBusinessName(activeBusiness.name)}
+                  </span>
                 </div>
               </div>
             )}
@@ -283,15 +262,11 @@ export function MobileTabBar({
                   item.href,
                   item.highlightNestedPrefixes,
                 );
-                const moreHref =
-                  activeBusinessId && item.href !== "/onboard"
-                    ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
-                    : item.href;
 
                 return (
                   <Link
                     key={item.id}
-                    href={moreHref}
+                    href={item.href}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${

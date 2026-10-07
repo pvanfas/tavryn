@@ -136,14 +136,20 @@ function LandingPage({
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <a
-              id="landing-try-demo-btn"
-              href="/api/demo/session"
+            <Link
+              href="/auth/login"
+              className="hidden sm:inline-flex text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              id="landing-signup-btn"
+              href="/auth/register"
               className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
-              <span>Try the demo</span>
+              <span>Free Signup</span>
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -179,14 +185,14 @@ function LandingPage({
 
             {/* Primary Call-to-Action Buttons */}
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
-              <a
+              <Link
                 id="hero-primary-cta"
-                href="/api/demo/session"
+                href="/auth/login?demo=true"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-base font-bold shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 <span>Try the demo</span>
                 <ArrowRight className="h-4 w-4 ml-0.5" />
-              </a>
+              </Link>
 
               <a
                 id="hero-video-cta"
@@ -227,8 +233,8 @@ function LandingPage({
                 Live Interactive Demo:
               </span>
               <span>
-                Clicking &quot;Try the demo&quot; pre-loads Demo Co with live
-                testnet contracts and a 1-click execution button.
+                Clicking &quot;Try the demo&quot; opens the sign-in page with
+                pre-filled demo credentials ready for 1-click testnet exploration.
               </span>
             </div>
           </div>
@@ -631,14 +637,14 @@ await release_escrow({
               analyze, negotiate, escrow, and settle in real time.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
+              <Link
                 id="footer-demo-cta"
-                href="/api/demo/session"
+                href="/auth/login?demo=true"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-base font-bold shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer"
               >
                 <span>Launch Demo Co</span>
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
               <a
                 href="https://github.com/pvanfas/tavryn"
                 target="_blank"

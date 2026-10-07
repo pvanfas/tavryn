@@ -97,7 +97,7 @@ flowchart TD
         Tables["contracts, negotiations, transactions,\npolicies, reviews, overrides"]
     end
 
-    LP -->|Try Demo /api/demo/session| DB
+    LP -->|Try Demo /auth/login| DB
     DB -->|Run Full Demo POST /api/demo/reset-and-run| Agent
     Agent -->|1. Evaluate Opportunity & Alternatives| Switching
     Agent -->|2. Concession Curves & Override Lessons| Memory
@@ -401,7 +401,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser:
 
 - Logged-out visitors browsing to `/` see the **Landing Page** with the one-line pitch, hero metrics, and 3-step loop.
-- Click **"Try the demo"** to navigate directly to the **Dashboard** at `/dashboard`.
+- Click **"Try the demo"** to navigate to the **Login Page** (`/auth/login`) with pre-filled demo credentials, then sign in to access the **Dashboard** at `/dashboard`.
 - Click **"Run full demo"** on the dashboard to watch the 7-step autonomous procurement engine execute live in the Activity Timeline.
 - Click **"Audit Ledger"** (`/audit`) to verify the cryptographic SHA-256 chain.
 - On the **Onboard** page, click **"Import Acme Corp Live SaaS Stack"** for instant end-to-end ingestion and analysis.

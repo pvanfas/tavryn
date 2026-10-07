@@ -123,4 +123,66 @@ describe("Landing Page Metrics & Approvals Endpoint", () => {
       "globals.css must define --text-2xs at 11px (0.6875rem) in @theme",
     );
   });
+
+  test("6. 'Free Signup' button in header and 'Try the demo' CTA in hero", async () => {
+    const pageContent = fs.readFileSync(
+      path.join(process.cwd(), "app/page.tsx"),
+      "utf8",
+    );
+    assert.ok(
+      pageContent.includes('id="landing-signup-btn"'),
+      "Landing page must contain header free signup button",
+    );
+    assert.ok(
+      pageContent.includes("Free Signup"),
+      "Landing page header must contain 'Free Signup' text",
+    );
+    assert.ok(
+      pageContent.includes('href="/auth/register"'),
+      "Header Free Signup button must link to /auth/register",
+    );
+    assert.ok(
+      pageContent.includes('id="hero-primary-cta"'),
+      "Landing page must contain hero try demo button",
+    );
+    assert.ok(
+      pageContent.includes('href="/auth/login?demo=true"'),
+      "Hero Try the demo must link to /auth/login?demo=true",
+    );
+    assert.ok(
+      !pageContent.includes('href="/api/demo/session"'),
+      "Landing page must not link to /api/demo/session",
+    );
+
+    const proxyContent = fs.readFileSync(
+      path.join(process.cwd(), "proxy.ts"),
+      "utf8",
+    );
+    assert.ok(
+      proxyContent.includes('"/signup"'),
+      "proxy.ts PUBLIC_PATHS must include /signup",
+    );
+    assert.ok(
+      proxyContent.includes('"/login"'),
+      "proxy.ts PUBLIC_PATHS must include /login",
+    );
+
+    const signupAliasContent = fs.readFileSync(
+      path.join(process.cwd(), "app/signup/page.tsx"),
+      "utf8",
+    );
+    assert.ok(
+      signupAliasContent.includes('redirect("/auth/register")'),
+      "app/signup/page.tsx must redirect to /auth/register",
+    );
+
+    const loginAliasContent = fs.readFileSync(
+      path.join(process.cwd(), "app/login/page.tsx"),
+      "utf8",
+    );
+    assert.ok(
+      loginAliasContent.includes('redirect("/auth/login")'),
+      "app/login/page.tsx must redirect to /auth/login",
+    );
+  });
 });

@@ -44,10 +44,10 @@ export default function NotFound() {
             Return to Overview
           </Link>
           <Link
-            href="/onboard"
+            href="/import-bills"
             className="w-full inline-flex items-center justify-center h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors"
           >
-            Onboard New Subscriptions
+            Import Bills
           </Link>
         </div>
       </div>

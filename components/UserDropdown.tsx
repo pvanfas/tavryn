@@ -2,15 +2,14 @@
 
 import {
   Building2,
-  Check,
   ChevronDown,
+  FileSpreadsheet,
   Loader2,
   Lock,
   LogOut,
-  Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -20,7 +19,6 @@ import {
 } from "@/lib/auth";
 
 import type { BusinessItem } from "./BusinessSwitcher";
-import { startTopLineLoader } from "./TopLineLoader";
 
 export function formatBusinessName(name?: string | null): string {
   if (!name) return "Demo Co";
@@ -46,7 +44,6 @@ export function UserDropdown({
   activeBusinessId,
 }: UserDropdownProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -115,38 +112,6 @@ export function UserDropdown({
     }
   };
 
-  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses, excluding any deleted orgs
-  const allowedBusinesses = businesses.filter(
-    (b) =>
-      (b.is_real || b.name === "Demo Co") && !b.name?.startsWith("[Deleted"),
-  );
-
-  // Deduplicate businesses by clean name, preferring the active business if matched
-  const uniqueBusinesses = allowedBusinesses.reduce<BusinessItem[]>(
-    (acc, b) => {
-      const clean = formatBusinessName(b.name);
-      const existingIndex = acc.findIndex(
-        (item) => formatBusinessName(item.name) === clean,
-      );
-      if (existingIndex === -1) {
-        acc.push(b);
-      } else if (b.id === activeBusinessId) {
-        acc[existingIndex] = b;
-      }
-      return acc;
-    },
-    [],
-  );
-
-  const handleSwitchBusiness = (id: string) => {
-    setOpen(false);
-    if (id !== activeBusinessId) {
-      startTopLineLoader();
-      const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
-      router.push(`${targetPath}?businessId=${id}`);
-    }
-  };
-
   const displayName = fullName || userEmail?.split("@")[0] || "User";
 
   return (
@@ -155,11 +120,6 @@ export function UserDropdown({
       <div className="sr-only" aria-hidden="true">
         <span>{businessName}</span>
         {isReal && <span>Verified Real Business</span>}
-        {businesses.map((b) => (
-          <span key={b.id} data-business-id={b.id}>
-            {b.name} {b.is_real ? "Verified Real Business" : "Demo"}
-          </span>
-        ))}
       </div>
 
       {/* Trigger */}
@@ -254,68 +214,18 @@ export function UserDropdown({
             </div>
           </div>
 
-          {/* Switch Business Section */}
-          {uniqueBusinesses.length > 0 && (
-            <div className="p-1.5 border-b border-slate-100 dark:border-slate-800/60">
-              <div className="px-2 pt-1 pb-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Switch Business
-              </div>
-              <div className="max-h-44 overflow-y-auto space-y-0.5 pr-0.5">
-                {uniqueBusinesses.map((b) => {
-                  const isActive =
-                    b.id === activeBusinessId ||
-                    formatBusinessName(b.name) ===
-                      formatBusinessName(businessName);
-                  const cleanName = formatBusinessName(b.name);
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      data-business-id={b.id}
-                      data-business-name={b.name}
-                      title={b.name}
-                      onClick={() => handleSwitchBusiness(b.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-left cursor-pointer ${
-                        isActive
-                          ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399]"
-                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          title={
-                            b.is_real
-                              ? "Verified Real Business"
-                              : "Demo / Simulated"
-                          }
-                          className={`h-2 w-2 rounded-full shrink-0 ${
-                            b.is_real ? "bg-[#107e65]" : "bg-amber-500"
-                          }`}
-                        />
-                        <span className="truncate">{cleanName}</span>
-                      </div>
-                      {isActive && (
-                        <Check className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0 ml-1.5" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="pt-1 mt-1 border-t border-slate-100/80 dark:border-slate-800/40">
-                <Link
-                  href="/onboard"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#107e65] dark:text-[#34d399] hover:bg-emerald-500/10 transition-colors"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Onboard New Business</span>
-                </Link>
-              </div>
-            </div>
-          )}
+          {/* Menu items */}
+          <div className="p-1.5 space-y-0.5">
+            <Link
+              href="/import-bills"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors group"
+            >
+              <FileSpreadsheet className="h-4 w-4 text-[#107e65] dark:text-[#34d399] group-hover:scale-105 transition-transform" />
+              <span>Import Bills</span>
+            </Link>
 
-          {/* Navigation items */}
-          <div className="p-1.5">
             <Link
               href="/auth/change-password"
               role="menuitem"

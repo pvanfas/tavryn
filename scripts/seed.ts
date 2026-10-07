@@ -47,6 +47,7 @@ async function seed() {
     const { data: newBusiness, error } = await supabase
       .from("businesses")
       .insert({
+        id: "b655fb94-fc62-4e3c-8898-2c5f88068159",
         name: "Demo Co",
         is_real: false,
         default_currency: "USDC",

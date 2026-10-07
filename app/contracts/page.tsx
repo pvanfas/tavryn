@@ -132,11 +132,11 @@ export default async function ContractsPage({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {business?.id && <QuickInvoiceDropzone businessId={business.id} />}
             <Link
-              href="/onboard"
+              href="/import-bills"
               className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Onboard Subscription</span>
+              <span>Import Bills</span>
             </Link>
           </div>
         </PageHeader>
@@ -206,11 +206,11 @@ export default async function ContractsPage({
               </Body>
             </div>
             <Link
-              href="/onboard"
+              href="/import-bills"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
             >
               <PlusCircle className="h-3.5 w-3.5" />
-              <span>Import Subscriptions CSV</span>
+              <span>Import Bills</span>
             </Link>
           </div>
         ) : (

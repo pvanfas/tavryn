@@ -124,7 +124,7 @@ export async function signInWithOAuth(
 /**
  * Send a magic link to the user's email for passwordless sign-in or onboarding.
  */
-export async function signInWithOtp(email: string, next: string = "/onboard") {
+export async function signInWithOtp(email: string, next: string = "/import-bills") {
   const client = getBrowserSupabase();
   const siteUrl =
     typeof window !== "undefined"

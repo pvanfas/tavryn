@@ -17,7 +17,8 @@ export interface NavItemConfig {
     | "ShieldCheck"
     | "BarChart3"
     | "PlusCircle"
-    | "SettingsIcon";
+    | "SettingsIcon"
+    | "FileSpreadsheet";
   badgeKey?: "approvals" | "audit" | "metrics";
   badgeText?: string;
   highlightNestedPrefixes?: string[];
@@ -94,10 +95,10 @@ export const WORKSPACE_NAV_SECTIONS: NavSectionConfig[] = [
 
 export const BOTTOM_NAV_ITEMS: NavItemConfig[] = [
   {
-    id: "onboard",
-    label: "Add business",
-    href: "/onboard",
-    iconName: "PlusCircle",
+    id: "import-bills",
+    label: "Import Bills",
+    href: "/import-bills",
+    iconName: "FileSpreadsheet",
   },
   {
     id: "settings",
@@ -124,7 +125,7 @@ export const MOBILE_MORE_ITEM_IDS = [
   "negotiations",
   "contracts",
   "audit",
-  "onboard",
+  "import-bills",
   "settings",
 ];
 

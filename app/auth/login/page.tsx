@@ -23,11 +23,13 @@ function LoginForm() {
   const rawNext = searchParams.get("next");
   const next = rawNext && rawNext !== "/" ? rawNext : "/dashboard";
 
+  const isDemo = searchParams.get("demo") === "true";
+
   const [authMode, setAuthMode] = useState<"password" | "magic_link">(
     "password",
   );
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(isDemo ? "demo@tavryn.io" : "");
+  const [password, setPassword] = useState(isDemo ? "demo1234" : "");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +133,11 @@ function LoginForm() {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
               <span>Demo Account</span>
+              {isDemo && (
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                  Pre-filled
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-slate-600 dark:text-slate-300 font-mono mt-0.5 flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-slate-800 dark:text-slate-200">

@@ -109,10 +109,10 @@ export function OpportunitiesHeader({
 
           {/* Primary Action Button (Icon only) */}
           <Link
-            href="/onboard"
+            href="/import-bills"
             className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-2xs transition-colors shrink-0"
-            title="Add Subscription"
-            aria-label="Add Subscription"
+            title="Import Bills"
+            aria-label="Import Bills"
           >
             <Plus className="h-4 w-4" />
           </Link>

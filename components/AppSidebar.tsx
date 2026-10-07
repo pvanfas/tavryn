@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  FileSpreadsheet,
   FileText,
   LayoutDashboard,
   Loader2,
@@ -32,7 +33,6 @@ import {
 } from "@/lib/nav";
 
 import { BusinessItem } from "./BusinessSwitcher";
-import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 interface AppSidebarProps {
@@ -66,11 +66,6 @@ export function AppSidebar({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
-  const [isSwitchingOrg, setIsSwitchingOrg] = useState(false);
-
-  useEffect(() => {
-    setIsSwitchingOrg(false);
-  }, [activeBusinessId]);
 
   const collapsed =
     controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
@@ -157,6 +152,7 @@ export function AppSidebar({
     BarChart3,
     PlusCircle,
     SettingsIcon,
+    FileSpreadsheet,
   };
 
   const visibleBusinesses = businesses.filter(
@@ -227,13 +223,13 @@ export function AppSidebar({
         )}
       </div>
 
-      {/* 2. BUSINESS SWITCHER (Top of sidebar under logo with "Real" badge) */}
+      {/* 2. ACTIVE ORGANIZATION BADGE (Read-only, single account per business) */}
       {!collapsed ? (
         <div className="px-3 pt-3.5 pb-2 shrink-0">
           <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#121915]/80 border border-slate-200/70 dark:border-slate-800/70 flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Active Organization
+                Organization
               </span>
               {activeBusiness?.is_real ? (
                 <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
@@ -247,50 +243,22 @@ export function AppSidebar({
             </div>
 
             <div className="flex items-center gap-2">
-              {isSwitchingOrg ? (
-                <Loader2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] animate-spin shrink-0" />
-              ) : (
-                <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
-              )}
-              <select
-                value={activeBusinessId || activeBusiness?.id || ""}
-                disabled={isSwitchingOrg}
-                onChange={(e) => {
-                  const newId = e.target.value;
-                  if (newId && newId !== activeBusinessId) {
-                    setIsSwitchingOrg(true);
-                    startTopLineLoader();
-                    const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
-                    router.push(`${targetPath}?businessId=${newId}`);
-                  }
-                }}
-                className="bg-transparent font-bold text-xs text-slate-900 dark:text-white focus:outline-hidden cursor-pointer w-full truncate pr-1 disabled:opacity-60"
-                aria-label="Select Active Organization"
-              >
-                {visibleBusinesses.map((b) => (
-                  <option
-                    key={b.id}
-                    value={b.id}
-                    className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                  >
-                    {formatBusinessName(b.name)}
-                  </option>
-                ))}
-              </select>
+              <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+              <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                {formatBusinessName(activeBusiness?.name || businessName || "Demo Co")}
+              </span>
             </div>
           </div>
         </div>
       ) : (
         <div className="p-2 flex justify-center shrink-0">
-          <button
-            type="button"
-            onClick={toggleCollapse}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-500"
-            title={`Active: ${activeBusiness?.name || "Demo Co"} (${activeBusiness?.is_real ? "Real" : "Demo"})`}
+          <div
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+            title={`Organization: ${activeBusiness?.name || businessName || "Demo Co"} (${activeBusiness?.is_real ? "Real" : "Demo"})`}
             aria-label="Active Organization"
           >
             <Building2 className="h-4 w-4" />
-          </button>
+          </div>
         </div>
       )}
 
@@ -317,15 +285,10 @@ export function AppSidebar({
               const showBadge =
                 item.badgeKey === "approvals" && pendingApprovalsCount > 0;
 
-              const navHref =
-                activeBusinessId && item.href !== "/onboard"
-                  ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
-                  : item.href;
-
               return (
                 <div key={item.id} className="relative group">
                   <Link
-                    href={navHref}
+                    href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                       collapsed ? "justify-center px-0 py-2.5" : ""
@@ -381,23 +344,18 @@ export function AppSidebar({
         ))}
       </nav>
 
-      {/* 4. BOTTOM SECTION: Add business, Settings, Treasury Chip, User Profile */}
+      {/* 4. BOTTOM SECTION: Import Bills, Settings, Treasury Chip */}
       <div className="p-3 border-t border-slate-200/70 dark:border-slate-800/70 space-y-2 shrink-0">
-        {/* Secondary Links: Add business & Settings */}
+        {/* Secondary Links: Import Bills & Settings */}
         <div className="space-y-0.5">
           {BOTTOM_NAV_ITEMS.map((item) => {
             const Icon = ICON_MAP[item.iconName] || PlusCircle;
             const active = isRouteActive(pathname, item.href);
 
-            const bottomHref =
-              activeBusinessId && item.href !== "/onboard"
-                ? `${item.href}?businessId=${encodeURIComponent(activeBusinessId)}`
-                : item.href;
-
             return (
               <div key={item.id} className="relative group">
                 <Link
-                  href={bottomHref}
+                  href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                     collapsed ? "justify-center px-0 py-2" : ""

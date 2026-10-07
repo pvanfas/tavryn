@@ -25,22 +25,37 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
     await expect(page.locator("text=28% Avg")).toBeVisible();
 
     // 4. Verify CTAs
-    const tryDemoBtn = page.locator("#landing-try-demo-btn");
+    const signupBtn = page.locator("#landing-signup-btn");
+    const tryDemoBtn = page.locator("#hero-primary-cta");
     const videoBtn = page.locator("#hero-video-cta");
     const githubBtn = page.locator("#hero-github-cta");
 
+    await expect(signupBtn).toBeVisible();
+    await expect(signupBtn).toContainText("Free Signup");
     await expect(tryDemoBtn).toBeVisible();
     await expect(videoBtn).toBeVisible();
     await expect(githubBtn).toBeVisible();
   });
 
-  test("2. 'Try the demo' logs into Demo Co and loads dashboard", async ({
+  test("2. 'Try the demo' opens login page with demo account and loads dashboard", async ({
     page,
   }) => {
     await page.goto("/");
 
-    // Click "Try the demo" button
-    await page.click("#landing-try-demo-btn");
+    // Click "Try the demo" hero button
+    await page.click("#hero-primary-cta");
+
+    // Must navigate to /auth/login (not /dashboard)
+    await expect(page).toHaveURL(/\/auth\/login/);
+
+    // Verify login page header and demo banner
+    await expect(
+      page.getByRole("heading", { name: "Welcome back" }),
+    ).toBeVisible();
+    await expect(page.locator("#demo-autofill-btn")).toBeVisible();
+
+    // Submit form with demo credentials
+    await page.click("button[type='submit']");
 
     // Must navigate to /dashboard
     await expect(page).toHaveURL(/\/dashboard/);
