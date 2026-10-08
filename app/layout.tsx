@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://tavryn.io",
+    process.env.NEXT_PUBLIC_APP_URL || "https://tavryn.space",
   ),
   title: {
     default: "Tavryn | Procurement & Treasury Ledger",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "Tavryn | Procurement & Treasury Ledger",
     description:
       "An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.",
-    url: "https://tavryn.io",
+    url: "https://tavryn.space",
     siteName: "Tavryn",
     images: [
       {

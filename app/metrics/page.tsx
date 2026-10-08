@@ -31,10 +31,11 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
     business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
   }
 
-  // 2. Fetch comprehensive protocol metrics (both all activity and real-only verified)
+  // 2. Fetch metrics specific to the logged organisation ONLY
+  const activeBusinessId = business?.id;
   const [metricsAll, metricsReal] = await Promise.all([
-    getTractionMetrics({ realOnly: false }),
-    getTractionMetrics({ realOnly: true }),
+    getTractionMetrics({ businessId: activeBusinessId, realOnly: false }),
+    getTractionMetrics({ businessId: activeBusinessId, realOnly: true }),
   ]);
 
   return (
@@ -43,7 +44,7 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
       isReal={Boolean(business?.is_real)}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },
-        { label: "Traction & Metrics" },
+        { label: "Organization Metrics" },
       ]}
       businesses={businesses}
       activeBusinessId={business?.id}
@@ -51,6 +52,7 @@ export default async function MetricsPage({ searchParams }: MetricsPageProps) {
       currency={business?.default_currency || "USDC"}
     >
       <TractionMetricsClient
+        business={business}
         initialMetricsAll={metricsAll}
         initialMetricsReal={metricsReal}
       />

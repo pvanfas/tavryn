@@ -151,6 +151,7 @@ export const LANDING_NAV_LINKS: LandingNavLink[] = [
 
 export const FOOTER_NAV_LINKS: LandingNavLink[] = [
   { label: "Audit Trail", href: "/audit" },
+  { label: "Public Metrics", href: "/public-metrics" },
   { label: "Dashboard", href: "/dashboard" },
   {
     label: "GitHub",

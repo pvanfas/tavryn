@@ -15,9 +15,10 @@ const PUBLIC_PATHS = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public landing page, public receipts, verification page, auth pages, and all API routes
+  // Allow public landing page, public metrics, public receipts, verification page, auth pages, and all API routes
   const isPublic =
     pathname === "/" ||
+    pathname.startsWith("/public-metrics") ||
     pathname.startsWith("/r/") ||
     pathname.startsWith("/approve/") ||
     pathname.startsWith("/verify-labeling") ||

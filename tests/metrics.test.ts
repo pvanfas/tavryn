@@ -216,4 +216,53 @@ describe("Traction Metrics Engine & Telemetry Reporting", () => {
     const badRes = await GET(badReq);
     assert.equal(badRes.status, 400);
   });
+
+  test("5. getTractionMetrics with businessId scopes metrics strictly to active organization", async () => {
+    // 5a. Scope to Demo Co
+    const demoCoMetrics = await getTractionMetrics({
+      businessId: "b655fb94-fc62-4e3c-8898-2c5f88068159",
+    });
+
+    assert.equal(demoCoMetrics.businesses.totalCount, 1);
+    assert.equal(demoCoMetrics.businesses.list.length, 1);
+    assert.equal(
+      demoCoMetrics.businesses.list[0].id,
+      "b655fb94-fc62-4e3c-8898-2c5f88068159",
+    );
+    assert.equal(demoCoMetrics.businesses.list[0].name, "Demo Co");
+
+    for (const tx of demoCoMetrics.transactions) {
+      assert.equal(tx.businessId, "b655fb94-fc62-4e3c-8898-2c5f88068159");
+    }
+
+    // 5b. Non-existent organization returns zeroed metrics
+    const nonExistentMetrics = await getTractionMetrics({
+      businessId: "00000000-0000-0000-0000-000000000000",
+    });
+    assert.equal(nonExistentMetrics.businesses.totalCount, 0);
+    assert.equal(nonExistentMetrics.businesses.list.length, 0);
+    assert.equal(nonExistentMetrics.usdcVolume.escrowed, 0);
+  });
+
+  test("6. public-metrics page exports dynamic route and proxy allows public access", async () => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const publicPageContent = fs.readFileSync(
+      path.join(process.cwd(), "app/public-metrics/page.tsx"),
+      "utf8",
+    );
+    assert.ok(
+      publicPageContent.includes("getTractionMetrics({ realOnly: true })"),
+      "Public page must fetch realOnly: true verified data",
+    );
+
+    const proxyContent = fs.readFileSync(
+      path.join(process.cwd(), "proxy.ts"),
+      "utf8",
+    );
+    assert.ok(
+      proxyContent.includes('pathname.startsWith("/public-metrics")'),
+      "proxy.ts must allow unauthenticated access to /public-metrics",
+    );
+  });
 });

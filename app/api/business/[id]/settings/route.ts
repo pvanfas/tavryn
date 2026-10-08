@@ -209,7 +209,7 @@ export async function POST(
     const result = await sendWebhookNotification(
       "🔔 Tavryn Webhook Integration Test",
       `Successfully connected notification webhook for organization (${businessId}). The autonomous procurement agent will dispatch renewal and settlement alerts here.`,
-      process.env.NEXT_PUBLIC_SITE_URL || "https://tavryn.network",
+      process.env.NEXT_PUBLIC_SITE_URL || "https://tavryn.space",
       targetUrl,
     );
 

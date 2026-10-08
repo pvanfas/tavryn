@@ -21,7 +21,7 @@ We encourage responsible security disclosure. If you discover a security vulnera
 
 ### Disclosure Process
 
-1. **Email us directly:** Send full vulnerability details to **`security@tavryn.network`**.
+1. **Email us directly:** Send full vulnerability details to **`security@tavryn.space`**.
 2. **Include in your report:**
    - Detailed description of the vulnerability and attack vector.
    - Proof-of-concept (PoC) script, HTTP payloads, or reproduction steps.

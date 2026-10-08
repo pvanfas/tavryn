@@ -396,10 +396,10 @@ function LandingPage({
                     </span>
                   </div>
                   <Link
-                    href="/metrics"
+                    href="/public-metrics"
                     className="inline-flex items-center gap-1 font-semibold text-[#107e65] dark:text-[#34d399] hover:underline"
                   >
-                    <span>Explore full telemetry on /metrics</span>
+                    <span>Explore public protocol telemetry on /public-metrics</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>

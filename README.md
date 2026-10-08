@@ -2,6 +2,7 @@
 
 > **An AI agent that finds the waste in a business's software spend, negotiates it away, and executes the financial decision in USDC on Arc.**
 
+[![Production](https://img.shields.io/badge/Production-tavryn.space-107e65?style=flat-square)](https://tavryn.space)
 [![Tameion Agents](<https://img.shields.io/badge/Tameion%20Agents-(Arc%20%2B%20Circle)-107e65?style=flat-square>)](https://tameion.thecanteenapp.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Tests: 201 Passing](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-201%20Passing-emerald?style=flat-square)](https://github.com/pvanfas/tavryn)

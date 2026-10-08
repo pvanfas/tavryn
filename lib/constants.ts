@@ -82,6 +82,9 @@ export const RATE_LIMIT_STALE_THRESHOLD_MS = 3_600_000; // 1 hour
 /** Auth cookie max-age in seconds (7 days) */
 export const AUTH_COOKIE_MAX_AGE_SECONDS = 604800;
 
+/** Production canonical domain URL */
+export const PRODUCTION_SITE_URL = "https://tavryn.space";
+
 /** Default localhost fallback URL used when NEXT_PUBLIC_SITE_URL is unset */
 export const DEFAULT_SITE_URL = "http://localhost:3000";
 

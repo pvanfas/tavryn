@@ -42,10 +42,10 @@ export async function getTractionMetrics(options?: {
   );
   const businessIds = businesses.map((b) => b.id);
 
-  // If realOnly is true and no real businesses exist yet, return clean zeroed metrics
-  if (realOnly && businessIds.length === 0) {
+  // If (realOnly or businessId) is requested and no businesses match, return clean zeroed metrics
+  if ((realOnly || businessId) && businessIds.length === 0) {
     return {
-      realOnly: true,
+      realOnly,
       generatedAt: new Date().toISOString(),
       businesses: { totalCount: 0, realCount: 0, demoCount: 0, list: [] },
       usdcVolume: {
@@ -146,37 +146,37 @@ export async function getTractionMetrics(options?: {
   }
 
   let contracts = cRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     contracts = contracts.filter((c) => bIdSet.has(c.business_id));
   }
   const contractIds = new Set(contracts.map((c) => c.id));
 
   let negotiations = nRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     negotiations = negotiations.filter((n) => contractIds.has(n.contract_id));
   }
 
   let transactions = tRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     transactions = transactions.filter((t) => bIdSet.has(t.business_id));
   }
 
   let agentActions = aRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     agentActions = agentActions.filter((a) => bIdSet.has(a.business_id));
   }
 
   let approvals = apRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     approvals = approvals.filter((ap) => bIdSet.has(ap.business_id));
   }
 
   let receiptsCount = (rRes.data || []).length;
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     receiptsCount = (rRes.data || []).filter((r) =>
       bIdSet.has(r.business_id),
@@ -184,7 +184,7 @@ export async function getTractionMetrics(options?: {
   }
 
   let reviews = revRes.data || [];
-  if (realOnly) {
+  if (realOnly || businessId) {
     const bIdSet = new Set(businessIds);
     reviews = reviews.filter((r) => bIdSet.has(r.business_id));
   }
