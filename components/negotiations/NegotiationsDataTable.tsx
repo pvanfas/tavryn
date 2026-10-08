@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Bot, ExternalLink } from "lucide-react";
+import { ArrowRight, Bot } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 

@@ -12,7 +12,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-
 import { BusinessItem } from "./BusinessSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserDropdown } from "./UserDropdown";

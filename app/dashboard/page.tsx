@@ -11,8 +11,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AppShell } from "@/components/AppShell";
 import { OpportunitiesTable } from "@/components/OpportunitiesTable";
 import { TransactionHashBadge } from "@/components/TransactionHashBadge";
-import { TreasuryUnifiedBalancePanel } from "@/components/TreasuryUnifiedBalancePanel";
-import { BodySmall, Caption, H2 } from "@/components/ui/text";
+import { Caption } from "@/components/ui/text";
 import {
   ARC_CONFIG,
   calculateIdleTreasuryUsycYield,

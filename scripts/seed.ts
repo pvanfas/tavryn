@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
+
 import { DEFAULT_ARC_ESCROW_CONTRACT } from "../lib/constants";
 
 // Load environment from .env.local

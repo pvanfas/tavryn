@@ -9,7 +9,6 @@ import {
   FileSpreadsheet,
   FileText,
   LayoutDashboard,
-  Loader2,
   MessageSquare,
   MoreHorizontal,
   PlusCircle,

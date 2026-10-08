@@ -137,15 +137,16 @@ export async function GET(req: NextRequest) {
     const { data: businesses } = await supabase
       .from("businesses")
       .select("id, name");
-    for (const b of businesses || []) {
-      await supabase.from("notifications").insert({
+    if (businesses && businesses.length > 0) {
+      const notificationRows = businesses.map((b) => ({
         business_id: b.id,
         title: `Weekly Executive Digest (${isoWeek})`,
         message: `Tavryn achieved $${Math.round(weeklySavings).toLocaleString()} in annual savings across ${
           digest.negotiationsRun
         } renewals this week. ${digest.pendingHumanApprovalsCount} pending supervisor approval(s).`,
         category: "weekly_digest",
-      });
+      }));
+      await supabase.from("notifications").insert(notificationRows);
     }
 
     // 4. Record to immutable agent_actions

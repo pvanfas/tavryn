@@ -229,56 +229,56 @@ export async function getPublicReceipt(
     return null;
   }
 
-  // 3. Fetch contract
-  const { data: contract } = await supabase
-    .from("contracts")
-    .select("id, service, category, current_price")
-    .eq("id", tx.contract_id)
-    .maybeSingle();
+  // 3, 4, 5. Fetch contract, business, vendor, and negotiation details concurrently
+  const [contractRes, bizRes, vendorRes, negRes] = await Promise.all([
+    supabase
+      .from("contracts")
+      .select("id, service, category, current_price")
+      .eq("id", tx.contract_id)
+      .maybeSingle(),
+    receipt.show_business_name && tx.business_id
+      ? supabase
+          .from("businesses")
+          .select("name")
+          .eq("id", tx.business_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    receipt.show_vendor_name && tx.vendor_id
+      ? supabase
+          .from("vendors")
+          .select("name")
+          .eq("id", tx.vendor_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    tx.negotiation_id
+      ? supabase
+          .from("negotiations")
+          .select("original_price, rounds, final_price, status")
+          .eq("id", tx.negotiation_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
-  // 4. Fetch business & vendor names (respecting privacy toggles)
-  let businessName: string | null = null;
-  if (receipt.show_business_name && tx.business_id) {
-    const { data: biz } = await supabase
-      .from("businesses")
-      .select("name")
-      .eq("id", tx.business_id)
-      .maybeSingle();
-    businessName = biz?.name || null;
-  }
+  const contract = contractRes.data;
+  const businessName = bizRes.data?.name || null;
+  const vendorName = vendorRes.data?.name || null;
 
-  let vendorName: string | null = null;
-  if (receipt.show_vendor_name && tx.vendor_id) {
-    const { data: v } = await supabase
-      .from("vendors")
-      .select("name")
-      .eq("id", tx.vendor_id)
-      .maybeSingle();
-    vendorName = v?.name || null;
-  }
-
-  // 5. Fetch negotiation rounds count and explanation
   let roundsCount = 1;
   let agentExplanation =
     "Autonomous procurement cycle finalized within enterprise policy limits.";
 
   let baselinePrice: number | null = null;
 
-  if (tx.negotiation_id) {
-    const { data: neg } = await supabase
-      .from("negotiations")
-      .select("original_price, rounds, final_price, status")
-      .eq("id", tx.negotiation_id)
-      .maybeSingle();
-
-    if (neg?.original_price != null) {
+  const neg = negRes.data;
+  if (neg) {
+    if (neg.original_price != null) {
       baselinePrice = Number(neg.original_price);
     }
 
-    if (typeof neg?.rounds === "number" && neg.rounds > 0) {
+    if (typeof neg.rounds === "number" && neg.rounds > 0) {
       roundsCount = neg.rounds;
-    } else if (Array.isArray(neg?.rounds)) {
-      roundsCount = Math.max(1, neg.rounds.length);
+    } else if (Array.isArray(neg.rounds)) {
+      roundsCount = Math.max(1, (neg.rounds as unknown as unknown[]).length);
     }
   }
 

@@ -44,8 +44,8 @@ export default function VerifyLabelingPage() {
         {/* Side by side comparison */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Real On-Chain Transaction */}
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-white dark:bg-gradient-to-b dark:from-emerald-950/20 dark:to-slate-900/60 p-6 space-y-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-emerald-100 dark:border-emerald-800/30">
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-[#111714] p-6 space-y-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-emerald-100 dark:border-emerald-800/40">
               <div className="flex items-center gap-2.5">
                 <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 animate-pulse" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -137,8 +137,8 @@ export default function VerifyLabelingPage() {
           </div>
 
           {/* Simulated Transaction */}
-          <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-white dark:bg-gradient-to-b dark:from-amber-950/20 dark:to-slate-900/60 p-6 space-y-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-amber-100 dark:border-amber-800/30">
+          <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-[#111714] p-6 space-y-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-amber-100 dark:border-amber-800/40">
               <div className="flex items-center gap-2.5">
                 <span className="w-3 h-3 rounded-full bg-amber-500" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -218,14 +218,14 @@ export default function VerifyLabelingPage() {
         </div>
 
         {/* Real Receipts Links */}
-        <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 space-y-4 shadow-sm">
+        <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#111714] space-y-4 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">
             Live Public Receipts Test Instances
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href={`/r/${VERIFICATION_SAMPLE_REAL_RECEIPT_TOKEN}`}
-              className="p-4 rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-slate-50 dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800/80 transition flex items-center justify-between group"
+              className="p-4 rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-slate-50 dark:bg-[#151c19] hover:bg-emerald-50/50 dark:hover:bg-[#18221e] transition flex items-center justify-between group"
             >
               <div>
                 <div className="text-sm font-semibold text-[#107e65] dark:text-emerald-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 flex items-center gap-1.5">
@@ -243,7 +243,7 @@ export default function VerifyLabelingPage() {
 
             <Link
               href={`/r/${VERIFICATION_SAMPLE_SIM_RECEIPT_TOKEN}`}
-              className="p-4 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-slate-50 dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800/80 transition flex items-center justify-between group"
+              className="p-4 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-slate-50 dark:bg-[#151c19] hover:bg-amber-50/50 dark:hover:bg-[#18221e] transition flex items-center justify-between group"
             >
               <div>
                 <div className="text-sm font-semibold text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 flex items-center gap-1.5">

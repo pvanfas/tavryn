@@ -104,15 +104,15 @@ export async function getTractionMetrics(options?: {
   ] = await Promise.all([
     supabase
       .from("contracts")
-      .select("*, vendors ( id, name )")
+      .select("id, business_id, current_price, status, created_at, vendor_id, vendors ( id, name )")
       .order("created_at", { ascending: false }),
     supabase
       .from("negotiations")
-      .select("*")
+      .select("id, contract_id, savings, status, rounds, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("transactions")
-      .select("*, businesses ( name, is_real ), vendors ( name )")
+      .select("id, business_id, vendor_id, contract_id, negotiation_id, amount, currency, status, escrow_address, tx_hash, is_simulated, created_at, businesses ( name, is_real ), vendors ( name )")
       .order("created_at", { ascending: false }),
     supabase
       .from("agent_actions")

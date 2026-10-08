@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Loader2, Plus } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";

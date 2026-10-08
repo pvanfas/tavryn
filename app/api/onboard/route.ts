@@ -1,6 +1,5 @@
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { ARC_CONFIG, createTreasuryWallet } from "@/lib/circle";
-import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { OnboardBusinessPayloadSchema } from "@/lib/schemas";
 import { getServiceSupabase } from "@/lib/supabase";

@@ -11,7 +11,6 @@ import {
   FileSpreadsheet,
   FileText,
   LayoutDashboard,
-  Loader2,
   type LucideIcon,
   MessageSquare,
   PlusCircle,

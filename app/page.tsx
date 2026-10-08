@@ -43,9 +43,7 @@ function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function Page(props: {
-  searchParams: Promise<{ businessId?: string }>;
-}) {
+export default async function Page() {
   const supabase = getServiceSupabase();
   const [featuredReceiptRes, metricsAll, metricsReal] = await Promise.all([
     supabase

@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { DEMO_BUSINESS_ID } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 

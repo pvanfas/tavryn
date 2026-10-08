@@ -43,7 +43,9 @@ export default async function NegotiationsPage({
   if (business) {
     const negotiationsQuery = supabase
       .from("negotiations")
-      .select("*, contracts!inner(*, vendors(*))")
+      .select(
+        "id, contract_id, original_price, target_price, current_offer, final_price, savings, rounds, status, created_at, contracts!inner(id, service, category, vendors(name, is_simulated))",
+      )
       .eq("contracts.business_id", business.id)
       .order("created_at", { ascending: false });
 
