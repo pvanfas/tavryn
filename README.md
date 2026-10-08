@@ -4,11 +4,17 @@
 
 [![Tameion Agents](<https://img.shields.io/badge/Tameion%20Agents-(Arc%20%2B%20Circle)-107e65?style=flat-square>)](https://tameion.thecanteenapp.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Tests: 159 Passing](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-159%20Passing-emerald?style=flat-square)](https://github.com/pvanfas/tavryn)
+[![Tests: 201 Passing](https://img.shields.io/badge/Unit%20%26%20Integration%20Tests-201%20Passing-emerald?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-8%2F8%20Passing-brightgreen?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Arc Testnet](<https://img.shields.io/badge/Settlement-Arc%20Testnet%20(USDC)-blueviolet?style=flat-square>)](https://testnet.arcscan.app/)
 [![Verified Savings Proof](<https://img.shields.io/badge/Verified%20Proof-Saved%20%242%2C688%20on%20Slack%20(28%25)-107e65?style=flat-square>)](/r/12dd9d181715dd61ccf700593ef2f2ce)
 [![Documentation](https://img.shields.io/badge/Docs-tavryn.mintlify.site-blue?style=flat-square)](https://tavryn.mintlify.site/)
+
+---
+
+<p align="center">
+  <img src="screenshot.png" alt="Tavryn Platform Overview" width="100%" />
+</p>
 
 ---
 
@@ -296,18 +302,19 @@ In accordance with rigorous transparency standards, here is the honest disclosur
 | Route                      | Description                                                                                          |
 | :------------------------- | :--------------------------------------------------------------------------------------------------- |
 | `/`                        | Public landing page with hero metrics, 3-step loop animation, and "Try the demo" CTA.               |
-| `/dashboard`               | Executive dashboard with treasury balance, contracts, activity timeline, and unified balance panel.   |
-| `/onboard`                 | Self-service onboarding: CSV upload, OAuth connect, or **1-click "Import Acme Corp Live SaaS Stack"**. |
-| `/decision/[contractId]`   | Contract decision view with reasoning timeline, policy checklist, reviewer audit, and switching NPV.  |
+| `/dashboard`               | Executive dashboard with hero savings display, collapsed Arc treasury chip, activity timeline, and opportunities. |
+| `/import-bills`            | Billing ingestion & onboarding: statement CSV upload, invoice PDF dropzone, or live SaaS stack import. |
+| `/decision/[contractId]`   | Tabbed decision view: Overview, Policy & Escrow, Alternatives (Switching NPV), Reviewer Audit, Public Receipts. |
 | `/audit`                   | Cryptographic SHA-256 chain verification of all agent actions with real-time integrity checks.        |
-| `/metrics`                 | Traction metrics, settlement history, and direct ArcScan links to on-chain transactions.             |
-| `/negotiate`               | Real vendor negotiation interface with AI outreach drafting and structured reply extraction.          |
+| `/metrics`                 | Traction metrics, settlement history, platform vs. real filtering, and direct ArcScan links.          |
+| `/negotiations`            | Autonomous negotiations ledger with savings sorting, state tracking, and direct decision links.       |
 | `/approve/[token]`         | 1-tap HMAC-SHA256 approval page with policy re-verification and single-use enforcement.              |
-| `/r/[token]`               | Public savings receipt with verifiable proof of negotiated discount.                                 |
-| `/contracts`               | Active contract browser with renewal dates, seat utilization, and waste alerts.                      |
+| `/r/[token]`               | Public savings receipt with verifiable proof of negotiated discount and ArcScan verification.        |
+| `/contracts`               | Contracts ledger with renewal dates, seat utilization, potential savings sorting, and waste alerts.   |
 | `/settings`                | Organization policies, spending limits, category budgets, and wallet configuration.                  |
 | `/approvals`               | Pending human approval queue for transactions exceeding autonomous policy ceilings.                  |
 | `/activity`                | Full agent activity feed with chronological action log.                                              |
+| `/verify-labeling`         | Side-by-side honest transaction labeling proof: live ArcScan explorer links vs. simulated mock badges. |
 
 ---
 
@@ -317,16 +324,16 @@ In accordance with rigorous transparency standards, here is the honest disclosur
 | :------------------- | :--------------------------------------------------------------------------------------------------- |
 | **Framework**        | [Next.js 16](https://nextjs.org/) (App Router, Turbopack)                                           |
 | **Language**         | TypeScript 5                                                                                         |
-| **UI**               | React 19, Tailwind CSS 4, Base UI, Lucide Icons, Motion (Framer Motion)                              |
-| **Database**         | Supabase PostgreSQL (13 tables, 14 migrations, Row-Level Security)                                   |
-| **Auth**             | Supabase Auth (Magic Link, OAuth — Google, GitHub)                                                   |
-| **AI/LLM**           | Vercel AI SDK (`ai` v7) — OpenAI, Anthropic providers                                               |
+| **UI**               | React 19, Tailwind CSS 4, Manrope typography, Lucide Icons                                           |
+| **Database**         | Supabase PostgreSQL (15 tables, 15 migrations, Multi-Tenant Row-Level Security)                     |
+| **Auth**             | Supabase Auth (Magic Link, OAuth — Google, GitHub) + Centralized Server-Side Access Guards           |
+| **AI/LLM**           | Vercel AI SDK (`ai` v7) — Gemini 2.5 Flash / Pro via AI Gateway                                      |
 | **Blockchain**       | [Arc Testnet](https://testnet.arcscan.app/) (Chain ID 5042002, USDC-native gas)                     |
-| **Smart Contracts**  | Solidity (Hardhat), deployed `ArcEscrow.sol`                                                         |
+| **Smart Contracts**  | Solidity (Hardhat), deployed `ArcEscrow.sol` (`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`)         |
 | **Wallets**          | Circle Developer-Controlled Wallets (`@circle-fin/developer-controlled-wallets`)                     |
 | **On-Chain Client**  | [viem](https://viem.sh/) v2                                                                          |
 | **Validation**       | Zod v4                                                                                               |
-| **Testing**          | Node Test Runner, Vitest, Playwright E2E, Hardhat                                                    |
+| **Testing**          | Node Test Runner (171 tests), Vitest (30 tests), Playwright E2E                                      |
 | **Deployment**       | Vercel (with Cron Jobs)                                                                              |
 
 ---

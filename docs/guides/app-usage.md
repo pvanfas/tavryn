@@ -36,15 +36,18 @@
 
 The application features a responsive sidebar navigation on desktop and an optimized bottom tab bar on mobile:
 
-| Section                   | Route        | Primary Purpose                                                                                      |
-| :------------------------ | :----------- | :--------------------------------------------------------------------------------------------------- |
-| **Executive Dashboard**   | `/`          | High-level metrics: total annualized spend, realized savings, active renewals, and immediate alerts. |
-| **Contracts**             | `/contracts` | Complete registry of vendor agreements, renewal calendar, license counts, and statement upload.      |
-| **Approvals Queue**       | `/approvals` | Human-in-the-loop escalation inbox for agreements exceeding policy caps or flagged by the reviewer.  |
-| **Treasury & Escrow**     | `/treasury`  | Real-time Arc L1 wallet balance (USDC), active on-chain escrow locks, and gas metrics.               |
-| **Negotiation Simulator** | `/simulator` | Interactive sandbox to test negotiation strategies against simulated vendor personalities.           |
-| **Audit Ledger**          | `/audit`     | Live cryptographic SHA-256 hash chain verification proving data integrity and tamper-resistance.     |
-| **Settings**              | `/settings`  | Organization profile, policy ceiling thresholds, category budgets, and API keys.                     |
+| Section                   | Route                    | Primary Purpose                                                                                      |
+| :------------------------ | :----------------------- | :--------------------------------------------------------------------------------------------------- |
+| **Executive Dashboard**   | `/dashboard`             | High-level metrics: total spend, realized savings, active renewals, and immediate alerts.            |
+| **Import Bills**          | `/import-bills`          | Ingest statements (CSV), invoice dropzone (PDF), or connect SaaS stacks.                             |
+| **Contracts**             | `/contracts`             | Complete registry of vendor agreements, renewal calendar, license counts, and waste indicators.      |
+| **Negotiations**          | `/negotiations`          | Active and historical negotiation threads, concession rounds, and counteroffer details.               |
+| **Approvals Queue**       | `/approvals`             | Human-in-the-loop escalation inbox for agreements exceeding policy caps or flagged by the reviewer.  |
+| **Decision Review**       | `/decision/[contractId]` | Tabbed decision analysis: Overview, Policy & Escrow, Alternatives (NPV), Reviewer Audit, Receipts.  |
+| **Metrics & Settlements** | `/metrics`               | Real-time traction metrics, settlement volume, platform vs. real filtering, and ArcScan links.       |
+| **Audit Ledger**          | `/audit`                 | Live cryptographic SHA-256 hash chain verification proving data integrity and tamper-resistance.     |
+| **Verify Labeling**       | `/verify-labeling`       | Transparent side-by-side verification: live ArcScan explorer links vs simulated mock badges.          |
+| **Settings**              | `/settings`              | Organization profile, policy ceiling thresholds, category budgets, and wallet configuration.         |
 
 ---
 

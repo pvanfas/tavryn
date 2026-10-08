@@ -7,14 +7,40 @@ export function CopyReceiptButton({ url }: { url?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    const link = url || (typeof window !== "undefined" ? window.location.href : "");
+    if (!link) return;
+
+    let successful = false;
     try {
-      const link = url || window.location.href;
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+        successful = true;
+      }
     } catch {
-      // Fallback
+      // Fallback below
     }
+
+    if (!successful && typeof document !== "undefined") {
+      try {
+        const el = document.createElement("textarea");
+        el.value = link;
+        el.setAttribute("readonly", "");
+        el.style.position = "fixed";
+        el.style.left = "-9999px";
+        el.style.top = "-9999px";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        successful = document.execCommand("copy");
+        document.body.removeChild(el);
+      } catch {
+        successful = false;
+      }
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (

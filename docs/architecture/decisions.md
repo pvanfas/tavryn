@@ -14,6 +14,23 @@ This document formalizes foundational architectural and security decisions gover
 - [ADR-006: Contract Active Escrow Lock via PostgreSQL Partial Unique Index](#adr-006-contract-active-escrow-lock-via-postgresql-partial-unique-index)
 - [ADR-007: Modular Domain-Driven Subsystem Architecture](#adr-007-modular-domain-driven-subsystem-architecture)
 - [ADR-008: Honest Labeling and Test Fixture Isolation for Shared Immutable Ledgers](#adr-008-honest-labeling-and-test-fixture-isolation-for-shared-immutable-ledgers)
+- [ADR-009: Decoupled Test Business Fixtures for Deterministic Policy Verification](#adr-009-decoupled-test-business-fixtures-for-deterministic-policy-verification)
+- [ADR-010: Dynamic Traction Telemetry & Strict Honest Labeling on Public Landing Page](#adr-010-dynamic-traction-telemetry--strict-honest-labeling-on-public-landing-page)
+- [ADR-011: Mobile Typography Hierarchy & Status Badge Font Calibration](#adr-011-mobile-typography-hierarchy--status-badge-font-calibration)
+- [ADR-012: Atomic Ledger Trigger Muting for Ephemeral Test Cleanup](#adr-012-atomic-ledger-trigger-muting-for-ephemeral-test-cleanup)
+- [ADR-013: Vercel AI Gateway Model Routing with Zero Silent Fallbacks](#adr-013-vercel-ai-gateway-model-routing-with-zero-silent-fallbacks)
+- [ADR-014: On-Chain Canonical Decision Hash Commitment](#adr-014-on-chain-canonical-decision-hash-commitment)
+- [ADR-015: Circle USYC Institutional KYC Transparency & Yield Modeling](#adr-015-circle-usyc-institutional-kyc-transparency--yield-modeling)
+- [ADR-016: Rate-Limited Public Traction Stats API & Real-Time Telemetry Bar](#adr-016-rate-limited-public-traction-stats-api--real-time-telemetry-bar)
+- [ADR-017: Centralized Adversarial Verification Ledger](#adr-017-centralized-adversarial-verification-ledger)
+- [ADR-018: Bento Telemetry Console & Layout-Matched Hydration Skeletons](#adr-018-bento-telemetry-console--layout-matched-hydration-skeletons)
+- [ADR-019: Viewport Progress Line & Clean Cascade Organization Purge](#adr-019-viewport-progress-line--clean-cascade-organization-purge)
+- [ADR-020: Modular Treasury Subsystem & Deduplicated RPC Executor](#adr-020-modular-treasury-subsystem--deduplicated-rpc-executor)
+- [ADR-021: Strict Authenticated Demo CTA & 1:1 Workspace Ingestion Model](#adr-021-strict-authenticated-demo-cta--11-workspace-ingestion-model)
+- [ADR-022: ArcEscrow Bytecode Verification & Full Schema Migration Coverage](#adr-022-arcescrow-bytecode-verification--full-schema-migration-coverage)
+- [ADR-023: Manrope Font Brand Alignment, Shared DataTable & Nav IA Hierarchy](#adr-023-manrope-font-brand-alignment-shared-datatable--nav-ia-hierarchy)
+- [ADR-024: Centralized Server-Side Multi-Tenant Boundary Enforcement](#adr-024-centralized-server-side-multi-tenant-boundary-enforcement)
+- [ADR-025: Hot-Path Database Query Optimization, Indexing & Dark Theme Contrast](#adr-025-hot-path-database-query-optimization-indexing--dark-theme-contrast)
 
 ---
 
@@ -228,3 +245,228 @@ Integration tests generated 31 temporary businesses and 498 records across contr
 
 - **Positive:** Eradicates database pollution without weakening immutable ledger security or altering production trigger definitions.
 - **Trade-off:** Administrative database operations require superuser/authenticated postgres session.
+
+---
+
+## ADR-013: Vercel AI Gateway Model Routing with Zero Silent Fallbacks
+
+### Context
+
+Model drift or silent degradation from unauthorized fallbacks can cause unverified negotiations or inconsistent procurement policies.
+
+### Decision
+
+Route all LLM operations via Vercel AI Gateway using Google Gemini models: `google/gemini-2.5-flash` for high-throughput invoice extraction and vendor counteroffer drafting, and `google/gemini-2.5-pro` for adversarial reviewer audits. Explicitly reject silent fallback logic: any gateway error, rate limit, or verification failure surfaces immediately to the operator.
+
+### Consequences
+
+- **Positive:** Predictable model reasoning, clear audit trails, and strict cost attribution.
+- **Trade-off:** Requires configured AI Gateway credentials and handles provider errors explicitly.
+
+---
+
+## ADR-014: On-Chain Canonical Decision Hash Commitment
+
+### Context
+
+An autonomous agent could theoretically replay an old approved decision or execute a slightly modified payment payload without human detection.
+
+### Decision
+
+Commit a keccak256 `decisionHash` on-chain in `ArcEscrow.usedDecisions` before funds move. The hash represents a canonical JSON encoding of 9 immutable decision fields (businessId, contractId, negotiatedPrice, seats, termMonths, vendorAddress, feeBps, timestamp, and nonce). Any attempt to replay a decision—even by the contract owner—reverts at the EVM bytecode level.
+
+### Consequences
+
+- **Positive:** Cryptographically binds on-chain escrow commitments to specific, immutable agent decision records.
+- **Trade-off:** Requires canonical JSON serialization and keccak256 hashing before contract interaction.
+
+---
+
+## ADR-015: Circle USYC Institutional KYC Transparency & Yield Modeling
+
+### Context
+
+Circle USYC represents tokenized US Treasury bills yielding risk-free return, but requires institutional onboarding and minimum balance commitments that are not accessible to public testnet faucets.
+
+### Decision
+
+Document institutional constraints in `docs/usyc-status.md`. Model USYC analytical yield curves and surplus allocations deterministically in `lib/circle/usyc.ts` while transparently labeling simulated yield vs live Arc USDC testnet balances.
+
+### Consequences
+
+- **Positive:** Realistic treasury management and yield calculations without phantom testnet RPC failures.
+- **Trade-off:** On-chain USYC transfers remain analytical until institutional mainnet deployment.
+
+---
+
+## ADR-016: Rate-Limited Public Traction Stats API & Real-Time Telemetry Bar
+
+### Context
+
+Public viewers, hackathon judges, and stakeholders need real-time insight into agent performance without exposing private business contract terms or exhausting database connection pools.
+
+### Decision
+
+Expose `/api/stats` protected by an in-memory sliding-window rate limiter, serving sanitized, aggregated counts of contracts, actions, savings, and settled escrows. Surface this data via `LiveStatsBar.tsx` across public surfaces.
+
+### Consequences
+
+- **Positive:** Transparent real-time telemetry with zero risk of database DoS or sensitive data leakage.
+- **Trade-off:** In-memory rate limits reset across serverless cold starts.
+
+---
+
+## ADR-017: Centralized Adversarial Verification Ledger
+
+### Context
+
+Verifying autonomous system security requires cross-referencing attack vectors against automated test suites to prevent security regressions during fast iteration.
+
+### Decision
+
+Maintain a dedicated `docs/ADVERSARIAL.md` document mapping 15 critical attack vectors (prompt injection, double payments, forged tokens, wallet address mutations, reentrancy, decision replays) directly to executable test files and assertion line numbers.
+
+### Consequences
+
+- **Positive:** Clear, auditable security posture for auditors, judges, and developers.
+- **Trade-off:** Must be updated whenever new security tests are added or restructured.
+
+---
+
+## ADR-018: Bento Telemetry Console & Layout-Matched Hydration Skeletons
+
+### Context
+
+Dashboard telemetry metrics initially suffered from layout shift during client-side hydration, and lacked cohesive visual hierarchy for multi-dimensional financial data.
+
+### Decision
+
+Redesign telemetry displays into a 4-pillar bento grid layout with glassmorphic styling, tactile manual sync buttons, visual auto/escalated status progress bars, and pixel-matched CSS skeletons to eliminate layout shift during data fetching.
+
+### Consequences
+
+- **Positive:** Premium aesthetic, zero Cumulative Layout Shift (CLS), and intuitive data hierarchy.
+- **Trade-off:** Slightly larger initial component DOM size.
+
+---
+
+## ADR-019: Viewport Progress Line & Clean Cascade Organization Purge
+
+### Context
+
+Full-page loading spinners disrupted user flow during navigation, and test organization cleanup was impeded by database foreign key constraints and append-only audit triggers.
+
+### Decision
+
+Replace modal loading spinners with a subtle top-of-viewport progress indicator. Provide an admin organization deletion API that cleanly cascades through 11 child tables while respecting PostgreSQL append-only audit trigger requirements.
+
+### Consequences
+
+- **Positive:** Smoother user navigation and dependable automated test environment cleanup.
+- **Trade-off:** Cascade deletion logic requires maintaining exact foreign key sequence.
+
+---
+
+## ADR-020: Modular Treasury Subsystem & Deduplicated RPC Executor
+
+### Context
+
+`lib/circle/balances.ts` grew monolithic, combining balance queries, Arc JSON-RPC transports, USYC yield logic, and Gateway balance aggregation in a single file with duplicate `eth_call` code.
+
+### Decision
+
+Decompose the treasury module into dedicated submodules (`arc-client.ts`, `balances.ts`, `gateway.ts`, `usyc.ts`) sharing a unified, deduplicated `eth_call` RPC executor with backwards-compatible barrel re-exports.
+
+### Consequences
+
+- **Positive:** Clean module separation, single source of truth for Arc RPC calls, and high testability.
+- **Trade-off:** More modular file structure.
+
+---
+
+## ADR-021: Strict Authenticated Demo CTA & 1:1 Workspace Ingestion Model
+
+### Context
+
+Public demo CTAs that silently auto-authenticated into the dashboard bypassed login auditing. Furthermore, multi-tenant workspace dropdowns added cognitive friction for single-business operators.
+
+### Decision
+
+Route public demo CTAs directly to `/auth/login?demo=true` with pre-filled credentials, preserving visible authentication boundaries. Transition from workspace-switching dropdowns to a streamlined 1:1 account-to-business model with `/import-bills` for onboarding new contract batches.
+
+### Consequences
+
+- **Positive:** Clear authentication flow, simplified navigation, and streamlined bill ingestion.
+- **Trade-off:** Users managing multiple businesses use separate authenticated accounts.
+
+---
+
+## ADR-022: ArcEscrow Bytecode Verification & Full Schema Migration Coverage
+
+### Context
+
+Contract addresses in configuration files drifted between exploratory test deployments, and local migrations lacked explicit tables for reviews, approval tokens, and override memory.
+
+### Decision
+
+Verify and pin the single live deployed ArcEscrow contract address (`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`) against on-chain bytecode on `testnet.arcscan.app`. Codify migrations 0011, 0012, and 0013 with complete Row-Level Security policies.
+
+### Consequences
+
+- **Positive:** 100% consistent smart contract addresses and full migration reproducibility.
+- **Trade-off:** Stale references across historical documentation had to be systematically reconciled.
+
+---
+
+## ADR-023: Manrope Font Brand Alignment, Shared DataTable & Nav IA Hierarchy
+
+### Context
+
+Font styles drifted between Inter and Manrope, and multiple tables across contracts, negotiations, and metrics lacked consistent sorting, filtering, and real/simulated badges.
+
+### Decision
+
+Standardize typography on Manrope across all surfaces. Introduce a reusable `<DataTable>` component with sticky filter chips, configurable default sorts, and honest real/simulated badge columns. Group sidebar navigation into Act, Trust, and Prove sections with a 4-tab mobile bottom bar.
+
+### Consequences
+
+- **Positive:** Consistent typography, polished data tables, and intuitive mobile ergonomics.
+- **Trade-off:** Migration required updating multiple page routes to the new table interface.
+
+---
+
+## ADR-024: Centralized Server-Side Multi-Tenant Boundary Enforcement
+
+### Context
+
+Relying solely on client-side Supabase tokens or per-route RLS parameters creates vulnerability risks if a service-role query is executed without explicit business ID filtering.
+
+### Decision
+
+Implement centralized server-side access guards (`requireBusinessAccess`, `requireContractAccess`) that strictly verify caller membership in `business_members` before executing any privileged or service-role database operations.
+
+### Consequences
+
+- **Positive:** Zero cross-tenant data leakage guaranteed at the application boundary, even across complex background tasks.
+- **Trade-off:** Every privileged endpoint must call the access guard helper before data access.
+
+---
+
+## ADR-025: Hot-Path Database Query Optimization, Indexing & Dark Theme Contrast
+
+### Context
+
+Unbounded JSONB columns (`conversation`, `usage_metric`) in high-volume list queries caused network bloat, sequential database queries created N+1 query patterns, and translucent gradient card backgrounds in dark mode caused washed-out contrast issues.
+
+### Decision
+
+1. Omit large JSONB fields from high-volume list and metrics queries using explicit column selection.
+2. Batch sequential notification inserts and entity lookups with `Promise.all`.
+3. Add migration 0015 providing partial indexes on high-frequency query paths (`idx_contracts_business_renewal`, `idx_agent_actions_business_created`, `idx_negotiations_contract_created`).
+4. Replace translucent gradient backgrounds on card surfaces with solid dark theme tokens (`dark:bg-[#111714]`) for sharp visual contrast.
+
+### Consequences
+
+- **Positive:** Sub-second query times, reduced payload bandwidth, zero N+1 latency, and crisp dark-mode visual readability.
+- **Trade-off:** Select queries must explicitly list columns when large JSONB fields are excluded.
+

@@ -26,7 +26,7 @@ docs/
 │   ├── overview.md                # System Topology, Execution Boundaries & Procurement Lifecycle
 │   ├── arc-integration.md         # Arc Testnet Parameters & Circle DCW Wallet Integration
 │   ├── security-model.md          # 11-Threat Matrix, Mitigations & Cryptographic Audit Ledger
-│   └── decisions.md               # Architecture Decision Records (ADRs 001–007)
+│   └── decisions.md               # Architecture Decision Records (ADRs 001–025)
 │
 ├── contracts/                     # Smart Contract Protocols & On-Chain Economics
 │   └── arc-escrow.md              # ArcEscrow.sol Specification, RBAC, State Machine & Threat Model
@@ -39,7 +39,7 @@ docs/
 │   └── typography.md              # Typography Scales, Fonts, and Text Layout Standards
 │
 └── updates/                       # Stage Build Logs & Changelogs
-    ├── INDEX.md                   # Chronological Directory of Stages 0000–0012
+    ├── INDEX.md                   # Chronological Directory of Stages 0000–0023
     └── 0000-genesis.md ...        # Individual Stage Engineering Reports
 ```
 
@@ -66,7 +66,7 @@ Tavryn enforces four strict invariants across every layer of the system:
 | **Public RPC**          | `https://rpc.testnet.arc.network`                            |
 | **Block Explorer**      | [ArcScan (testnet.arcscan.app)](https://testnet.arcscan.app) |
 | **Circle Faucet**       | [faucet.circle.com](https://faucet.circle.com)               |
-| **Smart Contract**      | `contracts/contracts/ArcEscrow.sol`                          |
+| **Smart Contract**      | `ArcEscrow.sol` (`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`) |
 
 ---
 

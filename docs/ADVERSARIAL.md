@@ -1,6 +1,6 @@
 # Formal Adversarial Test Documentation
 
-_Last verified: Oct 03, 2026 · Automated adversarial test matrix for Tavryn Autonomous Finance Agent._
+_Last verified: Oct 08, 2026 · Automated adversarial test matrix for Tavryn Autonomous Finance Agent._
 
 This document provides definitive, reproducible proof that Tavryn's multi-layered defense architecture (deterministic policy engine, HMAC tokens, idempotent escrow transactions, and on-chain smart contract guardrails) holds under deliberate attack.
 
@@ -17,11 +17,11 @@ Rather than relying on abstract claims, each attack scenario below demonstrates:
 
 | #     | Attack Vector                        | Target Surface                                           | Architectural Defense                                                       | Test Suite Reference                                                                                                                                                                                                                                                                                 |
 | ----- | ------------------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1** | Prompt Injection via Command Bar     | Natural Language Interface (`lib/agent/command.ts`)      | Regex heuristics + deterministic policy isolation; zero DB write permission | [`tests/command-bar.test.ts:L207-L264`](file:///Users/chris/Documents/GitHub/tavryn/tests/command-bar.test.ts#L207-L264)                                                                                                                                                                             |
-| **2** | Duplicate / Replayed Payment         | Escrow Tool & API (`lib/tools/escrow/create.ts`)         | Server-derived SHA-256 idempotency key + DB unique constraint               | [`tests/double-payment.test.ts:L65-L160`](file:///Users/chris/Documents/GitHub/tavryn/tests/double-payment.test.ts#L65-L160)                                                                                                                                                                         |
-| **3** | Stolen / Altered Approval Token      | Human-in-the-Loop Gateway (`lib/approval-tokens.ts`)     | SHA-256 HMAC signature verification + single-use binding (`used_at`)        | [`tests/approvals-and-overrides.test.ts:L30-L43`](file:///Users/chris/Documents/GitHub/tavryn/tests/approvals-and-overrides.test.ts#L30-L43), [`tests/policy-authorization-patch.test.ts:L151-L244`](file:///Users/chris/Documents/GitHub/tavryn/tests/policy-authorization-patch.test.ts#L151-L244) |
-| **4** | Mutated Vendor Wallet / Wrong Vendor | Payment Execution (`lib/tools/escrow/create.ts`)         | Deterministic vendor registry validation + escalation freeze                | [`tests/wrong-vendor.test.ts:L48-L114`](file:///Users/chris/Documents/GitHub/tavryn/tests/wrong-vendor.test.ts#L48-L114)                                                                                                                                                                             |
-| **5** | Replayed On-Chain Decision Hash      | Arc Smart Contract (`contracts/contracts/ArcEscrow.sol`) | Atomic `usedDecisions[decisionHash]` state tracking in smart contract       | [`contracts/test/ArcEscrow.test.js:L355-L385`](file:///Users/chris/Documents/GitHub/tavryn/contracts/test/ArcEscrow.test.js#L355-L385), [`tests/decision-hash.test.ts:L1-L114`](file:///Users/chris/Documents/GitHub/tavryn/tests/decision-hash.test.ts#L1-L114)                                     |
+| **1** | Prompt Injection via Command Bar     | Natural Language Interface (`lib/agent/command.ts`)      | Regex heuristics + deterministic policy isolation; zero DB write permission | [`tests/command-bar.test.ts:L207-L264`](../tests/command-bar.test.ts#L207-L264)                                                                                                                                                                             |
+| **2** | Duplicate / Replayed Payment         | Escrow Tool & API (`lib/tools/escrow/create.ts`)         | Server-derived SHA-256 idempotency key + DB unique constraint               | [`tests/double-payment.test.ts:L65-L160`](../tests/double-payment.test.ts#L65-L160)                                                                                                                                                                         |
+| **3** | Stolen / Altered Approval Token      | Human-in-the-Loop Gateway (`lib/approval-tokens.ts`)     | SHA-256 HMAC signature verification + single-use binding (`used_at`)        | [`tests/approvals-and-overrides.test.ts:L30-L43`](../tests/approvals-and-overrides.test.ts#L30-L43), [`tests/policy-authorization-patch.test.ts:L151-L244`](../tests/policy-authorization-patch.test.ts#L151-L244) |
+| **4** | Mutated Vendor Wallet / Wrong Vendor | Payment Execution (`lib/tools/escrow/create.ts`)         | Deterministic vendor registry validation + escalation freeze                | [`tests/wrong-vendor.test.ts:L48-L114`](../tests/wrong-vendor.test.ts#L48-L114)                                                                                                                                                                             |
+| **5** | Replayed On-Chain Decision Hash      | Arc Smart Contract (`contracts/contracts/ArcEscrow.sol`) | Atomic `usedDecisions[decisionHash]` state tracking in smart contract       | [`contracts/test/ArcEscrow.test.js:L355-L385`](../contracts/test/ArcEscrow.test.js#L355-L385), [`tests/decision-hash.test.ts:L1-L114`](../tests/decision-hash.test.ts#L1-L114)                                     |
 
 ---
 
@@ -59,8 +59,8 @@ const res = await processCommandQuery(injectionPrompt, businessId);
 
 ### Test Proof Link
 
-- **Source Code**: [`tests/command-bar.test.ts:L207-L264`](file:///Users/chris/Documents/GitHub/tavryn/tests/command-bar.test.ts#L207-L264)
-- **Defensive Implementation**: [`lib/agent/command.ts:L25-L42`](file:///Users/chris/Documents/GitHub/tavryn/lib/agent/command.ts#L25-L42)
+- **Source Code**: [`tests/command-bar.test.ts:L207-L264`](../tests/command-bar.test.ts#L207-L264)
+- **Defensive Implementation**: [`lib/agent/command.ts:L25-L42`](../lib/agent/command.ts#L25-L42)
 
 ### Verbatim Test Run Output
 
@@ -131,8 +131,8 @@ const results = await Promise.all([
 
 ### Test Proof Link
 
-- **Source Code**: [`tests/double-payment.test.ts:L65-L160`](file:///Users/chris/Documents/GitHub/tavryn/tests/double-payment.test.ts#L65-L160)
-- **Defensive Implementation**: [`lib/tools/escrow/create.ts:L33-L75`](file:///Users/chris/Documents/GitHub/tavryn/lib/tools/escrow/create.ts#L33-L75)
+- **Source Code**: [`tests/double-payment.test.ts:L65-L160`](../tests/double-payment.test.ts#L65-L160)
+- **Defensive Implementation**: [`lib/tools/escrow/create.ts:L33-L75`](../lib/tools/escrow/create.ts#L33-L75)
 
 ### Verbatim Test Run Output
 
@@ -186,8 +186,8 @@ const auth = await verifyPolicyExecutionAuthorization(business.id, {
 
 ### Test Proof Link
 
-- **Source Code**: [`tests/approvals-and-overrides.test.ts:L30-L43`](file:///Users/chris/Documents/GitHub/tavryn/tests/approvals-and-overrides.test.ts#L30-L43), [`tests/policy-authorization-patch.test.ts:L151-L244`](file:///Users/chris/Documents/GitHub/tavryn/tests/policy-authorization-patch.test.ts#L151-L244)
-- **Defensive Implementation**: [`lib/approval-tokens.ts:L45-L78`](file:///Users/chris/Documents/GitHub/tavryn/lib/approval-tokens.ts#L45-L78), [`lib/policy/index.ts:L110-L165`](file:///Users/chris/Documents/GitHub/tavryn/lib/policy/index.ts#L110-L165)
+- **Source Code**: [`tests/approvals-and-overrides.test.ts:L30-L43`](../tests/approvals-and-overrides.test.ts#L30-L43), [`tests/policy-authorization-patch.test.ts:L151-L244`](../tests/policy-authorization-patch.test.ts#L151-L244)
+- **Defensive Implementation**: [`lib/approval-tokens.ts:L45-L78`](../lib/approval-tokens.ts#L45-L78), [`lib/policy/index.ts:L110-L165`](../lib/policy/index.ts#L110-L165)
 
 ### Verbatim Test Run Output
 
@@ -246,8 +246,8 @@ await (create_escrow as any).execute({
 
 ### Test Proof Link
 
-- **Source Code**: [`tests/wrong-vendor.test.ts:L48-L114`](file:///Users/chris/Documents/GitHub/tavryn/tests/wrong-vendor.test.ts#L48-L114)
-- **Defensive Implementation**: [`lib/tools/escrow/create.ts:L85-L120`](file:///Users/chris/Documents/GitHub/tavryn/lib/tools/escrow/create.ts#L85-L120)
+- **Source Code**: [`tests/wrong-vendor.test.ts:L48-L114`](../tests/wrong-vendor.test.ts#L48-L114)
+- **Defensive Implementation**: [`lib/tools/escrow/create.ts:L85-L120`](../lib/tools/escrow/create.ts#L85-L120)
 
 ### Verbatim Test Run Output
 
@@ -307,10 +307,10 @@ const decisionHash = computeEscrowDecisionHash({
 
 ### Test Proof Link
 
-- **Smart Contract Test**: [`contracts/test/ArcEscrow.test.js:L355-L385`](file:///Users/chris/Documents/GitHub/tavryn/contracts/test/ArcEscrow.test.js#L355-L385)
-- **Unit Test**: [`tests/decision-hash.test.ts:L1-L114`](file:///Users/chris/Documents/GitHub/tavryn/tests/decision-hash.test.ts#L1-L114)
-- **Contract Source**: [`contracts/contracts/ArcEscrow.sol:L17-L21`](file:///Users/chris/Documents/GitHub/tavryn/contracts/contracts/ArcEscrow.sol#L17-L21), [`contracts/contracts/ArcEscrow.sol:L170-L195`](file:///Users/chris/Documents/GitHub/tavryn/contracts/contracts/ArcEscrow.sol#L170-L195)
-- **Hashing Source**: [`lib/policy/decision-hash.ts:L1-L85`](file:///Users/chris/Documents/GitHub/tavryn/lib/policy/decision-hash.ts#L1-L85)
+- **Smart Contract Test**: [`contracts/test/ArcEscrow.test.js:L355-L385`](../contracts/test/ArcEscrow.test.js#L355-L385)
+- **Unit Test**: [`tests/decision-hash.test.ts:L1-L114`](../tests/decision-hash.test.ts#L1-L114)
+- **Contract Source**: [`contracts/contracts/ArcEscrow.sol:L17-L21`](../contracts/contracts/ArcEscrow.sol#L17-L21), [`contracts/contracts/ArcEscrow.sol:L170-L195`](../contracts/contracts/ArcEscrow.sol#L170-L195)
+- **Hashing Source**: [`lib/policy/decision-hash.ts:L1-L85`](../lib/policy/decision-hash.ts#L1-L85)
 
 ### Verbatim Test Run Output
 
