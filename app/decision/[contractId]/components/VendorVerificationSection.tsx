@@ -47,7 +47,7 @@ export function VendorVerificationSection({
   onEscalateToHuman,
 }: VendorVerificationSectionProps) {
   return (
-    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800/70">
+    <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <H2 className="text-slate-900 dark:text-white">

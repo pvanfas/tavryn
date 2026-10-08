@@ -38,7 +38,7 @@ export function PolicyChecklistSection({
   };
 
   return (
-    <div className="mt-8">
+    <div>
       <H2 className="text-slate-900 dark:text-white mb-3">
         Deterministic Policy Checklist
       </H2>

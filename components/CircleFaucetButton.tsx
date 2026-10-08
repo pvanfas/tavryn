@@ -3,6 +3,8 @@
 import { Droplets, ExternalLink, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 
+import { ARC_CONFIG } from "@/lib/circle/config";
+
 interface CircleFaucetButtonProps {
   businessId?: string;
   walletAddress?: string | null;
@@ -65,7 +67,7 @@ export function CircleFaucetButton({
       </button>
 
       <a
-        href="https://faucet.circle.com"
+        href={ARC_CONFIG.faucetUrl || "https://faucet.circle.com"}
         target="_blank"
         rel="noopener noreferrer"
         className="text-[11px] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 inline-flex items-center gap-0.5"

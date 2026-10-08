@@ -10,10 +10,11 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
-import {
+import type {
   CircleGatewayUnifiedBalanceResult,
   UsycYieldAllocation,
 } from "@/lib/circle/balances";
+import { ARC_CONFIG } from "@/lib/circle/config";
 
 interface TreasuryUnifiedBalancePanelProps {
   gateway: CircleGatewayUnifiedBalanceResult;
@@ -117,7 +118,7 @@ export function TreasuryUnifiedBalancePanel({
                 Gateway Minter Contract
               </span>
               <a
-                href={`https://testnet.arcscan.app/address/${gateway.gatewayMinterAddress}`}
+                href={`${ARC_CONFIG.explorerUrl}/address/${gateway.gatewayMinterAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-xs text-[#107e65] dark:text-[#34d399] hover:underline inline-flex items-center gap-1 mt-0.5"

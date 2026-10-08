@@ -150,7 +150,7 @@ export function DecisionTimelineSection({
   ];
 
   return (
-    <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] mt-6">
+    <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800/70">
         <div>
@@ -176,9 +176,6 @@ export function DecisionTimelineSection({
 
       {/* Reasoning Tree Nodes */}
       <div className="mt-6 relative">
-        {/* Continuous Connecting Line */}
-        <div className="absolute left-[17px] sm:left-[23px] top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-
         <div className="space-y-3.5 sm:space-y-4">
           {timelineSteps.map((step, idx) => {
             const IconComponent = step.icon;
@@ -188,6 +185,22 @@ export function DecisionTimelineSection({
                 key={step.id}
                 className="relative flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl border border-slate-200/70 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               >
+                {/* Vertical Connector Line - Incoming from previous step */}
+                {idx > 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute left-[30px] sm:left-10 -translate-x-1/2 top-0 h-[14px] sm:h-5 w-0.5 bg-slate-200 dark:bg-slate-800 pointer-events-none z-0"
+                  />
+                )}
+
+                {/* Vertical Connector Line - Outgoing to next step */}
+                {idx < timelineSteps.length - 1 && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute left-[30px] sm:left-10 -translate-x-1/2 top-[46px] sm:top-[60px] -bottom-[14px] sm:-bottom-[16px] w-0.5 bg-slate-200 dark:bg-slate-800 pointer-events-none z-0"
+                  />
+                )}
+
                 {/* Node Step Icon */}
                 <div
                   className={`relative z-10 shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs border ${

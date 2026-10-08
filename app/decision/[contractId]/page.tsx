@@ -481,7 +481,7 @@ export default function DecisionDetailPage({
             ) : (
               <>
                 <Copy className="h-3.5 w-3.5" />
-                <span>Copy Public Receipt Link</span>
+                <span>Copy Receipt Link</span>
               </>
             )}
           </button>
