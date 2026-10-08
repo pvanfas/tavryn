@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { runAgentAnalysis } from "@/lib/agent/run";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -26,6 +27,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
+
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
 
     // Rate limit per contractId: 20 per minute
     const rate = checkRateLimit(`analyze_${contractId}`, 20, 60_000);

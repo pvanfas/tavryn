@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { getServiceSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,10 @@ export async function GET(request: Request) {
       .eq("status", "pending");
 
     if (businessId) {
+      const authCheck = await requireBusinessAccess(request, businessId);
+      if (!authCheck.authorized) {
+        return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+      }
       query = query.eq("business_id", businessId);
     }
 

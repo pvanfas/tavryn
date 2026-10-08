@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { apiSuccess, handleApiError } from "@/lib/api-response";
+import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { ARC_CONFIG, getArcUsdcBalance } from "@/lib/circle";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -15,6 +16,11 @@ export async function GET(req: NextRequest) {
     let treasuryBalance = 0;
 
     if (businessId) {
+      const authCheck = await requireBusinessAccess(req, businessId);
+      if (!authCheck.authorized) {
+        return apiError(authCheck.error, authCheck.status);
+      }
+
       const { data: business } = await supabase
         .from("businesses")
         .select("id, name, wallet_address, treasury_balance, is_real")

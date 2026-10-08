@@ -3,8 +3,13 @@
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowLeftRight,
   ArrowRight,
+  Check,
   CheckCircle2,
+  Clock,
+  Copy,
+  Receipt,
   ShieldCheck,
   UserCheck,
   XCircle,
@@ -48,6 +53,44 @@ export default function DecisionDetailPage({
   const [receiptCopiedToken, setReceiptCopiedToken] = useState<string | null>(
     null,
   );
+  const [headerReceiptCopied, setHeaderReceiptCopied] = useState(false);
+
+  type DecisionTabId =
+    | "timeline"
+    | "policy"
+    | "reviewer"
+    | "verification"
+    | "switching"
+    | "receipts";
+
+  const [activeTab, setActiveTab] = useState<DecisionTabId>("timeline");
+
+  const handleCopyHeaderReceipt = async () => {
+    try {
+      let url = "";
+      if (receipts.length > 0) {
+        url = `${window.location.origin}/receipt/${receipts[0].token}`;
+      } else {
+        const res = await fetch(`/api/decision/${contractId}/receipt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Failed to generate receipt");
+        url =
+          j.receiptUrl ||
+          `${window.location.origin}/receipt/${j.receipt?.token || j.receipt?.receipt_token}`;
+        await fetchReceipts();
+      }
+      await navigator.clipboard.writeText(url);
+      setHeaderReceiptCopied(true);
+      setTimeout(() => setHeaderReceiptCopied(false), 2500);
+    } catch (e) {
+      console.error("Failed to copy receipt link:", e);
+    }
+  };
+
   const [reviewing, setReviewing] = useState(false);
   const [switchingMatrix, setSwitchingMatrix] =
     useState<SwitchDecisionMatrix | null>(null);
@@ -348,13 +391,35 @@ export default function DecisionDetailPage({
           <span>Back to Negotiations</span>
         </Link>
 
-        <Link
-          href={`/negotiate/${contractId}`}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs w-full sm:w-auto"
-        >
-          <span>View Negotiation Transcript</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* Pinned Action: Copy Public Receipt Link */}
+          <button
+            type="button"
+            onClick={handleCopyHeaderReceipt}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-[#107e65] dark:text-[#34d399] text-xs font-semibold transition-colors shadow-2xs cursor-pointer flex-1 sm:flex-none"
+            title="Copy cryptographically signed public receipt link"
+          >
+            {headerReceiptCopied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Copied Receipt Link!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" />
+                <span>Copy Public Receipt Link</span>
+              </>
+            )}
+          </button>
+
+          <Link
+            href={`/negotiate/${contractId}`}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs flex-1 sm:flex-none"
+          >
+            <span>View Transcript</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </div>
 
       {/* Contract Overview Card */}
@@ -554,67 +619,137 @@ export default function DecisionDetailPage({
         </div>
       </div>
 
-      {/* Step-by-Step Decision Reasoning Tree & Liquidity Runway Timeline */}
-      <DecisionTimelineSection
-        contract={contract}
-        policy={policy}
-        evaluation={evaluation}
-        approval={approval}
-        review={data?.review}
-        switchingMatrix={switchingMatrix}
-      />
+      {/* Six Section Tabs (Timeline, Policy Checklist, Reviewer Audit, Vendor Verification, Switching Alternatives, Receipts) */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 dark:border-slate-800/80 scrollbar-none">
+          {[
+            { id: "timeline" as const, label: "Timeline", icon: Clock },
+            { id: "policy" as const, label: "Policy Checklist", icon: ShieldCheck },
+            { id: "reviewer" as const, label: "Reviewer Audit", icon: UserCheck },
+            {
+              id: "verification" as const,
+              label: "Vendor Verification",
+              icon: CheckCircle2,
+            },
+            {
+              id: "switching" as const,
+              label: "Switching Alternatives",
+              icon: ArrowLeftRight,
+            },
+            { id: "receipts" as const, label: "Receipts", icon: Receipt },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  isActive
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <Icon
+                  className={`h-3.5 w-3.5 ${
+                    isActive
+                      ? "text-emerald-400 dark:text-emerald-600"
+                      : "text-slate-400"
+                  }`}
+                />
+                <span>{tab.label}</span>
+                {tab.id === "receipts" && receipts.length > 0 && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isActive
+                        ? "bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-900"
+                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {receipts.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Dual-Agent Reviewer Audit Card */}
-      <ReviewerAuditSection
-        review={data?.review}
-        reviewing={reviewing}
-        onRunReviewer={handleRunReviewer}
-      />
+        {/* Tab 1: Timeline */}
+        {activeTab === "timeline" && (
+          <DecisionTimelineSection
+            contract={contract}
+            policy={policy}
+            evaluation={evaluation}
+            approval={approval}
+            review={data?.review}
+            switchingMatrix={switchingMatrix}
+          />
+        )}
 
-      {/* Strategic Alternatives Matrix: Switch vs Renegotiate */}
-      <SwitchingAlternativesSection
-        contract={contract}
-        switchingMatrix={switchingMatrix}
-        loadingSwitching={loadingSwitching}
-        onRefresh={fetchSwitchingMatrix}
-      />
+        {/* Tab 2: Policy Checklist */}
+        {activeTab === "policy" && (
+          <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+            <PolicyChecklistSection evaluation={evaluation} policy={policy} />
+          </div>
+        )}
 
-      {/* Policy Verification & Release Engine */}
-      <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] mt-6 sm:mt-8">
-        {/* Deterministic Policy Checklist Table */}
-        <PolicyChecklistSection evaluation={evaluation} policy={policy} />
+        {/* Tab 3: Reviewer Audit */}
+        {activeTab === "reviewer" && (
+          <ReviewerAuditSection
+            review={data?.review}
+            reviewing={reviewing}
+            onRunReviewer={handleRunReviewer}
+          />
+        )}
 
-        {/* Vendor Confirmation Verification & Escrow Release Section */}
-        <VendorVerificationSection
-          verification={verification}
-          verifying={verifying}
-          releaseLoading={releaseLoading}
-          submitting={submitting}
-          selectedTamper={selectedTamper}
-          verificationError={verificationError}
-          verificationSuccess={verificationSuccess}
-          onSelectTamper={setSelectedTamper}
-          onRunVerification={handleRunVerification}
-          onEscalateToHuman={() => handleDecision("approve")}
-        />
+        {/* Tab 4: Vendor Verification */}
+        {activeTab === "verification" && (
+          <div className="rounded-2xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/70 dark:border-slate-800/60 p-4 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+            <VendorVerificationSection
+              verification={verification}
+              verifying={verifying}
+              releaseLoading={releaseLoading}
+              submitting={submitting}
+              selectedTamper={selectedTamper}
+              verificationError={verificationError}
+              verificationSuccess={verificationSuccess}
+              onSelectTamper={setSelectedTamper}
+              onRunVerification={handleRunVerification}
+              onEscalateToHuman={() => handleDecision("approve")}
+            />
+          </div>
+        )}
+
+        {/* Tab 5: Switching Alternatives */}
+        {activeTab === "switching" && (
+          <SwitchingAlternativesSection
+            contract={contract}
+            switchingMatrix={switchingMatrix}
+            loadingSwitching={loadingSwitching}
+            onRefresh={fetchSwitchingMatrix}
+          />
+        )}
+
+        {/* Tab 6: Receipts */}
+        {activeTab === "receipts" && (
+          <PublicReceiptsSection
+            receipts={receipts}
+            creatingReceipt={creatingReceipt}
+            receiptCopiedToken={receiptCopiedToken}
+            isTransactionCompleted={
+              verification?.transaction?.status === "completed"
+            }
+            onCreateReceipt={handleCreateReceipt}
+            onCopyReceipt={(token, url) => {
+              navigator.clipboard.writeText(url);
+              setReceiptCopiedToken(token);
+              setTimeout(() => setReceiptCopiedToken(null), 2000);
+            }}
+            onToggleReceipt={handleToggleReceipt}
+          />
+        )}
       </div>
-
-      {/* Public Verified Receipts Section */}
-      <PublicReceiptsSection
-        receipts={receipts}
-        creatingReceipt={creatingReceipt}
-        receiptCopiedToken={receiptCopiedToken}
-        isTransactionCompleted={
-          verification?.transaction?.status === "completed"
-        }
-        onCreateReceipt={handleCreateReceipt}
-        onCopyReceipt={(token, url) => {
-          navigator.clipboard.writeText(url);
-          setReceiptCopiedToken(token);
-          setTimeout(() => setReceiptCopiedToken(null), 2000);
-        }}
-        onToggleReceipt={handleToggleReceipt}
-      />
     </AppShell>
   );
 }

@@ -18,6 +18,8 @@
 export const DEV_TREASURY_ADDRESS =
   "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
+export const DEMO_BUSINESS_ID = "b655fb94-fc62-4e3c-8898-2c5f88068159";
+
 /**
  * Deterministic placeholder wallet used for simulated (non-real) vendors
  * that have no on-chain wallet configured.

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { runNegotiationLoop } from "@/lib/agent/negotiate";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { get_vendor_history } from "@/lib/memory";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -34,6 +35,11 @@ export async function GET(req: Request, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
+
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
 
     const status = (await (get_negotiation_status as any).execute(
       { contractId },
@@ -86,6 +92,11 @@ export async function POST(req: Request, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
+
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
 
     // Rate limit: 20 per minute per contract
     const rate = checkRateLimit(`negotiate_${contractId}`, 20, 60_000);

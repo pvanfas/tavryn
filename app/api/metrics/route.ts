@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { generateMetricsCsv, getTractionMetrics } from "@/lib/metrics";
 
 export const dynamic = "force-dynamic";
 
 const QuerySchema = z.object({
+  businessId: z.string().uuid().optional(),
   realOnly: z
     .enum(["true", "false", "1", "0"])
     .optional()
@@ -18,6 +20,7 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const parseResult = QuerySchema.safeParse({
+      businessId: url.searchParams.get("businessId") ?? undefined,
       realOnly: url.searchParams.get("realOnly") ?? undefined,
       format: url.searchParams.get("format") ?? undefined,
     });
@@ -30,8 +33,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { realOnly, format } = parseResult.data;
-    const metrics = await getTractionMetrics({ realOnly });
+    const { businessId, realOnly, format } = parseResult.data;
+
+    if (businessId) {
+      const authCheck = await requireBusinessAccess(req, businessId);
+      if (!authCheck.authorized) {
+        return apiError(authCheck.error, authCheck.status);
+      }
+    }
+
+    const metrics = await getTractionMetrics({ realOnly, businessId });
 
     if (format === "csv") {
       const csv = generateMetricsCsv(metrics);

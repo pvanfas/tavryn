@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import { DEFAULT_ARC_ESCROW_CONTRACT } from "../lib/constants";
 
 // Load environment from .env.local
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
@@ -584,7 +585,7 @@ async function seed() {
       status: "completed",
       tx_hash:
         "0x3a4f89d71c6e12bb94a28f110c73e91d55e098cb15d2a71bf5a9e334418f7c9a",
-      escrow_address: "0x1A2B3C4D5E6F708192A3B4C5D6E7F8091A2B3C4D",
+      escrow_address: DEFAULT_ARC_ESCROW_CONTRACT,
       idempotency_key: "idemp-slack-annual-renewal-demo-co-2026",
       is_simulated: false,
       created_at: new Date(now - 0.8 * dayMs).toISOString(),
@@ -604,7 +605,7 @@ async function seed() {
     status: "completed",
     tx_hash:
       "0x81b7a2d488f01c34bb6199a501e7456cc180dbca741e93fe01b63991ad34f18b",
-    escrow_address: "0x1A2B3C4D5E6F708192A3B4C5D6E7F8091A2B3C4D",
+    escrow_address: DEFAULT_ARC_ESCROW_CONTRACT,
     idempotency_key: "idemp-snowflake-annual-renewal-demo-co-2026",
     is_simulated: false,
     created_at: new Date(now - 14 * dayMs).toISOString(),

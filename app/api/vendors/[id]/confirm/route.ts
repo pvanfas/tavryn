@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 
@@ -118,15 +119,21 @@ export async function POST(
     const vendorName = vendor?.name || "Enterprise Vendor";
 
     // 2. Fetch associated contract & negotiation
-    let contractQuery = supabase.from("contracts").select("*");
+    let contract: any = null;
     if (parsedBody.data.contractId) {
-      contractQuery = contractQuery.eq("id", parsedBody.data.contractId);
+      const authCheck = await requireContractAccess(req, parsedBody.data.contractId);
+      if (!authCheck.authorized) {
+        return apiError(authCheck.error, authCheck.status);
+      }
+      contract = authCheck.contract;
     } else {
-      contractQuery = contractQuery.eq("vendor_id", vendorId);
+      const { data: contracts } = await supabase
+        .from("contracts")
+        .select("*")
+        .eq("vendor_id", vendorId)
+        .limit(1);
+      contract = contracts?.[0] || null;
     }
-
-    const { data: contracts } = await contractQuery.limit(1);
-    const contract = contracts?.[0] || null;
 
     let finalPrice = contract ? Number(contract.current_price) * 0.8 : 9600;
     const seats = contract?.seat_count || 18;

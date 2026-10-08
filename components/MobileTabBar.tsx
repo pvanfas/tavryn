@@ -13,6 +13,7 @@ import {
   MessageSquare,
   MoreHorizontal,
   PlusCircle,
+  Scale,
   Settings as SettingsIcon,
   ShieldCheck,
   Wallet,
@@ -99,6 +100,7 @@ export function MobileTabBar({
     PlusCircle,
     SettingsIcon,
     FileSpreadsheet,
+    Scale,
   };
 
   // Collect all nav items

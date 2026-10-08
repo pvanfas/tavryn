@@ -2,12 +2,10 @@ import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Manrope } from "next/font/google";
+import { Geist_Mono, Manrope } from "next/font/google";
 
 import { TopLineLoader } from "@/components/TopLineLoader";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -97,7 +95,6 @@ export default function RootLayout({
         manrope.variable,
         geistMono.variable,
         "font-sans",
-        geist.variable,
       )}
       suppressHydrationWarning
     >

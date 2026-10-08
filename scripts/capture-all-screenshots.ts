@@ -2,12 +2,12 @@ import { chromium } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3002";
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
 // Destination directories
 const BASE_OUTPUT_DIR = path.resolve(process.cwd(), "public/screenshots");
 const ARTIFACT_BASE_DIR = path.resolve(
-  "/Users/chris/.gemini/antigravity-ide/brain/192429dd-d2cc-4d10-baf4-8d071cc1716b/screenshots",
+  "/Users/admin/.gemini/antigravity-ide/brain/71487230-c9b7-4804-8d17-0eb9f312f04d/screenshots",
 );
 
 interface RouteConfig {
@@ -46,13 +46,13 @@ const routes: RouteConfig[] = [
   },
   {
     name: "05_negotiation_detail",
-    path: "/negotiate/37448d59-445c-4e43-bc7e-aad1215986bd",
+    path: "/negotiate/89fa5106-d1c4-4daa-996f-3b986acc8cad",
     title: "Negotiation Detail (Datadog AI Loop & Concession Curve)",
     delayMs: 1500,
   },
   {
     name: "06_decision_review",
-    path: "/decision/37448d59-445c-4e43-bc7e-aad1215986bd",
+    path: "/decision/89fa5106-d1c4-4daa-996f-3b986acc8cad",
     title: "Decision Review, Reasoning Timeline & Reviewer Audit",
     delayMs: 1500,
   },
@@ -94,8 +94,8 @@ const routes: RouteConfig[] = [
   },
   {
     name: "13_onboarding",
-    path: "/onboard",
-    title: "Self-Service Business & Policy Onboarding",
+    path: "/import-bills",
+    title: "Self-Service Business & Policy Onboarding / Import Bills",
     delayMs: 1200,
   },
   {
@@ -106,13 +106,13 @@ const routes: RouteConfig[] = [
   },
   {
     name: "15_receipt_onchain",
-    path: "/r/5e00674ab8e2b86cdfedb78214f38672",
+    path: "/r/7b99f1f90512909eb40099f498f8f681",
     title: "Public Proof of Savings (Live Arc Testnet On-Chain)",
     delayMs: 1200,
   },
   {
     name: "16_receipt_simulated",
-    path: "/r/5af64a561a009ece45b8895f7a44ebdf",
+    path: "/r/2cb170224153e1c8dea266d581924296",
     title: "Public Proof of Savings (Simulated Mock Escrow)",
     delayMs: 1200,
   },
@@ -424,6 +424,18 @@ async function captureMatrix(browser: any, matrix: MatrixTarget, urlObj: URL) {
         fs.copyFileSync(outputPath, artifactPath);
       } catch {}
 
+      // Copy primary desktop views directly to top-level brain directory
+      const brainRootDir = "/Users/admin/.gemini/antigravity-ide/brain/71487230-c9b7-4804-8d17-0eb9f312f04d";
+      if (matrix.platform === "desktop" && matrix.theme === "light") {
+        try {
+          if (route.name === "02_dashboard") fs.copyFileSync(outputPath, path.join(brainRootDir, "dashboard_desktop.png"));
+          if (route.name === "03_contracts") fs.copyFileSync(outputPath, path.join(brainRootDir, "contracts_desktop.png"));
+          if (route.name === "04_negotiations") fs.copyFileSync(outputPath, path.join(brainRootDir, "negotiations_desktop.png"));
+          if (route.name === "11_metrics") fs.copyFileSync(outputPath, path.join(brainRootDir, "metrics_desktop.png"));
+          if (route.name === "06_decision_review") fs.copyFileSync(outputPath, path.join(brainRootDir, "decision_tabs_desktop.png"));
+        } catch {}
+      }
+
       // Backward-compatible copy for mobile light
       if (matrix.platform === "mobile" && matrix.theme === "light") {
         try {
@@ -453,6 +465,7 @@ async function main() {
 
   const urlObj = new URL(BASE_URL);
   const browser = await chromium.launch({
+    executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     headless: true,
   });
 

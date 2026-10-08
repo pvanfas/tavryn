@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 import {
@@ -49,18 +50,14 @@ export async function POST(req: Request, { params }: RouteProps) {
     }
 
     const { contract_id, offer, commitment_months, round } = parsed.data;
-    const supabase = getServiceSupabase();
 
-    // 1. Fetch Contract & Vendor
-    const { data: contract, error: contractErr } = await supabase
-      .from("contracts")
-      .select("*, vendors(*)")
-      .eq("id", contract_id)
-      .maybeSingle();
-
-    if (contractErr || !contract) {
-      return apiError(`Contract ${contract_id} not found`, 404);
+    const authCheck = await requireContractAccess(req, contract_id);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
+
+    const contract = authCheck.contract;
+    const supabase = getServiceSupabase();
 
     const vendor = contract.vendors;
     const vendorName = vendor?.name || "Vendor";

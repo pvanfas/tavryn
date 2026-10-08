@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getPublicReceipt, updateReceipt } from "@/lib/receipt";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -99,7 +100,12 @@ export async function PATCH(
       return apiError("Receipt not found", 404);
     }
 
-    const businessId = reqBizId || receiptRecord.business_id;
+    const authCheck = await requireBusinessAccess(req, receiptRecord.business_id);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
+
+    const businessId = receiptRecord.business_id;
 
     await updateReceipt({
       token,

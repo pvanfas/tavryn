@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { createReceipt, getReceiptsForContract } from "@/lib/receipt";
 import { getServiceSupabase } from "@/lib/supabase";
 
@@ -19,24 +20,13 @@ export async function GET(
 ) {
   try {
     const { contractId } = await params;
-    const { searchParams } = new URL(req.url);
-    let businessId = searchParams.get("businessId");
 
-    const supabase = getServiceSupabase();
-    if (!businessId) {
-      const { data: contract } = await supabase
-        .from("contracts")
-        .select("business_id")
-        .eq("id", contractId)
-        .maybeSingle();
-
-      businessId = contract?.business_id || null;
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
-    if (!businessId) {
-      return apiError("Missing businessId for contract", 400);
-    }
-
+    const businessId = authCheck.businessId;
     const receipts = await getReceiptsForContract(contractId, businessId);
     return apiSuccess({ receipts });
   } catch (err) {
@@ -50,6 +40,11 @@ export async function POST(
 ) {
   try {
     const { contractId } = await params;
+
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
 
     let body: unknown = {};
     try {
@@ -69,10 +64,11 @@ export async function POST(
 
     const {
       transactionId: reqTxId,
-      businessId: reqBizId,
       showBusinessName,
       showVendorName,
     } = parseResult.data;
+
+    const businessId = authCheck.businessId;
 
     const supabase = getServiceSupabase();
 
@@ -86,8 +82,6 @@ export async function POST(
     if (cErr || !contract) {
       return apiError(`Contract ${contractId} not found`, 404);
     }
-
-    const businessId = reqBizId || contract.business_id;
 
     // 2. Identify completed transaction
     let transactionId = reqTxId;

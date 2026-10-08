@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { checkPolicy, createApprovalRecord, PolicyRule } from "@/lib/policy";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -33,20 +34,15 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
-    const supabase = getServiceSupabase();
 
-    // 1. Fetch contract and vendor details
-    const { data: contract, error: cErr } = await supabase
-      .from("contracts")
-      .select("*, vendors(*), businesses(*)")
-      .eq("id", contractId)
-      .maybeSingle();
-
-    if (cErr || !contract) {
-      return apiError("Contract not found", 404);
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
-    const businessId = contract.business_id;
+    const contract = authCheck.contract;
+    const businessId = authCheck.businessId;
+    const supabase = getServiceSupabase();
 
     // 2. Fetch business policy
     const { data: pData } = await supabase
@@ -222,35 +218,14 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     const { action, reason: userReason } = parsedBody.data;
 
     // Security Guard: Verify authentication and authorization
-    const authCookie = req.cookies
-      .getAll()
-      .find(
-        (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
-      )?.value;
-    const authHeader = req.headers.get("authorization");
-    const isTest = process.env.NODE_ENV === "test";
-
-    if (!authCookie && !authHeader && !isTest) {
-      return apiError(
-        "Unauthorized: Authentication required to approve or reject decisions",
-        401,
-      );
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
+    const contract = authCheck.contract;
+    const businessId = authCheck.businessId;
     const supabase = getServiceSupabase();
-
-    // 1. Fetch contract & negotiation
-    const { data: contract, error: cErr } = await supabase
-      .from("contracts")
-      .select("*, businesses(*)")
-      .eq("id", contractId)
-      .maybeSingle();
-
-    if (cErr || !contract) {
-      return apiError("Contract not found", 404);
-    }
-
-    const businessId = contract.business_id;
 
     const { data: negotiation } = await supabase
       .from("negotiations")

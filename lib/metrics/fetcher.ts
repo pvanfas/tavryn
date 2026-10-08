@@ -12,12 +12,17 @@ import {
  */
 export async function getTractionMetrics(options?: {
   realOnly?: boolean;
+  businessId?: string;
 }): Promise<TractionMetricsResult> {
   const realOnly = Boolean(options?.realOnly);
+  const businessId = options?.businessId;
   const supabase = getServiceSupabase();
 
   // 1. Fetch businesses
   let bQuery = supabase.from("businesses").select("*");
+  if (businessId) {
+    bQuery = bQuery.eq("id", businessId);
+  }
   if (realOnly) {
     bQuery = bQuery.eq("is_real", true);
   }

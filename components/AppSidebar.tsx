@@ -15,6 +15,7 @@ import {
   type LucideIcon,
   MessageSquare,
   PlusCircle,
+  Scale,
   Settings as SettingsIcon,
   ShieldCheck,
   Wallet,
@@ -153,6 +154,7 @@ export function AppSidebar({
     PlusCircle,
     SettingsIcon,
     FileSpreadsheet,
+    Scale,
   };
 
   const visibleBusinesses = businesses.filter(

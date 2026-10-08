@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
 
@@ -33,6 +34,11 @@ export async function POST(req: NextRequest) {
     }
 
     const data = validation.data;
+    const authCheck = await requireBusinessAccess(req, data.businessId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
+
     const supabase = getServiceSupabase();
 
     // 1. Resolve or create vendor

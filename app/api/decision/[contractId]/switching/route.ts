@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 import { evaluateSwitchingMatrix } from "@/lib/switching";
@@ -28,20 +29,15 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
-    const supabase = getServiceSupabase();
 
-    // 1. Fetch contract
-    const { data: contract, error: cErr } = await supabase
-      .from("contracts")
-      .select("*, vendors(*), businesses(*)")
-      .eq("id", contractId)
-      .maybeSingle();
-
-    if (cErr || !contract) {
-      return apiError("Contract not found", 404);
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
-    const businessId = contract.business_id;
+    const contract = authCheck.contract;
+    const businessId = authCheck.businessId;
+    const supabase = getServiceSupabase();
 
     // 2. Fetch negotiation
     const { data: negotiation } = await supabase

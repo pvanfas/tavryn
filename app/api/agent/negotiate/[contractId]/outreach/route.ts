@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { draftVendorOutreachEmail } from "@/lib/agent/real-vendor";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 interface RouteProps {
@@ -26,6 +27,11 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
+
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
 
     // Rate limit: 20 per minute
     const rate = checkRateLimit(`draft_outreach_${contractId}`, 20, 60_000);

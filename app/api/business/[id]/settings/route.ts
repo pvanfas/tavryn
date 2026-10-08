@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { sendWebhookNotification } from "@/lib/notifications";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -28,6 +29,11 @@ export async function GET(
     const { id: businessId } = await props.params;
     if (!businessId) {
       return apiError("Missing business ID", 400);
+    }
+
+    const authCheck = await requireBusinessAccess(req, businessId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
     const supabase = getServiceSupabase();
@@ -75,6 +81,11 @@ export async function PUT(
     const { id: businessId } = await props.params;
     if (!businessId) {
       return apiError("Missing business ID", 400);
+    }
+
+    const authCheck = await requireBusinessAccess(req, businessId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
     let rawBody = {};
@@ -175,6 +186,15 @@ export async function POST(
 ) {
   try {
     const { id: businessId } = await props.params;
+    if (!businessId) {
+      return apiError("Missing business ID", 400);
+    }
+
+    const authCheck = await requireBusinessAccess(req, businessId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
+    }
+
     let rawBody: any = {};
     try {
       rawBody = await req.json();
@@ -213,6 +233,11 @@ export async function DELETE(
     const { id: businessId } = await props.params;
     if (!businessId) {
       return apiError("Missing business ID", 400);
+    }
+
+    const authCheck = await requireBusinessAccess(req, businessId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
 
     // Safety guard: Protect default Demo Co organization from accidental deletion

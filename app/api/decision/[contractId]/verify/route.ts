@@ -8,6 +8,7 @@ import {
   verifyConfirmationTerms,
 } from "@/lib/agent/verification";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireContractAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 import { dispute_escrow, release_escrow } from "@/lib/tools";
@@ -25,7 +26,7 @@ const verifyBodySchema = z.object({
   action: z.enum(["verify", "release"]).optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: RouteProps) {
+export async function GET(req: NextRequest, { params }: RouteProps) {
   try {
     const rawParams = await params;
     const parsedParams = paramSchema.safeParse(rawParams);
@@ -38,18 +39,14 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
     }
 
     const { contractId } = parsedParams.data;
-    const supabase = getServiceSupabase();
 
-    // 1. Fetch contract & negotiation
-    const { data: contract, error: cErr } = await supabase
-      .from("contracts")
-      .select("*, vendors ( id, name, category, contact, is_simulated )")
-      .eq("id", contractId)
-      .maybeSingle();
-
-    if (cErr || !contract) {
-      return apiError("Contract not found", 404);
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
+
+    const contract = authCheck.contract;
+    const supabase = getServiceSupabase();
 
     const { data: negotiation } = await supabase
       .from("negotiations")
@@ -140,18 +137,14 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     }
 
     const body = parsedBody.data;
-    const supabase = getServiceSupabase();
 
-    // 1. Fetch contract, vendor, and negotiation
-    const { data: contract, error: cErr } = await supabase
-      .from("contracts")
-      .select("*, vendors ( id, name, category, contact, is_simulated )")
-      .eq("id", contractId)
-      .maybeSingle();
-
-    if (cErr || !contract) {
-      return apiError("Contract not found", 404);
+    const authCheck = await requireContractAccess(req, contractId);
+    if (!authCheck.authorized) {
+      return apiError(authCheck.error, authCheck.status);
     }
+
+    const contract = authCheck.contract;
+    const supabase = getServiceSupabase();
 
     const { data: negotiation } = await supabase
       .from("negotiations")

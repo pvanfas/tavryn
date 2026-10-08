@@ -18,7 +18,8 @@ export interface NavItemConfig {
     | "BarChart3"
     | "PlusCircle"
     | "SettingsIcon"
-    | "FileSpreadsheet";
+    | "FileSpreadsheet"
+    | "Scale";
   badgeKey?: "approvals" | "audit" | "metrics";
   badgeText?: string;
   highlightNestedPrefixes?: string[];
@@ -31,20 +32,32 @@ export interface NavSectionConfig {
 
 export const WORKSPACE_NAV_SECTIONS: NavSectionConfig[] = [
   {
-    title: "Workspace",
+    title: "Act",
     items: [
       {
         id: "overview",
-        label: "Overview",
+        label: "Dashboard",
         href: "/dashboard",
         iconName: "LayoutDashboard",
       },
       {
-        id: "activity",
-        label: "Activity",
-        href: "/activity",
-        iconName: "Activity",
+        id: "contracts",
+        label: "Contracts",
+        href: "/contracts",
+        iconName: "FileText",
       },
+      {
+        id: "negotiations",
+        label: "Negotiations",
+        href: "/negotiations",
+        iconName: "MessageSquare",
+        highlightNestedPrefixes: ["/negotiate"],
+      },
+    ],
+  },
+  {
+    title: "Trust",
+    items: [
       {
         id: "approvals",
         label: "Approvals",
@@ -53,34 +66,23 @@ export const WORKSPACE_NAV_SECTIONS: NavSectionConfig[] = [
         badgeKey: "approvals",
       },
       {
-        id: "negotiations",
-        label: "Negotiations",
-        href: "/negotiations",
-        iconName: "MessageSquare",
-        highlightNestedPrefixes: ["/decision", "/negotiate"],
-      },
-    ],
-  },
-  {
-    title: "Records",
-    items: [
-      {
-        id: "contracts",
-        label: "Contracts",
-        href: "/contracts",
-        iconName: "FileText",
-      },
-      {
         id: "audit",
-        label: "Audit trail",
+        label: "Audit Trail",
         href: "/audit",
         iconName: "ShieldCheck",
         badgeText: "Chained",
       },
+      {
+        id: "decision",
+        label: "Decision",
+        href: "/decision",
+        iconName: "Scale",
+        highlightNestedPrefixes: ["/decision"],
+      },
     ],
   },
   {
-    title: "Insights",
+    title: "Prove",
     items: [
       {
         id: "metrics",
@@ -110,10 +112,11 @@ export const BOTTOM_NAV_ITEMS: NavItemConfig[] = [
 
 /**
  * Primary tabs displayed on mobile bottom bar (below md)
+ * Exactly 4 primary items + 1 More sheet button = 5 tabs total
  */
 export const MOBILE_PRIMARY_TAB_IDS = [
   "overview",
-  "activity",
+  "contracts",
   "approvals",
   "metrics",
 ];
@@ -123,8 +126,8 @@ export const MOBILE_PRIMARY_TAB_IDS = [
  */
 export const MOBILE_MORE_ITEM_IDS = [
   "negotiations",
-  "contracts",
   "audit",
+  "decision",
   "import-bills",
   "settings",
 ];

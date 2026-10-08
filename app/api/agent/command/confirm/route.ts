@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { executeConfirmedAction } from "@/lib/agent/command";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { getAuthUser, requireBusinessAccess } from "@/lib/auth-guard";
+import { DEMO_BUSINESS_ID } from "@/lib/constants";
 import { getServiceSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -31,16 +33,28 @@ export async function POST(req: Request) {
     }
 
     const { action, params, businessId: requestedBusinessId } = validation.data;
+    const supabase = getServiceSupabase();
+    let businessId: string = "";
 
-    let businessId: string = requestedBusinessId || "";
-    if (!businessId) {
-      const supabase = getServiceSupabase();
-      const { data: firstB } = await supabase
-        .from("businesses")
-        .select("id")
-        .limit(1)
-        .maybeSingle();
-      businessId = firstB?.id || "b655fb94-fc62-4e3c-8898-2c5f88068159";
+    if (requestedBusinessId) {
+      const authCheck = await requireBusinessAccess(req, requestedBusinessId);
+      if (!authCheck.authorized) {
+        return apiError(authCheck.error, authCheck.status);
+      }
+      businessId = requestedBusinessId;
+    } else {
+      const user = await getAuthUser(req);
+      if (user && !user.isDemo) {
+        const { data: member } = await supabase
+          .from("business_members")
+          .select("business_id")
+          .eq("user_id", user.userId)
+          .limit(1)
+          .maybeSingle();
+        businessId = member?.business_id || DEMO_BUSINESS_ID;
+      } else {
+        businessId = DEMO_BUSINESS_ID;
+      }
     }
 
     const executionResult = await executeConfirmedAction(

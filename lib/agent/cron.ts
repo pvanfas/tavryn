@@ -195,11 +195,12 @@ export async function runDailyProcurementCron(
   let totalNotificationsCreated = 0;
 
   for (const businessId of businessIds) {
-    const bContracts = contractsByBusiness.get(businessId) || [];
-    const bName = bContracts[0]?.businesses?.name || "Organization";
-    const policy = policyMap.get(businessId);
-    const minSavings =
-      policy?.min_savings != null ? Number(policy.min_savings) : 200;
+    try {
+      const bContracts = contractsByBusiness.get(businessId) || [];
+      const bName = bContracts[0]?.businesses?.name || "Organization";
+      const policy = policyMap.get(businessId);
+      const minSavings =
+        policy?.min_savings != null ? Number(policy.min_savings) : 200;
 
     const skippedContracts: SkippedContractInfo[] = [];
     const qualifyingOpportunities: Array<{
@@ -417,7 +418,19 @@ export async function runDailyProcurementCron(
       skippedContracts,
       notificationsCreated: businessNotificationsCount,
     });
+  } catch (bizErr) {
+    console.error(`[CRON ERROR] Isolated failure processing business ${businessId}:`, bizErr);
+    businessResults.push({
+      businessId,
+      businessName: "Unknown",
+      contractsScanned: 0,
+      opportunitiesFound: 0,
+      negotiationsStarted: [],
+      skippedContracts: [],
+      notificationsCreated: 0,
+    });
   }
+}
 
   return {
     success: true,

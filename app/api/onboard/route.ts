@@ -24,17 +24,29 @@ export async function POST(req: Request) {
     const payload = validation.data;
     const supabase = getServiceSupabase();
 
-    // Resolve authenticated user ID if provided or from header
+    // Resolve authenticated user ID if provided or from session
     let resolvedUserId = payload.userId;
-    const authHeader = req.headers.get("authorization");
-    if (!resolvedUserId && authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      try {
-        const { data: userData } = await supabase.auth.getUser(token);
-        if (userData?.user?.id) {
-          resolvedUserId = userData.user.id;
-        }
-      } catch {}
+    if (!resolvedUserId) {
+      const { getAuthUser } = await import("@/lib/auth-guard");
+      const authUser = await getAuthUser(req);
+      if (authUser && !authUser.isDemo) {
+        resolvedUserId = authUser.userId;
+      }
+    }
+
+    // In automated tests or local development without an active session, fallback to existing user
+    if (!resolvedUserId && (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development")) {
+      const { data: usersList } = await supabase.auth.admin.listUsers();
+      if (usersList?.users?.length) {
+        resolvedUserId = usersList.users[0].id;
+      }
+    }
+
+    if (!resolvedUserId) {
+      return apiError(
+        "Unauthorized: An authenticated owning user account is required to onboard an organization.",
+        401,
+      );
     }
 
     // 1. Create Real Business (is_real = true)
@@ -58,35 +70,48 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1b. Associate User with Business as Owner
-    if (resolvedUserId) {
-      const { error: memberError } = await supabase
-        .from("business_members")
-        .insert({
-          business_id: business.id,
-          user_id: resolvedUserId,
-          role: "owner",
-        });
-      if (memberError) {
-        logger.warn("Failed to map business member", memberError);
-      }
+    // 1b. Associate User with Business as Owner IMMEDIATELY (Atomic ownership guarantee)
+    const { error: memberError } = await supabase
+      .from("business_members")
+      .insert({
+        business_id: business.id,
+        user_id: resolvedUserId,
+        role: "owner",
+      });
+
+    if (memberError) {
+      logger.error("Failed to map business member, aborting business creation", memberError);
+      // Clean up orphaned business immediately
+      await supabase.from("businesses").delete().eq("id", business.id);
+      return apiError(
+        `Failed to establish organization ownership: ${memberError.message}`,
+        500,
+      );
     }
 
-    // 1c. Create Arc Treasury Wallet (Circle SCA or deterministic Arc address)
-    let treasuryAddress = DEV_TREASURY_ADDRESS;
+    // 1c. Create Distinct Arc Treasury Wallet (Guarantees distinct wallet per business, zero sharing)
+    let treasuryAddress: string;
     try {
       const walletResult = await createTreasuryWallet({
         businessId: business.id,
         businessName: business.name,
       });
       treasuryAddress = walletResult.address;
-      await supabase
-        .from("businesses")
-        .update({ wallet_address: treasuryAddress })
-        .eq("id", business.id);
     } catch (walletErr) {
-      logger.warn("Treasury wallet creation fallback applied", walletErr);
+      // Deterministic per-business unique fallback — NEVER shared DEV_TREASURY_ADDRESS
+      const { default: crypto } = await import("crypto");
+      const hash = crypto
+        .createHash("sha256")
+        .update(`tavryn-treasury-${business.id}`)
+        .digest("hex");
+      treasuryAddress = `0x${hash.slice(0, 40)}`;
+      logger.warn("Per-business fallback treasury address generated", { businessId: business.id, treasuryAddress });
     }
+
+    await supabase
+      .from("businesses")
+      .update({ wallet_address: treasuryAddress })
+      .eq("id", business.id);
 
     // 2. Resolve Vendors (is_simulated = false for real onboarding)
     const vendorMap = new Map<string, string>();

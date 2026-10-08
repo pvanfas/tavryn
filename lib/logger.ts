@@ -8,6 +8,9 @@ const SENSITIVE_KEY_PATTERNS = [
   /authorization/i,
   /private[-_]?key/i,
   /bearer/i,
+  /cookie/i,
+  /webhook[-_]?url/i,
+  /webhook/i,
 ];
 
 const SECRET_VALUE_PATTERNS = [
@@ -42,6 +45,13 @@ function sanitizeObject(obj: unknown, depth = 0): unknown {
   }
 
   if (Array.isArray(obj)) {
+    // Truncate large multi-record dumps in logs to prevent cross-tenant data pooling
+    if (obj.length > 25) {
+      return [
+        ...obj.slice(0, 5).map((item) => sanitizeObject(item, depth + 1)),
+        `[TRUNCATED: ${obj.length - 5} additional records omitted to prevent multi-tenant log leakage]`,
+      ];
+    }
     return obj.map((item) => sanitizeObject(item, depth + 1));
   }
 

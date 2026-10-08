@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { ARC_CONFIG, getArcUsdcBalance } from "@/lib/circle";
 import { getServiceSupabase } from "@/lib/supabase";
 import { logAgentAction } from "@/lib/tools/audit";
@@ -41,6 +42,11 @@ export async function POST(req: NextRequest) {
 
     let business: any = null;
     if (requestedBusinessId) {
+      const authCheck = await requireBusinessAccess(req, requestedBusinessId);
+      if (!authCheck.authorized) {
+        return apiError(authCheck.error, authCheck.status);
+      }
+
       const { data } = await supabase
         .from("businesses")
         .select("id, name, wallet_address, treasury_balance, is_real")
