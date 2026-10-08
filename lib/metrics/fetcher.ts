@@ -232,8 +232,14 @@ export async function getTractionMetrics(options?: {
     txItems.push({
       id: t.id,
       businessId: t.business_id,
-      businessName: t.businesses?.name || "Unknown",
-      vendorName: t.vendors?.name || "Direct Vendor",
+      businessName:
+        (Array.isArray(t.businesses)
+          ? t.businesses[0]?.name
+          : (t.businesses as { name?: string } | null)?.name) || "Unknown",
+      vendorName:
+        (Array.isArray(t.vendors)
+          ? t.vendors[0]?.name
+          : (t.vendors as { name?: string } | null)?.name) || "Direct Vendor",
       amount,
       currency: t.currency || "USDC",
       status: t.status,
