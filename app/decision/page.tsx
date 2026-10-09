@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";
 
 export const revalidate = 0;
@@ -14,16 +15,8 @@ export default async function DecisionIndexPage({
   const supabase = getServiceSupabase();
   const { businessId } = await searchParams;
 
-  // 1. Fetch active business
-  const { data: bData } = await supabase
-    .from("businesses")
-    .select("id")
-    .not("name", "ilike", "[Deleted%")
-    .order("created_at", { ascending: true });
-
-  const businesses = bData || [];
-  const business =
-    businesses.find((b) => b.id === businessId) || businesses[0] || null;
+  // 1. Resolve active business
+  const business = await getActiveBusiness(businessId);
 
   if (business) {
     // 2. Fetch the latest contract to inspect its decision

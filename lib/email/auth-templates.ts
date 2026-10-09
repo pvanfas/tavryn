@@ -1,0 +1,446 @@
+/**
+ * Tavryn Branded Authentication Email Templates
+ *
+ * Designed for Supabase Auth (GoTrue).
+ * Compatible with major email clients (Apple Mail, Gmail, Outlook, iOS Mail, Android).
+ * Supports both raw GoTrue template tags ({{ .ConfirmationURL }}, {{ .Token }})
+ * and preview rendering with mock values for development & in-app testing.
+ */
+
+export type AuthEmailType =
+  "magic_link" | "reset_password" | "confirm_signup" | "invite_user";
+
+export interface AuthEmailMetadata {
+  id: AuthEmailType;
+  title: string;
+  description: string;
+  defaultSubject: string;
+  supabaseTemplateName: string;
+  category: "Authentication" | "Security" | "Onboarding";
+}
+
+export const AUTH_EMAIL_METADATA: Record<AuthEmailType, AuthEmailMetadata> = {
+  magic_link: {
+    id: "magic_link",
+    title: "Magic Link Sign-In",
+    description:
+      "Sent when users sign in passwordlessly via email magic link.",
+    defaultSubject: "Your Tavryn sign-in link",
+    supabaseTemplateName: "Magic Link",
+    category: "Authentication",
+  },
+  reset_password: {
+    id: "reset_password",
+    title: "Password Reset",
+    description: "Sent when users request to reset their password.",
+    defaultSubject: "Reset your Tavryn password",
+    supabaseTemplateName: "Reset Password",
+    category: "Security",
+  },
+  confirm_signup: {
+    id: "confirm_signup",
+    title: "Confirm Sign-Up",
+    description: "Sent when a new user signs up with email and password.",
+    defaultSubject: "Verify your email to activate Tavryn",
+    supabaseTemplateName: "Confirm signup",
+    category: "Onboarding",
+  },
+  invite_user: {
+    id: "invite_user",
+    title: "Workspace Invitation",
+    description:
+      "Sent when an operator or controller is invited to a Tavryn organization.",
+    defaultSubject: "You've been invited to join Tavryn",
+    supabaseTemplateName: "Invite user",
+    category: "Onboarding",
+  },
+};
+
+export interface EmailRenderOptions {
+  mode: "gotrue" | "preview";
+  siteUrl?: string;
+  email?: string;
+  confirmationUrl?: string;
+  token?: string;
+  orgName?: string;
+  inviterName?: string;
+}
+
+const DEFAULT_PREVIEW_OPTS: Required<EmailRenderOptions> = {
+  mode: "preview",
+  siteUrl: "https://tavryn.space",
+  email: "operator@acmecorp.com",
+  confirmationUrl:
+    "https://tavryn.space/auth/callback?token=demo_auth_token_9921",
+  token: "849204",
+  orgName: "Acme Finance Operations",
+  inviterName: "Sarah Chen",
+};
+
+/**
+ * Common HTML base wrapper with bulletproof layout, Tavryn brand styling,
+ * responsive mobile media queries, and accessible font stacks.
+ */
+function renderEmailShell({
+  preheader,
+  contentHtml,
+  emailVariable,
+  year = "2026",
+}: {
+  preheader: string;
+  contentHtml: string;
+  emailVariable: string;
+  year?: string;
+}): string {
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Tavryn</title>
+  <style type="text/css">
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    @media only screen and (max-width: 620px) {
+      .email-container { width: 100% !important; padding: 16px !important; }
+      .email-card { padding: 24px 20px !important; }
+      .otp-code { font-size: 24px !important; letter-spacing: 4px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- Hidden preheader text -->
+  <div style="display: none; font-size: 1px; color: #f8fafc; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+    ${preheader}
+  </div>
+
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; min-height: 100vh;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="560" class="email-container" style="max-width: 560px; width: 100%;">
+          
+          <!-- Top Accent Bar -->
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #107e65 0%, #0d9488 50%, #34d399 100%); border-top-left-radius: 12px; border-top-right-radius: 12px;"></td>
+          </tr>
+
+          <!-- Main Email Card -->
+          <tr>
+            <td class="email-card" style="background-color: #ffffff; padding: 36px 36px 32px 36px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);">
+              
+              <!-- Brand Header -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 28px;">
+                <tr>
+                  <td align="left">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <!-- Stylized SVG-like Logo Mark -->
+                        <td style="width: 38px; height: 38px; background-color: #107e65; border-radius: 10px; text-align: center; vertical-align: middle;">
+                          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+                              <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff; line-height: 38px; text-align: center;">
+                                T
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td style="padding-left: 14px; vertical-align: middle;">
+                          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 19px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; line-height: 1.2;">
+                            Tavryn
+                          </div>
+                          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #107e65; letter-spacing: 0.6px; text-transform: uppercase; margin-top: 2px;">
+                            Autonomous Procurement
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="display: inline-block; padding: 4px 10px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #166534; letter-spacing: 0.2px;">
+                      Arc &bull; USDC
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Main Dynamic Content -->
+              ${contentHtml}
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 28px 16px 12px 16px; text-align: center; font-size: 12px; line-height: 1.6; color: #64748b;">
+              <p style="margin: 0 0 6px 0; font-weight: 500;">
+                Tavryn Protocol &bull; Autonomous B2B Procurement &amp; On-Chain Arc Escrow Settlement
+              </p>
+              <p style="margin: 0 0 6px 0;">
+                This authentication notice was requested for <span style="font-weight: 600; color: #334155;">${emailVariable}</span>.
+              </p>
+              <p style="margin: 0; color: #94a3b8; font-size: 11px;">
+                If you did not initiate this request, your account is secure and you can safely disregard this email.
+              </p>
+              <p style="margin: 12px 0 0 0; color: #cbd5e1; font-size: 11px;">
+                &copy; ${year} Tavryn. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Bulletproof CTA button helper
+ */
+function renderButton(url: string, label: string): string {
+  return `
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 28px 0 24px 0;">
+      <tr>
+        <td align="center" style="border-radius: 10px; background-color: #107e65;">
+          <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; text-decoration: none; border-radius: 10px; background-color: #107e65; text-align: center; line-height: 1; mso-padding-alt: 0;">
+            <!--[if mso]><i style="letter-spacing: 25px; mso-font-width: -100%; mso-text-raise: 20pt;">&nbsp;</i><![endif]-->
+            <span style="mso-text-raise: 10pt;">${label} &rarr;</span>
+            <!--[if mso]><i style="letter-spacing: 25px; mso-font-width: -100%;">&nbsp;</i><![endif]-->
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+}
+
+/**
+ * Security Advisory Box
+ */
+function renderSecurityTip(tip: string): string {
+  return `
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin: 24px 0 16px 0;">
+      <tr>
+        <td style="padding: 12px 16px;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="vertical-align: top; width: 20px; font-size: 14px; line-height: 1.4; color: #166534;">
+                &#10003;
+              </td>
+              <td style="padding-left: 8px; font-size: 12px; line-height: 1.5; color: #166534;">
+                ${tip}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `;
+}
+
+/**
+ * Direct Link Fallback Box
+ */
+function renderFallbackLink(url: string): string {
+  return `
+    <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b; line-height: 1.5;">
+      <p style="margin: 0 0 4px 0; font-weight: 500;">Button not working? Copy and paste this URL into your browser:</p>
+      <p style="margin: 0; word-break: break-all; color: #107e65; font-family: 'SF Mono', Menlo, monospace; font-size: 11px;">
+        ${url}
+      </p>
+    </div>
+  `;
+}
+
+/**
+ * 1. Magic Link Sign-In Template
+ */
+export function generateMagicLinkEmail(
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  const isGoTrue = options.mode === "gotrue";
+  const confirmationUrl = isGoTrue
+    ? "{{ .ConfirmationURL }}"
+    : options.confirmationUrl || DEFAULT_PREVIEW_OPTS.confirmationUrl;
+  const email = isGoTrue
+    ? "{{ .Email }}"
+    : options.email || DEFAULT_PREVIEW_OPTS.email;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; line-height: 1.25;">
+      Sign in to Tavryn
+    </h1>
+    <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+      Click the button below to securely authenticate to your Tavryn procurement workspace. No password required.
+    </p>
+
+    ${renderButton(confirmationUrl, "Sign In to Tavryn")}
+
+    ${renderSecurityTip("<strong>Security Check:</strong> This link is strictly for you. Tavryn will never request your private keys, seed phrases, or wallet secrets.")}
+
+    ${renderFallbackLink(confirmationUrl)}
+  `;
+
+  return renderEmailShell({
+    preheader: "Your single-use sign-in link for Tavryn.",
+    contentHtml,
+    emailVariable: email,
+  });
+}
+
+/**
+ * 2. Password Reset Template
+ */
+export function generateResetPasswordEmail(
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  const isGoTrue = options.mode === "gotrue";
+  const confirmationUrl = isGoTrue
+    ? "{{ .ConfirmationURL }}"
+    : options.confirmationUrl || DEFAULT_PREVIEW_OPTS.confirmationUrl;
+  const email = isGoTrue
+    ? "{{ .Email }}"
+    : options.email || DEFAULT_PREVIEW_OPTS.email;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; line-height: 1.25;">
+      Reset your password
+    </h1>
+    <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+      We received a request to reset the password for your Tavryn account. Click the button below to choose a new password.
+    </p>
+
+    ${renderButton(confirmationUrl, "Reset Password")}
+
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; margin: 24px 0 16px 0;">
+      <tr>
+        <td style="padding: 12px 16px;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="vertical-align: top; width: 20px; font-size: 14px; line-height: 1.4; color: #b45309;">
+                &#9888;
+              </td>
+              <td style="padding-left: 8px; font-size: 12px; line-height: 1.5; color: #92400e;">
+                <strong>Expiration notice:</strong> For your security, this password reset link is valid for 10 minutes. If you did not request a password change, you can safely ignore this message—your existing credentials remain untouched.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    ${renderFallbackLink(confirmationUrl)}
+  `;
+
+  return renderEmailShell({
+    preheader: "Reset the password for your Tavryn account.",
+    contentHtml,
+    emailVariable: email,
+  });
+}
+
+/**
+ * 3. Confirm Sign-Up Template
+ */
+export function generateConfirmSignupEmail(
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  const isGoTrue = options.mode === "gotrue";
+  const confirmationUrl = isGoTrue
+    ? "{{ .ConfirmationURL }}"
+    : options.confirmationUrl || DEFAULT_PREVIEW_OPTS.confirmationUrl;
+  const token = isGoTrue
+    ? "{{ .Token }}"
+    : options.token || DEFAULT_PREVIEW_OPTS.token;
+  const email = isGoTrue
+    ? "{{ .Email }}"
+    : options.email || DEFAULT_PREVIEW_OPTS.email;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; line-height: 1.25;">
+      Welcome to Tavryn
+    </h1>
+    <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+      Thank you for creating an account with Tavryn. Please confirm your email address to activate your autonomous procurement agent and configure your Arc USDC treasury.
+    </p>
+
+    ${renderButton(confirmationUrl, "Confirm Account &amp; Get Started")}
+
+    ${renderSecurityTip("<strong>Autonomous Guardrails:</strong> Once verified, Tavryn operates within deterministic spending ceilings set by your financial policy. The agent cannot self-approve expenditures.")}
+
+    ${renderFallbackLink(confirmationUrl)}
+  `;
+
+  return renderEmailShell({
+    preheader: "Confirm your email to activate your Tavryn workspace.",
+    contentHtml,
+    emailVariable: email,
+  });
+}
+
+/**
+ * 4. Workspace / Team Invite Template
+ */
+export function generateInviteUserEmail(
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  const isGoTrue = options.mode === "gotrue";
+  const confirmationUrl = isGoTrue
+    ? "{{ .ConfirmationURL }}"
+    : options.confirmationUrl || DEFAULT_PREVIEW_OPTS.confirmationUrl;
+  const email = isGoTrue
+    ? "{{ .Email }}"
+    : options.email || DEFAULT_PREVIEW_OPTS.email;
+  const orgName = isGoTrue
+    ? "{{ .Data.org_name }}"
+    : options.orgName || DEFAULT_PREVIEW_OPTS.orgName;
+  const inviterName = isGoTrue
+    ? "{{ .Data.inviter_name }}"
+    : options.inviterName || DEFAULT_PREVIEW_OPTS.inviterName;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; line-height: 1.25;">
+      Join your team on Tavryn
+    </h1>
+    <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+      <strong>${inviterName}</strong> has invited you to join <strong style="color: #0f172a;">${orgName}</strong> on Tavryn to supervise autonomous vendor renewals, review contract negotiations, and authorize on-chain settlements.
+    </p>
+
+    ${renderButton(confirmationUrl, "Accept Invitation &amp; Join Workspace")}
+
+    ${renderSecurityTip("<strong>Role Separation:</strong> Tavryn enforces dual-agent supervision and cryptographic supervisor approvals with HMAC signatures for high-value contract renewals.")}
+
+    ${renderFallbackLink(confirmationUrl)}
+  `;
+
+  return renderEmailShell({
+    preheader: `You've been invited to join ${orgName} on Tavryn.`,
+    contentHtml,
+    emailVariable: email,
+  });
+}
+
+/**
+ * Factory dispatcher for rendering by template type
+ */
+export function renderAuthEmail(
+  type: AuthEmailType,
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  switch (type) {
+    case "magic_link":
+      return generateMagicLinkEmail(options);
+    case "reset_password":
+      return generateResetPasswordEmail(options);
+    case "confirm_signup":
+      return generateConfirmSignupEmail(options);
+    case "invite_user":
+      return generateInviteUserEmail(options);
+    default:
+      return generateMagicLinkEmail(options);
+  }
+}

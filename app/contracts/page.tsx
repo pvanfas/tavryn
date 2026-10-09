@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { ContractsDataTable } from "@/components/contracts/ContractsDataTable";
 import { PageHeader } from "@/components/PageHeader";
 import { QuickInvoiceDropzone } from "@/components/QuickInvoiceDropzone";
+import { getActiveBusiness } from "@/lib/active-business";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike } from "@/lib/heuristics";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -39,18 +40,9 @@ export default async function ContractsPage({
   const supabase = getServiceSupabase();
   const { businessId, status: selectedStatus } = await searchParams;
 
-  // 1. Fetch businesses
-  const { data: bData } = await supabase
-    .from("businesses")
-    .select(
-      "id, name, is_real, treasury_balance, default_currency, wallet_address",
-    )
-    .not("name", "ilike", "[Deleted%")
-    .order("created_at", { ascending: true });
-
-  const businesses = bData || [];
-  const business =
-    businesses.find((b) => b.id === businessId) || businesses[0] || null;
+  // 1. Resolve Active Business (Session-aware single organization resolution)
+  const business = await getActiveBusiness(businessId);
+  const businesses = business ? [business] : [];
 
   // 2. Fetch contracts, status counts, and on-chain balance concurrently
   let liveTreasuryBalance = business?.treasury_balance

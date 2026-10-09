@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
 import { BusinessItem } from "./BusinessSwitcher";
+import { FirstTimeOnboardingModal } from "./FirstTimeOnboardingModal";
 import { MobileTabBar } from "./MobileTabBar";
 
 interface AppShellProps {
@@ -89,6 +90,9 @@ export function AppShell({
         currency={currency}
         walletAddress={effectiveWallet}
       />
+
+      {/* First-Time Onboarding Modal */}
+      <FirstTimeOnboardingModal currentBusinessIsReal={isReal} />
     </div>
   );
 }

@@ -63,7 +63,7 @@ export function FundingResultCard({ fundingResult }: FundingResultCardProps) {
 
       <div className="flex justify-end pt-2">
         <Link
-          href={`/dashboard?businessId=${fundingResult.businessId}`}
+          href="/dashboard"
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
         >
           <span>Go to Overview</span>

@@ -19,6 +19,7 @@ import {
   getOnChainUSDCBalance,
 } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
+import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";
 
 export const revalidate = 0; // Fresh data on each request
@@ -79,25 +80,10 @@ export default async function DashboardPage({
   let balanceSource: "chain" | "db_fallback" = "db_fallback";
 
   try {
-    // 1. Fetch all businesses
-    const { data: bList, error: bListError } = await supabase
-      .from("businesses")
-      .select(
-        "id, name, is_real, treasury_balance, default_currency, wallet_address",
-      )
-      .not("name", "ilike", "[Deleted%")
-      .order("created_at", { ascending: false });
-
-    if (bListError) throw bListError;
-    businesses = bList || [];
-
-    // 2. Resolve Active Business (Default to Demo Co for reviewers)
-    if (businessId) {
-      business = businesses.find((b) => b.id === businessId) || null;
-    }
-    if (!business && businesses.length > 0) {
-      business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
-    }
+    // 1 & 2. Resolve Active Business (Session-aware single organization resolution)
+    const active = await getActiveBusiness(businessId);
+    business = active;
+    businesses = active ? [active] : [];
 
     // 3. Fetch Contracts, Latest Transaction, and On-Chain Balance in parallel
     if (business?.id) {

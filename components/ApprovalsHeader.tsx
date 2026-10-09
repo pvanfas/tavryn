@@ -25,9 +25,7 @@ export function ApprovalsHeader({
   className = "",
 }: ApprovalsHeaderProps) {
   const hasPending = pendingCount > 0;
-  const settingsUrl = businessId
-    ? `/settings?businessId=${businessId}`
-    : "/settings";
+  const settingsUrl = "/settings";
 
   return (
     <PageHeader

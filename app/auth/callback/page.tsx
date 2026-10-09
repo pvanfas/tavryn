@@ -10,26 +10,46 @@ import { getBrowserSupabase, setAuthCookie } from "@/lib/auth";
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/";
+  const rawNext = searchParams.get("next");
+  const next = rawNext && rawNext !== "/" ? rawNext : "/dashboard";
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"processing" | "success" | "error">(
     "processing",
   );
 
   useEffect(() => {
-    const errorParam =
+    let errorParam =
       searchParams.get("error_description") || searchParams.get("error");
+    let code = searchParams.get("code");
+    let hashAccessToken: string | null = null;
+    let hashRefreshToken: string | null = null;
+
+    // Supabase Implicit / Email confirmation link returns tokens in the URL hash fragment (#access_token=...)
+    if (typeof window !== "undefined" && window.location.hash) {
+      const hashClean = window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      const hashParams = new URLSearchParams(hashClean);
+
+      if (!errorParam) {
+        errorParam =
+          hashParams.get("error_description") || hashParams.get("error");
+      }
+      hashAccessToken = hashParams.get("access_token");
+      hashRefreshToken = hashParams.get("refresh_token");
+    }
+
     if (errorParam) {
-      setError(errorParam);
+      setError(decodeURIComponent(errorParam.replace(/\+/g, " ")));
       setStatus("error");
       return;
     }
 
-    const code = searchParams.get("code");
     const supabase = getBrowserSupabase();
 
     const completeAuth = async () => {
       try {
+        // 1. PKCE Code flow (exchange code for session)
         if (code) {
           const { data, error: exchangeError } =
             await supabase.auth.exchangeCodeForSession(code);
@@ -46,7 +66,27 @@ function CallbackHandler() {
           }
         }
 
-        // If no code, check for existing session or hash fragment
+        // 2. Hash fragment flow (#access_token=...&refresh_token=...)
+        if (hashAccessToken) {
+          const { data: setSessionData, error: setSessionErr } =
+            await supabase.auth.setSession({
+              access_token: hashAccessToken,
+              refresh_token: hashRefreshToken || "",
+            });
+          if (setSessionErr) {
+            setError(setSessionErr.message);
+            setStatus("error");
+            return;
+          }
+          if (setSessionData.session) {
+            setAuthCookie(setSessionData.session.access_token);
+            setStatus("success");
+            router.replace(next);
+            return;
+          }
+        }
+
+        // 3. Existing stored session
         const { data: sessionData, error: sessionErr } =
           await supabase.auth.getSession();
         if (sessionErr) {
@@ -62,7 +102,7 @@ function CallbackHandler() {
           return;
         }
 
-        // Listen for auth state change if session hasn't settled yet
+        // 4. Listen for auth state change if session hasn't settled yet
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event, session) => {
             if (session) {

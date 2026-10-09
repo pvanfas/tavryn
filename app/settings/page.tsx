@@ -1,5 +1,7 @@
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 
+import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";
 
 import { SettingsClient } from "./SettingsClient";
@@ -22,27 +24,9 @@ export default async function SettingsPage({
   const supabase = getServiceSupabase();
   const { businessId } = await searchParams;
 
-  // 1. Fetch businesses (filtering out soft-deleted orgs)
-  const { data: bList } = await supabase
-    .from("businesses")
-    .select(
-      "id, name, is_real, treasury_balance, default_currency, wallet_address, webhook_url",
-    )
-    .not("name", "ilike", "[Deleted%")
-    .order("created_at", { ascending: false });
-
-  const businesses = bList || [];
-
-  // 2. Resolve Active Business:
-  // - If businessId is provided in URL, prioritize finding that business
-  // - Otherwise, default to any real business if one exists, then Demo Co, then first available
-  let business = businesses.find((b) => b.id === businessId) || null;
-  if (!business && businesses.length > 0) {
-    business =
-      businesses.find((b) => b.is_real) ||
-      businesses.find((b) => b.name === "Demo Co") ||
-      businesses[0];
-  }
+  // 1 & 2. Resolve Active Business (Session-aware single organization resolution)
+  const business = await getActiveBusiness(businessId);
+  const businesses = business ? [business] : [];
 
   // 3. Fetch Deterministic Policy for the active business
   let policy = {
@@ -89,11 +73,11 @@ export default async function SettingsPage({
           ? {
               id: business.id,
               name: business.name,
-              wallet_address: business.wallet_address,
+              wallet_address: business.wallet_address || null,
               default_currency: business.default_currency || "USDC",
               is_real: Boolean(business.is_real),
               treasury_balance: Number(business.treasury_balance || 0),
-              webhook_url: business.webhook_url,
+              webhook_url: business.webhook_url || null,
             }
           : null
       }

@@ -49,17 +49,33 @@ export async function POST(req: Request) {
     }
 
     // 1. Create Real Business (is_real = true)
-    const { data: business, error: businessError } = await supabase
+    const insertData: Record<string, any> = {
+      name: payload.name,
+      is_real: true,
+      default_currency: payload.default_currency || "USDC",
+      treasury_balance: payload.treasury_balance,
+      webhook_url: payload.webhook_url || null,
+    };
+    if (payload.industry) {
+      insertData.industry = payload.industry;
+    }
+
+    let { data: business, error: businessError } = await supabase
       .from("businesses")
-      .insert({
-        name: payload.name,
-        is_real: true,
-        default_currency: payload.default_currency || "USDC",
-        treasury_balance: payload.treasury_balance,
-        webhook_url: payload.webhook_url || null,
-      })
+      .insert(insertData)
       .select("id, name")
       .single();
+
+    if (businessError && businessError.message?.includes("industry")) {
+      delete insertData.industry;
+      const retryResult = await supabase
+        .from("businesses")
+        .insert(insertData)
+        .select("id, name")
+        .single();
+      business = retryResult.data;
+      businessError = retryResult.error;
+    }
 
     if (businessError || !business) {
       logger.error("Failed to insert business", businessError);

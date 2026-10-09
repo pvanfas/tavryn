@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  BarChart3,
   CheckCircle2,
   Database,
   ExternalLink,
@@ -169,8 +170,8 @@ function LandingPage({
 
             {/* Main Catchphrase Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15] sm:leading-[1.12]">
-              An agent that uncovers spend inefficiencies, negotiates them away,
-              and executes the financial decision.
+              An open-source AI agent that turns spend inefficiencies into real
+              savings.
             </h1>
 
             {/* Subtitle */}
@@ -212,28 +213,14 @@ function LandingPage({
                 <span>GitHub Repo</span>
               </a>
 
-              {featuredReceiptToken && (
-                <Link
-                  id="hero-receipt-cta"
-                  href={`/r/${featuredReceiptToken}`}
-                  target="_blank"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
-                >
-                  <Receipt className="h-5 w-5" />
-                  <span>Public Proof</span>
-                </Link>
-              )}
-            </div>
-
-            {/* Live Interactive Demo Pill */}
-            <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 text-xs text-slate-600 dark:text-slate-300">
-              <span className="font-bold text-[#107e65] dark:text-[#34d399]">
-                Live Interactive Demo:
-              </span>
-              <span>
-                Clicking &quot;Try the demo&quot; opens the sign-in page with
-                pre-filled demo credentials ready for 1-click testnet exploration.
-              </span>
+              <Link
+                id="hero-metrics-cta"
+                href="/public-metrics"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
+              >
+                <BarChart3 className="h-5 w-5" />
+                <span>Public Metrics</span>
+              </Link>
             </div>
           </div>
         </section>
@@ -399,7 +386,9 @@ function LandingPage({
                     href="/public-metrics"
                     className="inline-flex items-center gap-1 font-semibold text-[#107e65] dark:text-[#34d399] hover:underline"
                   >
-                    <span>Explore public protocol telemetry on /public-metrics</span>
+                    <span>
+                      Explore public protocol telemetry on /public-metrics
+                    </span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -631,8 +620,8 @@ await release_escrow({
             </h2>
             <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
               Launch Demo Co with one click. No registration required. Click
-              &quot;Simulate 7-Step Loop&quot; on the dashboard to watch the agent
-              analyze, negotiate, escrow, and settle in real time.
+              &quot;Simulate 7-Step Loop&quot; on the dashboard to watch the
+              agent analyze, negotiate, escrow, and settle in real time.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link

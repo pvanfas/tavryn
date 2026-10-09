@@ -113,6 +113,7 @@ export const OnboardBusinessPayloadSchema = z.object({
     .nonnegative("Treasury balance must be >= 0")
     .default(50000),
   default_currency: z.string().default("USDC"),
+  industry: z.string().trim().optional(),
   userId: z.string().uuid().optional(),
   webhook_url: z.string().url().optional().or(z.literal("")),
   policy: PolicyConfigSchema,

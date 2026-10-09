@@ -2,10 +2,8 @@
 
 import { Building2, Plus } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import { startTopLineLoader } from "./TopLineLoader";
 import { formatBusinessName } from "./UserDropdown";
 
 export interface BusinessItem {
@@ -26,23 +24,6 @@ export function BusinessSwitcher({
   businesses,
   activeBusinessId,
 }: BusinessSwitcherProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isSwitching, setIsSwitching] = useState(false);
-
-  useEffect(() => {
-    setIsSwitching(false);
-  }, [activeBusinessId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = e.target.value;
-    if (newId && newId !== activeBusinessId) {
-      setIsSwitching(true);
-      startTopLineLoader();
-      const targetPath = pathname && pathname !== "/" ? pathname : "/dashboard";
-      router.push(`${targetPath}?businessId=${newId}`);
-    }
-  };
 
   // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses
   const displayBusinesses = businesses.filter(

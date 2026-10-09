@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist_Mono, Manrope } from "next/font/google";
 
+import { AuthHashListener } from "@/components/AuthHashListener";
 import { TopLineLoader } from "@/components/TopLineLoader";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,7 @@ export default function RootLayout({
       <body
         className={`${manrope.className} min-h-full flex flex-col bg-[#f7f9f8] dark:bg-[#0b100e] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
       >
+        <AuthHashListener />
         <TopLineLoader />
         {children}
         <Analytics />

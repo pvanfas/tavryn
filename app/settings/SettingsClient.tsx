@@ -10,12 +10,14 @@ import {
   Copy,
   ExternalLink,
   Loader2,
+  Mail,
   Save,
   Send,
   ShieldCheck,
   Trash2,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -72,8 +74,12 @@ export function SettingsClient({
   } | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const [business, setBusiness] = useState<BusinessState | null>(initialBusiness);
-  const [webhookUrl, setWebhookUrl] = useState(initialBusiness?.webhook_url || "");
+  const [business, setBusiness] = useState<BusinessState | null>(
+    initialBusiness,
+  );
+  const [webhookUrl, setWebhookUrl] = useState(
+    initialBusiness?.webhook_url || "",
+  );
   const [policy, setPolicy] = useState<PolicyState>(initialPolicy);
 
   // Sync state if initial props change (e.g., when switching active business)
@@ -242,7 +248,9 @@ export function SettingsClient({
     <AppShell
       businessName={business?.name || "Demo Co"}
       isReal={business?.is_real ?? false}
-      businesses={businesses.length > 0 ? businesses : business ? [business] : []}
+      businesses={
+        businesses.length > 0 ? businesses : business ? [business] : []
+      }
       activeBusinessId={business?.id || activeBusinessId}
       treasuryBalance={business?.treasury_balance ?? 0}
       walletAddress={business?.wallet_address}
@@ -392,8 +400,8 @@ export function SettingsClient({
                   Deterministic Procurement Policy Engine
                 </h2>
                 <p className="text-[11px] text-slate-500">
-                  Pure code boundaries enforced server-side. The AI agent
-                  cannot approve its own spend.
+                  Pure code boundaries enforced server-side. The AI agent cannot
+                  approve its own spend.
                 </p>
               </div>
             </div>
@@ -545,7 +553,41 @@ export function SettingsClient({
             </div>
           </div>
 
-          {/* Section 4: Danger Zone */}
+          {/* Section 4: Branded Auth Email Templates */}
+          <div className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-4 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65] shrink-0 mt-0.5">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Branded Auth Email Templates
+                    </h2>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
+                      Supabase GoTrue Ready
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Preview and copy production-ready HTML email templates
+                    (Magic Link, OTP, Password Reset, Team Invite) styled with
+                    Tavryn&apos;s emerald brand design.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/settings/email-templates"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0 shadow-2xs"
+              >
+                <span>Open Studio</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#107e65]" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Section 5: Danger Zone */}
           <div className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-rose-200/80 dark:border-rose-900/50 p-4 sm:p-7 shadow-[0_4px_20px_rgba(225,29,72,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-4">
             <div className="flex items-start gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
@@ -556,8 +598,8 @@ export function SettingsClient({
                   Danger Zone
                 </h2>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Permanently delete this organization and purge all
-                  associated contracts, transactions, policies, and receipts
+                  Permanently delete this organization and purge all associated
+                  contracts, transactions, policies, and receipts
                 </p>
               </div>
             </div>
@@ -645,9 +687,13 @@ export function SettingsClient({
                 </p>
                 <ul className="list-disc list-inside text-[11px] space-y-0.5 text-rose-700 dark:text-rose-400">
                   <li>Your user login credentials and session tokens</li>
-                  <li>All active contracts, negotiations, and conversation logs</li>
+                  <li>
+                    All active contracts, negotiations, and conversation logs
+                  </li>
                   <li>All on-chain settlement receipts and transactions</li>
-                  <li>Spending policies, category budgets, and treasury settings</li>
+                  <li>
+                    Spending policies, category budgets, and treasury settings
+                  </li>
                 </ul>
               </div>
 
@@ -694,7 +740,8 @@ export function SettingsClient({
                   onClick={handleDeleteAccount}
                   disabled={
                     deleting ||
-                    (confirmInput.trim().toLowerCase() !== "delete my account" &&
+                    (confirmInput.trim().toLowerCase() !==
+                      "delete my account" &&
                       confirmInput.trim().toLowerCase() !==
                         business.name.trim().toLowerCase())
                   }

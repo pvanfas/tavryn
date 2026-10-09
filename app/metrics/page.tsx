@@ -1,6 +1,7 @@
 import React from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { getActiveBusiness } from "@/lib/active-business";
 import { getTractionMetrics } from "@/lib/metrics";
 import { getServiceSupabase } from "@/lib/supabase";
 
@@ -13,23 +14,11 @@ interface MetricsPageProps {
 }
 
 export default async function MetricsPage({ searchParams }: MetricsPageProps) {
-  const supabase = getServiceSupabase();
   const { businessId } = await searchParams;
 
-  // 1. Fetch businesses for AppShell header and user context
-  const { data: bList } = await supabase
-    .from("businesses")
-    .select(
-      "id, name, is_real, treasury_balance, default_currency, wallet_address",
-    )
-    .not("name", "ilike", "[Deleted%")
-    .order("created_at", { ascending: false });
-
-  const businesses = bList || [];
-  let business = businesses.find((b) => b.id === businessId) || null;
-  if (!business && businesses.length > 0) {
-    business = businesses.find((b) => b.name === "Demo Co") || businesses[0];
-  }
+  // 1. Resolve Active Business (Session-aware single organization resolution)
+  const business = await getActiveBusiness(businessId);
+  const businesses = business ? [business] : [];
 
   // 2. Fetch metrics specific to the logged organisation ONLY
   const activeBusinessId = business?.id;

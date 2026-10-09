@@ -43,7 +43,7 @@ function RegisterForm() {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/login`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
 
