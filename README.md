@@ -9,6 +9,7 @@
 [![Playwright E2E](https://img.shields.io/badge/Playwright%20E2E-8%2F8%20Passing-brightgreen?style=flat-square)](https://github.com/pvanfas/tavryn)
 [![Arc Testnet](<https://img.shields.io/badge/Settlement-Arc%20Testnet%20(USDC)-blueviolet?style=flat-square>)](https://testnet.arcscan.app/)
 [![Verified Savings Proof](<https://img.shields.io/badge/Verified%20Proof-Saved%20%242%2C688%20on%20Slack%20(28%25)-107e65?style=flat-square>)](/r/12dd9d181715dd61ccf700593ef2f2ce)
+[![npm version](https://img.shields.io/npm/v/tavryn-sdk?color=107e65&style=flat-square)](https://www.npmjs.com/package/tavryn-sdk)
 [![Documentation](https://img.shields.io/badge/Docs-tavryn.mintlify.site-blue?style=flat-square)](https://tavryn.mintlify.site/)
 
 ---
@@ -180,6 +181,32 @@ Tavryn deeply integrates Circle's developer infrastructure and the Arc Network:
 | **Block Explorer**     | [https://testnet.arcscan.app](https://testnet.arcscan.app)                                                                     |
 | **ArcEscrow Contract** | [`0x78e61ae7e8EeF34Add911FA3e41F3408a819c047`](https://testnet.arcscan.app/address/0x78e61ae7e8EeF34Add911FA3e41F3408a819c047) |
 | **USDC Precompile**    | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
+
+### Autonomous Spending Policy SDK (`tavryn-sdk`)
+
+The core deterministic policy engine and cryptographic idempotency key generation primitives have been extracted and published to npm as a standalone, zero-dependency package:
+
+```bash
+npm install tavryn-sdk
+```
+
+```typescript
+import { checkPolicy, computeIdempotencyKey } from "tavryn-sdk";
+
+// Pure, zero-I/O boundary: enforce hard spending limits on AI agents
+const decision = checkPolicy("execute", policy, {
+  amount: 1400,
+  savings: 400,
+  category: "software",
+  treasuryBalance: 25000,
+});
+
+if (decision.decision === "approved") {
+  // Proceed with autonomous payment / escrow release
+}
+```
+
+Detailed guide, interfaces, and integration examples are documented in **[Tavryn SDK Developer Guide](docs/guides/tavryn-sdk.md)**.
 
 ---
 

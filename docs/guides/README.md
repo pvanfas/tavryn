@@ -9,6 +9,7 @@ This directory contains practical, operator-facing and developer-facing guides f
 | Guide                                         | Description                                                                                                                                                    | Target Audience             | Status         |
 | :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------- | :------------- |
 | **[Application Usage Guide](./app-usage.md)** | Comprehensive end-to-end walk-through of Tavryn: onboarding, contract ingestion, policy ceilings, automated negotiation, approvals, and Arc escrow settlement. | Finance, Operations, Admins | Ready / Active |
+| **[Tavryn SDK Developer Guide](./tavryn-sdk.md)** | Installation, policy checks, runway analytics, and idempotency key primitives for the standalone `tavryn-sdk` npm package. | Software Engineers, Integrators | Ready / Active |
 
 ---
 
