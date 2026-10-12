@@ -10,7 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { PageHeader } from "@/components/PageHeader";
 import { TractionMetricsResult } from "@/lib/metrics";
@@ -40,13 +40,17 @@ export function TractionMetricsClient({
 }: TractionMetricsClientProps) {
   const isReal = Boolean(business?.is_real);
   const [viewMode, setViewMode] = useState<"verified" | "all">("verified");
-  const [liveTimestamp] = useState<string>(() =>
-    new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-  );
+  const [liveTimestamp, setLiveTimestamp] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLiveTimestamp(
+      new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+    );
+  }, []);
 
   // When viewMode is verified, use verified real metrics; otherwise all activity
   const rawOrgMetrics =
@@ -121,7 +125,7 @@ export function TractionMetricsClient({
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/20 text-xs font-mono text-emerald-800 dark:text-emerald-300 shrink-0">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <Clock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>Reconciled {liveTimestamp}</span>
+            <span>Reconciled {liveTimestamp || "Live"}</span>
           </div>
         </div>
       </PageHeader>

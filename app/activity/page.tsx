@@ -5,7 +5,6 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { getActiveBusiness } from "@/lib/active-business";
 import { getOnChainUSDCBalance } from "@/lib/circle";
-import { getServiceSupabase } from "@/lib/supabase";
 
 export const revalidate = 0;
 

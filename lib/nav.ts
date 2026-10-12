@@ -51,7 +51,7 @@ export const WORKSPACE_NAV_SECTIONS: NavSectionConfig[] = [
         label: "Negotiations",
         href: "/negotiations",
         iconName: "MessageSquare",
-        highlightNestedPrefixes: ["/negotiate"],
+        highlightNestedPrefixes: ["/negotiate", "/decision"],
       },
     ],
   },

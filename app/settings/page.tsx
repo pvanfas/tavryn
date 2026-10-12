@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
 
 import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";

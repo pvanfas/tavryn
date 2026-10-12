@@ -86,7 +86,12 @@ export async function getArcUsdcBalance(address: string): Promise<number> {
   try {
     return await queryArcUsdcBalanceOnChain(address, 1000);
   } catch (err) {
-    if (process.env.NODE_ENV !== "test") {
+    const isTesting =
+      process.env.NODE_ENV === "test" ||
+      Boolean(process.env.VITEST) ||
+      Boolean(process.env.NODE_TEST_CONTEXT) ||
+      Boolean(process.env.CI);
+    if (!isTesting) {
       console.warn("[Circle/Arc] Failed to query live Arc USDC balance:", err);
     }
     return 0;

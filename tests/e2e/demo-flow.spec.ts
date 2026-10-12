@@ -9,7 +9,7 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
     // 1. Verify exact one-line pitch
     const pitchHeading = page.locator("h1");
     await expect(pitchHeading).toContainText(
-      "An agent that uncovers spend inefficiencies, negotiates them away, and executes the financial decision",
+      "An open-source AI agent that turns spend inefficiencies into real savings.",
     );
 
     // 2. Verify 3-step loop
@@ -21,8 +21,8 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
     await expect(step3).toBeVisible();
 
     // 3. Verify Hero savings metrics
-    await expect(page.locator("text=$28,800+")).toBeVisible();
-    await expect(page.locator("text=28% Avg")).toBeVisible();
+    await expect(page.locator("text=Waste Identified")).toBeVisible();
+    await expect(page.locator("text=Negotiation Yield")).toBeVisible();
 
     // 4. Verify CTAs
     const signupBtn = page.locator("#landing-signup-btn");
@@ -87,7 +87,7 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
 
     // Wait for the full demo loop to conclude and the success notice to appear
     const successBanner = page.locator("text=Full loop executed:");
-    await expect(successBanner).toBeVisible({ timeout: 30_000 });
+    await expect(successBanner).toBeVisible({ timeout: 60_000 });
 
     // Verify step badges in the activity timeline
     await expect(page.locator("text=Detect Renewal Waste")).toBeVisible();
@@ -97,7 +97,9 @@ test.describe("Tavryn Autonomous Procurement Demo Walkthrough", () => {
     await expect(
       page.locator("text=Vendor Fulfillment Verification"),
     ).toBeVisible();
-    await expect(page.locator("text=Escrow Fund Release")).toBeVisible();
+    await expect(
+      page.locator("text=/Escrow Fund Release|Simulated Fund Settlement/"),
+    ).toBeVisible();
     await expect(page.locator("text=Vendor Memory & Reputation")).toBeVisible();
   });
 

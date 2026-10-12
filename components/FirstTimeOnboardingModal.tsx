@@ -6,10 +6,7 @@ import {
   Briefcase,
   Building2,
   CheckCircle2,
-  FileSpreadsheet,
-  FileText,
   Loader2,
-  Plus,
   Sparkles,
   Upload,
   X,
@@ -130,7 +127,12 @@ export function FirstTimeOnboardingModal({
     async function checkFirstTimeStatus() {
       try {
         const user = await getCurrentUser();
-        if (!user || user.id === "00000000-0000-0000-0000-000000000001") {
+        if (
+          !user ||
+          user.id === "00000000-0000-0000-0000-000000000001" ||
+          user.id === "demo-user-001" ||
+          user.email === "demo@tavryn.io"
+        ) {
           // Unauthenticated or demo session does not trigger modal automatically
           return;
         }

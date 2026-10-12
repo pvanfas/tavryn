@@ -12,6 +12,7 @@ import { AppShell } from "@/components/AppShell";
 import { OpportunitiesTable } from "@/components/OpportunitiesTable";
 import { TransactionHashBadge } from "@/components/TransactionHashBadge";
 import { Caption } from "@/components/ui/text";
+import { getActiveBusiness } from "@/lib/active-business";
 import {
   ARC_CONFIG,
   calculateIdleTreasuryUsycYield,
@@ -19,7 +20,6 @@ import {
   getOnChainUSDCBalance,
 } from "@/lib/circle";
 import { ContractLike, evaluateContractOpportunity } from "@/lib/heuristics";
-import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";
 
 export const revalidate = 0; // Fresh data on each request

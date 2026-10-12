@@ -4,7 +4,6 @@ import React from "react";
 import { AppShell } from "@/components/AppShell";
 import { Caption } from "@/components/ui/text";
 import { getActiveBusiness } from "@/lib/active-business";
-import { getServiceSupabase } from "@/lib/supabase";
 import { verifyAuditChain } from "@/lib/tools/audit";
 
 import { AuditTableClient } from "./AuditTableClient";

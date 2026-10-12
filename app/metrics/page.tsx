@@ -3,7 +3,6 @@ import React from "react";
 import { AppShell } from "@/components/AppShell";
 import { getActiveBusiness } from "@/lib/active-business";
 import { getTractionMetrics } from "@/lib/metrics";
-import { getServiceSupabase } from "@/lib/supabase";
 
 import { TractionMetricsClient } from "./TractionMetricsClient";
 

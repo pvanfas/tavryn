@@ -8,7 +8,6 @@ import {
   Layers,
   Lock,
   PlayCircle,
-  Receipt,
   ShieldCheck,
   TrendingDown,
   Zap,

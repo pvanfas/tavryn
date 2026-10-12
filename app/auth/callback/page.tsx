@@ -20,7 +20,7 @@ function CallbackHandler() {
   useEffect(() => {
     let errorParam =
       searchParams.get("error_description") || searchParams.get("error");
-    let code = searchParams.get("code");
+    const code = searchParams.get("code");
     let hashAccessToken: string | null = null;
     let hashRefreshToken: string | null = null;
 
