@@ -163,6 +163,7 @@ const STEP_ICONS: Record<string, React.ElementType> = {
 interface ActivityTimelineProps {
   businessId?: string;
   businessName?: string;
+  isReal?: boolean;
 }
 
 function getPhaseForStep(stepName?: string): string {
@@ -188,7 +189,8 @@ function getPhaseForStep(stepName?: string): string {
 
 export function ActivityTimeline({
   businessId,
-  businessName = "Demo Co",
+  businessName = "Organization",
+  isReal = false,
 }: ActivityTimelineProps) {
   const router = useRouter();
   const [steps, setSteps] = useState<StepItem[]>(DEFAULT_STEPS);
@@ -245,7 +247,8 @@ export function ActivityTimeline({
     }, 550);
 
     try {
-      const res = await fetch("/api/demo/reset-and-run", {
+      const endpoint = isReal ? "/api/agent/run-now" : "/api/demo/reset-and-run";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ businessId }),
@@ -253,7 +256,7 @@ export function ActivityTimeline({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Demo loop execution failed");
+        throw new Error(data.error || "Agent execution failed");
       }
 
       if (data.result?.steps) {
@@ -270,15 +273,23 @@ export function ActivityTimeline({
         );
       }
 
-      const savings =
-        data.result?.savingsRealized ?? data.savingsRealized ?? 2688;
-      setLastRunNotice(
-        `Full loop executed: $${savings.toLocaleString()} annual savings secured, reviewer verified, escrowed & settled on Arc!`,
-      );
+      if (isReal) {
+        const started = data.result?.totalNegotiationsStarted ?? 0;
+        const notifs = data.result?.totalNotificationsCreated ?? 0;
+        setLastRunNotice(
+          `Agent execution completed: ${started} negotiation(s) initiated, ${notifs} notification(s) created.`,
+        );
+      } else {
+        const savings =
+          data.result?.savingsRealized ?? data.savingsRealized ?? 2688;
+        setLastRunNotice(
+          `Full loop executed: $${savings.toLocaleString()} annual savings secured, reviewer verified, escrowed & settled on Arc!`,
+        );
+      }
 
       router.refresh();
     } catch (err) {
-      setLastRunNotice(`Demo execution error: ${(err as Error).message}`);
+      setLastRunNotice(`Execution error: ${(err as Error).message}`);
       setSteps(DEFAULT_STEPS);
     } finally {
       clearInterval(progressInterval);
@@ -360,12 +371,12 @@ export function ActivityTimeline({
             {isRunning ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Simulating 7-Step Loop ({percentCompleted}%)...</span>
+                <span>{isReal ? "Running Agent Scan..." : `Simulating 7-Step Loop (${percentCompleted}%)...`}</span>
               </>
             ) : (
               <>
                 <AgentIcon className="h-4 w-4" />
-                <span>Simulate 7-Step Loop</span>
+                <span>{isReal ? "Run Autonomous Agent" : "Simulate 7-Step Loop"}</span>
               </>
             )}
           </button>

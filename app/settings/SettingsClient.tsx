@@ -246,7 +246,7 @@ export function SettingsClient({
 
   return (
     <AppShell
-      businessName={business?.name || "Demo Co"}
+      businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
       isReal={business?.is_real ?? false}
       businesses={
         businesses.length > 0 ? businesses : business ? [business] : []

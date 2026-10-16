@@ -8,7 +8,11 @@
  */
 
 export type AuthEmailType =
-  "magic_link" | "reset_password" | "confirm_signup" | "invite_user";
+  | "magic_link"
+  | "reset_password"
+  | "confirm_signup"
+  | "invite_user"
+  | "change_email";
 
 export interface AuthEmailMetadata {
   id: AuthEmailType;
@@ -53,6 +57,15 @@ export const AUTH_EMAIL_METADATA: Record<AuthEmailType, AuthEmailMetadata> = {
     defaultSubject: "You've been invited to join Tavryn",
     supabaseTemplateName: "Invite user",
     category: "Onboarding",
+  },
+  change_email: {
+    id: "change_email",
+    title: "Confirm Email Change",
+    description:
+      "Sent when users request to change their account email address.",
+    defaultSubject: "Confirm your new email address",
+    supabaseTemplateName: "Change Email Address",
+    category: "Security",
   },
 };
 
@@ -425,6 +438,57 @@ export function generateInviteUserEmail(
 }
 
 /**
+ * 5. Confirm Email Change Template
+ */
+export function generateChangeEmailHtml(
+  options: Partial<EmailRenderOptions> = {},
+): string {
+  const isGoTrue = options.mode === "gotrue";
+  const confirmationUrl = isGoTrue
+    ? "{{ .ConfirmationURL }}"
+    : options.confirmationUrl || DEFAULT_PREVIEW_OPTS.confirmationUrl;
+  const email = isGoTrue
+    ? "{{ .Email }}"
+    : options.email || DEFAULT_PREVIEW_OPTS.email;
+
+  const contentHtml = `
+    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; line-height: 1.25;">
+      Confirm your new email address
+    </h1>
+    <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+      We received a request to update the email address associated with your Tavryn account. Please click the button below to verify this email address and complete the update.
+    </p>
+
+    ${renderButton(confirmationUrl, "Confirm Email Address")}
+
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; margin: 24px 0 16px 0;">
+      <tr>
+        <td style="padding: 12px 16px;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="vertical-align: top; width: 20px; font-size: 14px; line-height: 1.4; color: #b45309;">
+                &#9888;
+              </td>
+              <td style="padding-left: 8px; font-size: 12px; line-height: 1.5; color: #92400e;">
+                <strong>Security check:</strong> If you did not request to change your email address, please ignore this email or contact support. Your existing email address remains unchanged until verified.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    ${renderFallbackLink(confirmationUrl)}
+  `;
+
+  return renderEmailShell({
+    preheader: "Confirm your new email address for your Tavryn account.",
+    contentHtml,
+    emailVariable: email,
+  });
+}
+
+/**
  * Factory dispatcher for rendering by template type
  */
 export function renderAuthEmail(
@@ -440,6 +504,8 @@ export function renderAuthEmail(
       return generateConfirmSignupEmail(options);
     case "invite_user":
       return generateInviteUserEmail(options);
+    case "change_email":
+      return generateChangeEmailHtml(options);
     default:
       return generateMagicLinkEmail(options);
   }

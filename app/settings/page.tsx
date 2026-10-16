@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { getActiveBusiness } from "@/lib/active-business";
 import { getServiceSupabase } from "@/lib/supabase";
@@ -25,7 +26,10 @@ export default async function SettingsPage({
 
   // 1 & 2. Resolve Active Business (Session-aware single organization resolution)
   const business = await getActiveBusiness(businessId);
-  const businesses = business ? [business] : [];
+  if (!business) {
+    redirect("/onboard");
+  }
+  const businesses = [business];
 
   // 3. Fetch Deterministic Policy for the active business
   let policy = {

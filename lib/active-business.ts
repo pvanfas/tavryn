@@ -37,20 +37,8 @@ export async function getActiveBusiness(
   const businesses = (bList as ActiveBusiness[]) || [];
   if (businesses.length === 0) return null;
 
-  // 2. Inspect active authentication session from cookies
+  // 2. Check for authenticated Supabase user session FIRST
   const cookieStore = await cookies();
-  const demoCookie = cookieStore.get("sb-tavryn-auth-token")?.value;
-
-  if (demoCookie === "demo-tavryn-session-token") {
-    // Demo session is active: strictly resolve to Demo Co
-    return (
-      businesses.find((b) => b.name === "Demo Co") ||
-      businesses.find((b) => !b.is_real) ||
-      businesses[0]
-    );
-  }
-
-  // 3. Check for authenticated Supabase user session
   let token = cookieStore.get("sb-access-token")?.value;
   if (!token) {
     for (const c of cookieStore.getAll()) {
@@ -77,19 +65,38 @@ export async function getActiveBusiness(
 
         if (member?.business_id) {
           const matched = businesses.find((b) => b.id === member.business_id);
+          // Authenticated users strictly resolve to their real organization
+          if (matched && matched.name !== "Demo Co") return matched;
           if (matched) return matched;
         }
+
+        // New signup user has no organization yet — strictly return null (redirect to onboard)
+        return null;
       }
     } catch {}
+
+    // A real token was present — never fall back to Demo Co
+    return null;
   }
 
-  // 4. If an explicit businessId was passed and matches an accessible business
+  // 3. Inspect demo session cookie (only if user signed out and logged in as demo)
+  const demoCookie = cookieStore.get("sb-tavryn-auth-token")?.value;
+  if (demoCookie === "demo-tavryn-session-token") {
+    // Explicit demo session is active: strictly resolve to Demo Co
+    return (
+      businesses.find((b) => b.name === "Demo Co") ||
+      businesses.find((b) => !b.is_real) ||
+      businesses[0]
+    );
+  }
+
+  // 4. If an explicit businessId was passed and matches an accessible business (unauthenticated evaluation only)
   if (preferredId) {
     const matched = businesses.find((b) => b.id === preferredId);
     if (matched) return matched;
   }
 
-  // 5. Fallback: Demo Co, or first available business
+  // 5. Fallback for unauthenticated evaluation / landing page preview
   return (
     businesses.find((b) => b.name === "Demo Co") ||
     businesses.find((b) => !b.is_real) ||

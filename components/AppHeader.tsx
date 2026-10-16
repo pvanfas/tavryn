@@ -47,9 +47,12 @@ export function AppHeader({
   treasuryBalance: _treasuryBalance,
   currency: _currency = "USDC",
   isReal = false,
-  businessName = "Demo Co",
+  businessName: rawBusinessName,
   onOpenMobileMenu,
 }: AppHeaderProps) {
+  const isRealAccount = isReal || businesses.some((b) => b.is_real);
+  const businessName =
+    rawBusinessName || (isRealAccount ? "Organization" : "Demo Co");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -266,7 +269,7 @@ export function AppHeader({
           {/* User Dropdown with integrated organization switcher */}
           <UserDropdown
             businessName={businessName}
-            isReal={isReal}
+            isReal={isRealAccount}
             businesses={businesses}
             activeBusinessId={activeBusinessId}
           />

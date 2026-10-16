@@ -25,10 +25,14 @@ export function BusinessSwitcher({
   activeBusinessId,
 }: BusinessSwitcherProps) {
 
-  // Strictly enforce only 1 demo organization ("Demo Co") alongside verified real businesses
-  const displayBusinesses = businesses.filter(
-    (b) => b.is_real || b.name === "Demo Co",
-  );
+  // If a real organization is present, strictly exclude Demo Co
+  const hasRealOrg = businesses.some((b) => b.is_real);
+  const displayBusinesses = businesses.filter((b) => {
+    if (hasRealOrg) {
+      return b.is_real && b.name !== "Demo Co";
+    }
+    return b.name === "Demo Co" || !b.is_real;
+  });
 
   const activeBusiness =
     displayBusinesses.find((b) => b.id === activeBusinessId) ||
@@ -40,7 +44,7 @@ export function BusinessSwitcher({
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/70 dark:border-slate-800/70 text-xs text-slate-700 dark:text-slate-200 shadow-2xs">
           <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
           <span className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[150px]">
-            {formatBusinessName(activeBusiness?.name || "Demo Co")}
+            {formatBusinessName(activeBusiness?.name || (hasRealOrg ? "Organization" : "Demo Co"))}
           </span>
           {activeBusiness?.is_real ? (
             <span

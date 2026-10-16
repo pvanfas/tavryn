@@ -335,7 +335,7 @@ export default function NegotiationDetailPage({
 
   return (
     <AppShell
-      businessName="Tavryn Demo Co"
+      businessName={!isSimulated ? "Organization" : "Demo Co"}
       isReal={!isSimulated}
       breadcrumbs={[
         { label: "Overview", href: "/" },

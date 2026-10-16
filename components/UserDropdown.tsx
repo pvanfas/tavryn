@@ -21,7 +21,7 @@ import {
 import type { BusinessItem } from "./BusinessSwitcher";
 
 export function formatBusinessName(name?: string | null): string {
-  if (!name) return "Demo Co";
+  if (!name) return "";
   // Strip trailing numeric timestamps, IDs, or numbers (e.g. "Test Real Business 1790488549038" -> "Test Real Business")
   const cleaned = name
     .replace(/\s+\d+$/g, "")
@@ -38,11 +38,14 @@ interface UserDropdownProps {
 }
 
 export function UserDropdown({
-  businessName = "Demo Co",
+  businessName,
   isReal = false,
   businesses = [],
   activeBusinessId,
 }: UserDropdownProps) {
+  const isRealAccount = isReal || businesses.some((b) => b.is_real);
+  const fallbackOrg = isRealAccount ? "Organization" : "Demo Co";
+  const displayOrgName = formatBusinessName(businessName) || fallbackOrg;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -189,14 +192,14 @@ export function UserDropdown({
             {/* Org badge - Clean name only with no numbers */}
             <div
               className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60"
-              title={businessName}
-              data-business-name={businessName}
+              title={displayOrgName}
+              data-business-name={displayOrgName}
             >
               <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
-                {formatBusinessName(businessName)}
+                {displayOrgName}
               </span>
-              {isReal ? (
+              {isRealAccount ? (
                 <span
                   title="Verified Real Business"
                   className="ml-auto text-[0.65rem] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-[#107e65] dark:text-emerald-400 border border-emerald-500/15 shrink-0"

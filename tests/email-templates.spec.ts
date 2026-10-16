@@ -21,6 +21,7 @@ describe("Tavryn Auth Email Templates", () => {
         "reset_password",
         "confirm_signup",
         "invite_user",
+        "change_email",
       ];
       for (const t of types) {
         const meta = AUTH_EMAIL_METADATA[t];
@@ -109,6 +110,7 @@ describe("Tavryn Auth Email Templates", () => {
         "reset_password",
         "confirm_signup",
         "invite_user",
+        "change_email",
       ];
       for (const t of types) {
         const output = renderAuthEmail(t, { mode: "preview" });
@@ -152,6 +154,14 @@ describe("Tavryn Auth Email Templates", () => {
       const content = fs.readFileSync(file, "utf8");
       expect(content).toContain("{{ .ConfirmationURL }}");
       expect(content).toContain("Join your team on Tavryn");
+    });
+
+    it("ensures change-email.html exists and is valid GoTrue markup", () => {
+      const file = path.join(templatesDir, "change-email.html");
+      expect(fs.existsSync(file)).toBe(true);
+      const content = fs.readFileSync(file, "utf8");
+      expect(content).toContain("{{ .ConfirmationURL }}");
+      expect(content).toContain("Confirm your new email address");
     });
   });
 });

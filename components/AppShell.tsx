@@ -21,7 +21,7 @@ interface AppShellProps {
 }
 
 export function AppShell({
-  businessName = "Demo Co",
+  businessName: rawBusinessName,
   isReal = false,
   breadcrumbs = [
     { label: "Overview", href: "/" },
@@ -36,8 +36,13 @@ export function AppShell({
 }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
 
+  const isRealAccount = isReal || businesses.some((b) => b.is_real);
   const activeBusiness =
     businesses.find((b) => b.id === activeBusinessId) || businesses[0];
+  const effectiveBusinessName =
+    rawBusinessName ||
+    activeBusiness?.name ||
+    (isRealAccount ? "Organization" : "Demo Co");
   const effectiveWallet = walletAddress || activeBusiness?.wallet_address;
 
   return (
@@ -50,8 +55,8 @@ export function AppShell({
 
       {/* Desktop Fixed Sidebar (hidden below md) */}
       <AppSidebar
-        businessName={businessName}
-        isReal={isReal}
+        businessName={effectiveBusinessName}
+        isReal={isRealAccount}
         businesses={businesses}
         activeBusinessId={activeBusinessId}
         treasuryBalance={treasuryBalance}
@@ -73,8 +78,8 @@ export function AppShell({
           activeBusinessId={activeBusinessId}
           treasuryBalance={treasuryBalance}
           currency={currency}
-          isReal={isReal}
-          businessName={businessName}
+          isReal={isRealAccount}
+          businessName={effectiveBusinessName}
         />
 
         <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto space-y-7 pb-24 md:pb-8">
@@ -92,7 +97,7 @@ export function AppShell({
       />
 
       {/* First-Time Onboarding Modal */}
-      <FirstTimeOnboardingModal currentBusinessIsReal={isReal} />
+      <FirstTimeOnboardingModal currentBusinessIsReal={isRealAccount} />
     </div>
   );
 }

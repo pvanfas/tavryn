@@ -137,73 +137,76 @@ export async function POST(req: Request) {
       .eq("id", business.id);
 
     // 2. Resolve Vendors (is_simulated = false for real onboarding)
+    let totalSpend = 0;
     const vendorMap = new Map<string, string>();
-    const uniqueVendors = Array.from(
-      new Set(payload.subscriptions.map((s) => s.vendor.trim())),
-    );
 
-    for (const vendorName of uniqueVendors) {
-      const { data: existingVendor } = await supabase
-        .from("vendors")
-        .select("id")
-        .ilike("name", vendorName)
-        .maybeSingle();
+    if (payload.subscriptions && payload.subscriptions.length > 0) {
+      const uniqueVendors = Array.from(
+        new Set(payload.subscriptions.map((s) => s.vendor.trim())),
+      );
 
-      if (existingVendor) {
-        vendorMap.set(vendorName.toLowerCase(), existingVendor.id);
-      } else {
-        const sampleSub = payload.subscriptions.find(
-          (s) => s.vendor.trim().toLowerCase() === vendorName.toLowerCase(),
-        );
-        const { data: newVendor, error: vendorError } = await supabase
+      for (const vendorName of uniqueVendors) {
+        const { data: existingVendor } = await supabase
           .from("vendors")
-          .insert({
-            name: vendorName,
-            category: sampleSub?.category || "software",
-            is_simulated: false,
-            reputation_score: 4.8,
-            contact: `procurement@${vendorName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
-          })
           .select("id")
-          .single();
+          .ilike("name", vendorName)
+          .maybeSingle();
 
-        if (vendorError || !newVendor) {
-          logger.error("Failed to insert vendor", vendorError);
+        if (existingVendor) {
+          vendorMap.set(vendorName.toLowerCase(), existingVendor.id);
         } else {
-          vendorMap.set(vendorName.toLowerCase(), newVendor.id);
+          const sampleSub = payload.subscriptions.find(
+            (s) => s.vendor.trim().toLowerCase() === vendorName.toLowerCase(),
+          );
+          const { data: newVendor, error: vendorError } = await supabase
+            .from("vendors")
+            .insert({
+              name: vendorName,
+              category: sampleSub?.category || "software",
+              is_simulated: false,
+              reputation_score: 4.8,
+              contact: `procurement@${vendorName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
+            })
+            .select("id")
+            .single();
+
+          if (vendorError || !newVendor) {
+            logger.error("Failed to insert vendor", vendorError);
+          } else {
+            vendorMap.set(vendorName.toLowerCase(), newVendor.id);
+          }
         }
       }
-    }
 
-    // 3. Create Contracts
-    let totalSpend = 0;
-    const contractsPayload = payload.subscriptions.map((sub) => {
-      totalSpend += sub.annual_price;
-      const vendorId = vendorMap.get(sub.vendor.trim().toLowerCase()) || null;
-      return {
-        business_id: business.id,
-        vendor_id: vendorId,
-        service: sub.service,
-        category: sub.category,
-        current_price: sub.annual_price,
-        renewal_date: new Date(sub.renewal_date).toISOString(),
-        seat_count: sub.seats ?? null,
-        active_seats: sub.active_seats ?? null,
-        usage_metric:
-          sub.usage_decline_pct != null
-            ? { type: "usage_decline", decline_pct: sub.usage_decline_pct }
-            : null,
-        status: "active",
-      };
-    });
+      // 3. Create Contracts
+      const contractsPayload = payload.subscriptions.map((sub) => {
+        totalSpend += sub.annual_price;
+        const vendorId = vendorMap.get(sub.vendor.trim().toLowerCase()) || null;
+        return {
+          business_id: business.id,
+          vendor_id: vendorId,
+          service: sub.service,
+          category: sub.category,
+          current_price: sub.annual_price,
+          renewal_date: new Date(sub.renewal_date).toISOString(),
+          seat_count: sub.seats ?? null,
+          active_seats: sub.active_seats ?? null,
+          usage_metric:
+            sub.usage_decline_pct != null
+              ? { type: "usage_decline", decline_pct: sub.usage_decline_pct }
+              : null,
+          status: "active",
+        };
+      });
 
-    const { error: contractsError } = await supabase
-      .from("contracts")
-      .insert(contractsPayload);
+      const { error: contractsError } = await supabase
+        .from("contracts")
+        .insert(contractsPayload);
 
-    if (contractsError) {
-      logger.error("Failed to insert contracts", contractsError);
-      return apiError(`Database error: ${contractsError.message}`, 500);
+      if (contractsError) {
+        logger.error("Failed to insert contracts", contractsError);
+        return apiError(`Database error: ${contractsError.message}`, 500);
+      }
     }
 
     // 4. Create Policy

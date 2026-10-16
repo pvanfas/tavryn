@@ -440,8 +440,21 @@ export default function DecisionDetailPage({
 
   return (
     <AppShell
-      businessName={contract?.business?.name || "Demo Co"}
+      businessName={contract?.business?.name || (!contract?.vendor?.is_simulated ? "Organization" : "Demo Co")}
       isReal={!contract?.vendor?.is_simulated}
+      businesses={
+        contract?.business
+          ? [
+              {
+                id: contract.business.id,
+                name: contract.business.name,
+                is_real: !contract?.vendor?.is_simulated,
+                treasury_balance: contract.business.treasury_balance ?? 0,
+                default_currency: "USDC",
+              },
+            ]
+          : []
+      }
       breadcrumbs={[
         { label: "Overview", href: "/" },
         { label: "Negotiations", href: "/negotiations" },

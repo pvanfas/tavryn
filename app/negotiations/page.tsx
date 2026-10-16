@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import React from "react";
 
 import { AppShell } from "@/components/AppShell";
@@ -24,7 +25,10 @@ export default async function NegotiationsPage({
 
   // 1. Resolve Active Business (Session-aware single organization resolution)
   const business = await getActiveBusiness(businessId);
-  const businesses = business ? [business] : [];
+  if (!business) {
+    redirect("/onboard");
+  }
+  const businesses = [business];
 
   // Real-time on-chain balance & negotiations in parallel
   let liveTreasuryBalance = business?.treasury_balance
@@ -58,7 +62,7 @@ export default async function NegotiationsPage({
 
   return (
     <AppShell
-      businessName={business?.name || "Demo Co"}
+      businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
       isReal={business?.is_real ?? false}
       businesses={businesses}
       activeBusinessId={business?.id}

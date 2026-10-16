@@ -17,6 +17,9 @@ export default async function DecisionIndexPage({
 
   // 1. Resolve active business
   const business = await getActiveBusiness(businessId);
+  if (!business) {
+    redirect("/onboard");
+  }
 
   if (business) {
     // 2. Fetch the latest contract to inspect its decision

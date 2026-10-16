@@ -31,7 +31,7 @@ export function CommandBar({
   isOpen,
   onClose,
   businessId,
-  businessName = "Demo Co",
+  businessName = "Organization",
 }: CommandBarProps) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);

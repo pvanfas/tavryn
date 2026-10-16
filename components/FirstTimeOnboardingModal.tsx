@@ -6,8 +6,12 @@ import {
   Briefcase,
   Building2,
   CheckCircle2,
+  FileText,
+  Files,
   Loader2,
+  Plus,
   Sparkles,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -15,23 +19,11 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import { getCurrentUser } from "@/lib/auth";
+import { INDUSTRY_OPTIONS } from "@/lib/constants";
 import {
   DEFAULT_POLICY_CONFIG,
   SubscriptionRow,
-  ValidatedSubscriptionRow,
 } from "@/lib/schemas";
-
-const INDUSTRY_OPTIONS = [
-  { id: "saas", label: "SaaS & Cloud Software" },
-  { id: "fintech", label: "FinTech & Financial Services" },
-  { id: "ai", label: "AI & Machine Learning" },
-  { id: "ecommerce", label: "E-Commerce & Retail" },
-  { id: "healthcare", label: "Healthcare & Biotech" },
-  { id: "professional_services", label: "Professional Services & Consulting" },
-  { id: "media", label: "Media & Entertainment" },
-  { id: "manufacturing", label: "Hardware & Manufacturing" },
-  { id: "other", label: "Other" },
-];
 
 const BENCHMARK_SUBSCRIPTIONS: SubscriptionRow[] = [
   {
@@ -60,7 +52,7 @@ const BENCHMARK_SUBSCRIPTIONS: SubscriptionRow[] = [
   },
   {
     vendor: "Datadog",
-    service: "Infrastructure Pro",
+    service: "Infrastructure & APM Pro",
     category: "cloud",
     annual_price: 37200,
     renewal_date: new Date(Date.now() + 14 * 86400000)
@@ -68,36 +60,46 @@ const BENCHMARK_SUBSCRIPTIONS: SubscriptionRow[] = [
       .split("T")[0],
     seats: null,
     active_seats: null,
-    usage_decline_pct: 42,
+    usage_decline_pct: 31,
   },
   {
     vendor: "AWS",
-    service: "Cloud Hosting & Compute",
+    service: "Compute & Database Reservation",
     category: "cloud",
     annual_price: 24000,
-    renewal_date: new Date(Date.now() + 35 * 86400000)
+    renewal_date: new Date(Date.now() + 45 * 86400000)
       .toISOString()
       .split("T")[0],
     seats: null,
     active_seats: null,
-    usage_decline_pct: 12,
+    usage_decline_pct: 18,
   },
   {
     vendor: "GitHub",
-    service: "Enterprise Cloud",
+    service: "GitHub Enterprise Cloud",
     category: "software",
-    annual_price: 9600,
-    renewal_date: new Date(Date.now() + 40 * 86400000)
+    annual_price: 12600,
+    renewal_date: new Date(Date.now() + 35 * 86400000)
       .toISOString()
       .split("T")[0],
-    seats: 96,
-    active_seats: 68,
-    usage_decline_pct: 29,
+    seats: 50,
+    active_seats: 38,
+    usage_decline_pct: 24,
   },
 ];
 
 interface FirstTimeOnboardingModalProps {
   currentBusinessIsReal?: boolean;
+}
+
+interface UploadedFileSummary {
+  id: string;
+  name: string;
+  size: number;
+  status: "parsing" | "success" | "error";
+  vendorDetected?: string;
+  annualPrice?: number;
+  error?: string;
 }
 
 export function FirstTimeOnboardingModal({
@@ -114,8 +116,10 @@ export function FirstTimeOnboardingModal({
 
   // Step 2: Bills / Subscriptions
   const [subscriptions, setSubscriptions] = useState<SubscriptionRow[]>([]);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileSummary[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Submission State
@@ -172,48 +176,194 @@ export function FirstTimeOnboardingModal({
 
   const handleLoadBenchmark = () => {
     setSubscriptions(BENCHMARK_SUBSCRIPTIONS);
-    setFileName("Benchmark Enterprise Stack (5 SaaS Contracts)");
+    setUploadedFiles([
+      {
+        id: "benchmark-stack",
+        name: "Benchmark Enterprise Stack (5 SaaS Contracts)",
+        size: 0,
+        status: "success",
+        vendorDetected: "Salesforce, Slack, Datadog & more",
+        annualPrice: BENCHMARK_SUBSCRIPTIONS.reduce((s, r) => s + r.annual_price, 0),
+      },
+    ]);
     setUploadError(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFiles = async (fileList: FileList | File[]) => {
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
 
     setIsUploading(true);
     setUploadError(null);
-    setFileName(file.name);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    // Filter valid files (pdf, csv, image)
+    const validFiles = files.filter((f) => {
+      const ext = f.name.toLowerCase();
+      return (
+        ext.endsWith(".pdf") ||
+        ext.endsWith(".csv") ||
+        ext.endsWith(".png") ||
+        ext.endsWith(".jpg") ||
+        ext.endsWith(".jpeg")
+      );
+    });
 
-      const res = await fetch("/api/import/file", {
-        method: "POST",
-        body: formData,
-      });
+    if (validFiles.length === 0) {
+      setUploadError("Please upload PDF invoices or CSV statements.");
+      setIsUploading(false);
+      return;
+    }
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to parse uploaded document.");
-      }
+    const newFileSummaries: UploadedFileSummary[] = validFiles.map((f) => ({
+      id: `file-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: f.name,
+      size: f.size,
+      status: "parsing",
+    }));
 
-      const rows: ValidatedSubscriptionRow[] = data.rows || [];
-      const validRows = rows
-        .filter((r) => r.isValid && r.parsed)
-        .map((r) => r.parsed!);
+    setUploadedFiles((prev) => [...prev, ...newFileSummaries]);
 
-      if (validRows.length === 0) {
-        throw new Error(
-          "No valid subscription line items could be extracted. Try loading the benchmark stack or another file.",
+    let newlyDetectedRows: SubscriptionRow[] = [];
+    let successCount = 0;
+
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      const summaryId = newFileSummaries[i].id;
+      setUploadProgressText(
+        validFiles.length > 1
+          ? `Parsing ${i + 1} of ${validFiles.length}: ${file.name}...`
+          : `Parsing ${file.name}...`,
+      );
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/import/file", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "Failed to parse document");
+        }
+
+        const detected: any[] = data.detected || [];
+        if (detected.length === 0) {
+          throw new Error("No subscription line items detected in document");
+        }
+
+        const parsedRows: SubscriptionRow[] = detected.map((item) => ({
+          vendor: item.vendor || "Enterprise Vendor",
+          service: item.service || `${item.vendor} License`,
+          category: (item.category as any) || "software",
+          annual_price: Number(item.annual_price) || 12000,
+          renewal_date:
+            item.renewal_date ||
+            new Date(Date.now() + 60 * 86400000).toISOString().split("T")[0],
+          seats: item.seats != null ? Number(item.seats) : null,
+          active_seats: item.active_seats != null ? Number(item.active_seats) : null,
+          usage_decline_pct:
+            item.usage_decline_pct != null ? Number(item.usage_decline_pct) : null,
+        }));
+
+        newlyDetectedRows = [...newlyDetectedRows, ...parsedRows];
+        const primaryItem = detected[0];
+
+        setUploadedFiles((prev) =>
+          prev.map((item) =>
+            item.id === summaryId
+              ? {
+                  ...item,
+                  status: "success",
+                  vendorDetected:
+                    detected.length > 1
+                      ? `${primaryItem.vendor} (+${detected.length - 1} items)`
+                      : primaryItem.vendor,
+                  annualPrice: parsedRows.reduce((sum, r) => sum + r.annual_price, 0),
+                }
+              : item,
+          ),
+        );
+        successCount++;
+      } catch (err: any) {
+        setUploadedFiles((prev) =>
+          prev.map((item) =>
+            item.id === summaryId
+              ? {
+                  ...item,
+                  status: "error",
+                  error: err.message || "Failed to parse document",
+                }
+              : item,
+          ),
         );
       }
+    }
 
-      setSubscriptions(validRows);
-    } catch (err) {
-      setUploadError((err as Error).message);
-    } finally {
-      setIsUploading(false);
+    if (newlyDetectedRows.length > 0) {
+      setSubscriptions((prev) => {
+        // Merge without duplicate (vendor + service)
+        const existingKeys = new Set(
+          prev.map((r) => `${r.vendor.toLowerCase()}-${r.service.toLowerCase()}`),
+        );
+        const toAdd = newlyDetectedRows.filter(
+          (r) =>
+            !existingKeys.has(`${r.vendor.toLowerCase()}-${r.service.toLowerCase()}`),
+        );
+        return [...prev, ...toAdd];
+      });
+    } else if (successCount === 0) {
+      setUploadError(
+        "Could not extract contracts from the uploaded file(s). You can load the benchmark stack or try other PDFs.",
+      );
+    }
+
+    setIsUploading(false);
+    setUploadProgressText(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
+    e.target.value = "";
+  };
+
+  const handleRemoveSubscription = (index: number) => {
+    setSubscriptions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    const fileToRemove = uploadedFiles.find((f) => f.id === fileId);
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+    if (fileToRemove?.vendorDetected) {
+      setSubscriptions((prev) =>
+        prev.filter(
+          (s) =>
+            !s.vendor.toLowerCase().includes(fileToRemove.vendorDetected!.toLowerCase()) &&
+            !fileToRemove.vendorDetected!.toLowerCase().includes(s.vendor.toLowerCase()),
+        ),
+      );
     }
   };
 
@@ -267,46 +417,42 @@ export function FirstTimeOnboardingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl bg-white dark:bg-[#111714] border border-slate-200/90 dark:border-slate-800/90 shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#111714] border border-slate-200/90 dark:border-slate-800/90 shadow-2xl overflow-hidden">
         {/* Header Banner */}
-        <div className="p-6 bg-gradient-to-r from-[#107e65]/10 via-emerald-500/5 to-transparent border-b border-slate-200/80 dark:border-slate-800/80 flex items-start justify-between">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 bg-linear-to-r from-emerald-500/10 via-teal-500/5 to-transparent flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#107e65] text-white flex items-center justify-center shadow-xs">
-              <Building2 className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl bg-[#107e65]/10 dark:bg-[#107e65]/20 flex items-center justify-center border border-[#107e65]/20">
+              <Building2 className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                {step === 1 ? "Welcome to Tavryn" : "Step 2: Import Bills & Contracts"}
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Welcome to Tavryn</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399]">
+                  Step {step} of 2
+                </span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {step === 1
-                  ? "Set up your autonomous procurement profile in 2 quick steps."
-                  : "Ingest your subscriptions so Tavryn can detect renewal savings."}
+                  ? "Set up your organization workspace"
+                  : "Import bills, contracts & PDF invoices"}
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Explore with Demo Co first"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {currentBusinessIsReal && (
+            <button
+              onClick={handleClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              aria-label="Dismiss setup"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
-        {/* Progress Bar */}
-        <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
-          <div
-            className="h-full bg-[#107e65] transition-all duration-300"
-            style={{ width: step === 1 ? "50%" : "100%" }}
-          />
-        </div>
-
-        {/* Content Body */}
-        <div className="p-6 space-y-5">
+        {/* Modal Scrollable Body */}
+        <div className="p-6 overflow-y-auto space-y-4">
           {submitError && (
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-xs">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-start gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>{submitError}</span>
             </div>
@@ -314,21 +460,24 @@ export function FirstTimeOnboardingModal({
 
           {isSuccess ? (
             <div className="py-8 text-center space-y-3">
-              <div className="h-14 w-14 rounded-full bg-emerald-500/10 text-[#107e65] flex items-center justify-center mx-auto">
-                <CheckCircle2 className="h-8 w-8" />
+              <div className="h-14 w-14 rounded-full bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] mx-auto flex items-center justify-center border border-emerald-500/20">
+                <CheckCircle2 className="h-7 w-7" />
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Organization Created & Bills Ingested!
+                Workspace Initialized!
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Launching your autonomous ledger on Arc...
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {companyName}
+                </span>{" "}
+                is live with {subscriptions.length} recurring contracts ready for autonomous AI negotiation.
               </p>
             </div>
           ) : step === 1 ? (
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Company Name <span className="text-rose-500">*</span>
+                  Company or Organization Name
                 </label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -372,14 +521,7 @@ export function FirstTimeOnboardingModal({
                 </span>
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                >
-                  Explore with Demo Co first
-                </button>
+              <div className="pt-2 flex items-center justify-end">
                 <button
                   type="submit"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-xs transition-colors"
@@ -391,36 +533,195 @@ export function FirstTimeOnboardingModal({
             </form>
           ) : (
             <div className="space-y-4">
-              {/* Option A: Upload Invoices / Statement */}
-              <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-[#151c19]/50 text-center space-y-2">
-                <Upload className="h-6 w-6 text-slate-400 mx-auto" />
+              {/* Option A: Multiple PDF Upload Drag & Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`relative p-5 rounded-2xl border-2 border-dashed transition-all text-center space-y-2.5 ${
+                  isDragging
+                    ? "border-[#107e65] bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-[#107e65]/30"
+                    : "border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-[#151c19]/60 hover:border-slate-400 dark:hover:border-slate-600"
+                }`}
+              >
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] mx-auto flex items-center justify-center border border-emerald-500/20">
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Files className="h-5 w-5" />
+                  )}
+                </div>
+
                 <div>
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs">
-                    <span>Choose File (PDF Invoices or CSV)</span>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {isDragging
+                      ? "Drop your PDF invoices here"
+                      : "Drag & drop multiple PDF invoices or contracts"}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Select single or multiple PDFs at once (AWS, Slack, Datadog, Salesforce, etc.)
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="onboarding-multi-pdf-input"
+                    className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+                  >
+                    <Upload className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399]" />
+                    <span>Browse PDF Files (Multiple)</span>
                     <input
+                      id="onboarding-multi-pdf-input"
                       type="file"
-                      accept=".pdf,.csv"
-                      onChange={handleFileUpload}
+                      multiple
+                      accept=".pdf,.csv,application/pdf,text/csv"
+                      onChange={handleFileInputChange}
                       className="hidden"
                       disabled={isUploading}
                     />
                   </label>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  Supports vendor PDF invoices, bank statements, and subscriptions CSV.
-                </p>
+
                 {isUploading && (
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#107e65]">
+                  <div className="flex items-center justify-center gap-2 text-xs font-semibold text-[#107e65] dark:text-[#34d399] pt-1">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Parsing line items...</span>
+                    <span>{uploadProgressText || "Parsing contracts..."}</span>
                   </div>
                 )}
+
                 {uploadError && (
-                  <p className="text-xs text-rose-500">{uploadError}</p>
+                  <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+                    {uploadError}
+                  </div>
                 )}
               </div>
 
-              {/* Option B: Benchmark Stack */}
+              {/* Uploaded Documents List */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Uploaded Documents ({uploadedFiles.length})
+                    </span>
+                    <label
+                      htmlFor="onboarding-multi-pdf-input-more"
+                      className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-semibold text-[#107e65] dark:text-[#34d399] hover:underline"
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span>Add more PDFs</span>
+                      <input
+                        id="onboarding-multi-pdf-input-more"
+                        type="file"
+                        multiple
+                        accept=".pdf,.csv,application/pdf,text/csv"
+                        onChange={handleFileInputChange}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {uploadedFiles.map((f) => (
+                      <div
+                        key={f.id}
+                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 dark:text-white truncate max-w-[240px]">
+                              {f.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {f.size > 0
+                                ? `${(f.size / 1024).toFixed(0)} KB`
+                                : "Demo Package"}
+                              {f.vendorDetected && (
+                                <span className="ml-1.5 text-[#107e65] dark:text-[#34d399] font-medium">
+                                  &bull; {f.vendorDetected}
+                                  {f.annualPrice
+                                    ? ` ($${f.annualPrice.toLocaleString()}/yr)`
+                                    : ""}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {f.status === "parsing" ? (
+                            <Loader2 className="h-4 w-4 text-[#107e65] animate-spin" />
+                          ) : f.status === "success" ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-rose-500" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(f.id)}
+                            className="p-1 rounded text-slate-400 hover:text-rose-500 transition-colors"
+                            title="Remove file"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Detected Subscriptions Preview */}
+              {subscriptions.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-[#107e65]" />
+                      <span>{subscriptions.length} Detected Contracts</span>
+                    </span>
+                    <span className="text-[#107e65] dark:text-[#34d399] text-sm">
+                      ${totalSpend.toLocaleString()}/yr
+                    </span>
+                  </div>
+
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {subscriptions.map((sub, idx) => (
+                      <div
+                        key={`${sub.vendor}-${sub.service}-${idx}`}
+                        className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#111714] border border-slate-200/80 dark:border-slate-800/80 text-[11px]"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {sub.vendor}
+                          </span>
+                          <span className="text-slate-400 mx-1.5">&bull;</span>
+                          <span className="text-slate-600 dark:text-slate-300 truncate">
+                            {sub.service}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            ${sub.annual_price.toLocaleString()}/yr
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSubscription(idx)}
+                            className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                            title="Remove contract"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Option B: Benchmark Stack Alternative */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 text-xs">
                 <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Sparkles className="h-4 w-4 text-[#107e65] shrink-0" />
@@ -435,22 +736,8 @@ export function FirstTimeOnboardingModal({
                 </button>
               </div>
 
-              {/* Status Preview */}
-              {subscriptions.length > 0 && (
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                  <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
-                    <span className="truncate">{fileName}</span>
-                    <span className="text-[#107e65] font-bold">
-                      ${totalSpend.toLocaleString()}/yr
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {subscriptions.length} recurring contracts ready for autonomous negotiation.
-                  </p>
-                </div>
-              )}
-
-              <div className="pt-2 flex items-center justify-between">
+              {/* Navigation Actions */}
+              <div className="pt-2 flex items-center justify-between shrink-0">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -472,7 +759,7 @@ export function FirstTimeOnboardingModal({
                     </>
                   ) : (
                     <>
-                      <span>Complete Setup & Launch</span>
+                      <span>Complete Setup & Launch ({subscriptions.length})</span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </>
                   )}

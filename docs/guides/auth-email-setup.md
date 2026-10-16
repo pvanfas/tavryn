@@ -35,8 +35,9 @@ All templates are located in [`emails/auth/`](file:///Users/chris/Documents/GitH
 | :--- | :--- | :--- | :--- |
 | **Magic Link Sign-In** | [`emails/auth/magic-link.html`](file:///Users/chris/Documents/GitHub/tavryn/emails/auth/magic-link.html) | `Your Tavryn sign-in link` | **Magic Link** |
 | **Password Reset** | [`emails/auth/reset-password.html`](file:///Users/chris/Documents/GitHub/tavryn/emails/auth/reset-password.html) | `Reset your Tavryn password` | **Reset Password** |
-| **Confirm Sign-Up** | [`emails/auth/confirm-signup.html`](file:///Users/chris/Documents/GitHub/tavryn/emails/auth/confirm-signup.html) | `Verify your email to activate Tavryn` | **Confirm signup** |
-| **Workspace Invite** | [`emails/auth/invite-user.html`](file:///Users/chris/Documents/GitHub/tavryn/emails/auth/invite-user.html) | `You've been invited to join Tavryn` | **Invite user** |
+| **Confirm Sign-Up** | [`emails/auth/confirm-signup.html`](file:///Users/admin/srv/tavryn/emails/auth/confirm-signup.html) | `Verify your email to activate Tavryn` | **Confirm signup** |
+| **Workspace Invite** | [`emails/auth/invite-user.html`](file:///Users/admin/srv/tavryn/emails/auth/invite-user.html) | `You've been invited to join Tavryn` | **Invite user** |
+| **Change Email Address** | [`emails/auth/change-email.html`](file:///Users/admin/srv/tavryn/emails/auth/change-email.html) | `Confirm your new email address` | **Change Email Address** |
 
 ---
 

@@ -1,4 +1,5 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { redirect } from "next/navigation";
 import React from "react";
 
 import { AppShell } from "@/components/AppShell";
@@ -19,14 +20,17 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
 
   // 1. Resolve Active Business (Session-aware single organization resolution)
   const business = await getActiveBusiness(businessId);
-  const businesses = business ? [business] : [];
+  if (!business) {
+    redirect("/onboard");
+  }
+  const businesses = [business];
 
   // 2. Perform server-side cryptographic audit chain verification (latest 250 blocks)
   const verification = await verifyAuditChain(business?.id, 250);
 
   return (
     <AppShell
-      businessName={business?.name || "Demo Co"}
+      businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
       isReal={Boolean(business?.is_real)}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },

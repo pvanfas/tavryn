@@ -231,3 +231,39 @@ export const MOCK_VENDOR_BENCHMARKS = {
       "Telemetry indicates compute reservation renewal approaching. Recommend renegotiating tiered commitment to save $2,016/yr.",
   },
 } as const;
+
+// ---------------------------------------------------------------------------
+// Industry Categorization
+// ---------------------------------------------------------------------------
+
+export interface IndustryOption {
+  id: string;
+  label: string;
+}
+
+/** Comprehensive list of supported business industry verticals */
+export const INDUSTRY_OPTIONS: readonly IndustryOption[] = [
+  { id: "saas", label: "SaaS & Cloud Software" },
+  { id: "ai", label: "AI & Machine Learning" },
+  { id: "fintech", label: "FinTech & Financial Services" },
+  { id: "crypto", label: "Web3, Crypto & Blockchain" },
+  { id: "cybersecurity", label: "Cybersecurity & IT Infrastructure" },
+  { id: "ecommerce", label: "E-Commerce & Retail" },
+  { id: "healthcare", label: "Healthcare & Life Sciences" },
+  { id: "biotech", label: "Biotechnology & Pharmaceuticals" },
+  { id: "professional_services", label: "Professional Services & Consulting" },
+  { id: "legal", label: "Legal & Compliance" },
+  { id: "marketing", label: "Marketing, Advertising & PR" },
+  { id: "media", label: "Media, Gaming & Entertainment" },
+  { id: "edtech", label: "Education & EdTech" },
+  { id: "proptech", label: "Real Estate & PropTech" },
+  { id: "logistics", label: "Logistics, Supply Chain & Freight" },
+  { id: "manufacturing", label: "Hardware, Robotics & Manufacturing" },
+  { id: "aerospace", label: "Aerospace & Defense" },
+  { id: "cleantech", label: "Energy, CleanTech & Utilities" },
+  { id: "telecom", label: "Telecommunications & Networking" },
+  { id: "hospitality", label: "Travel, Hospitality & Food Services" },
+  { id: "nonprofit", label: "Non-Profit, NGO & Public Sector" },
+  { id: "other", label: "Other" },
+] as const;
+

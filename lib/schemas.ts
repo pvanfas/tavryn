@@ -119,7 +119,7 @@ export const OnboardBusinessPayloadSchema = z.object({
   policy: PolicyConfigSchema,
   subscriptions: z
     .array(SubscriptionRowSchema)
-    .min(1, "At least one valid subscription contract is required"),
+    .default([]),
 });
 
 export type OnboardBusinessPayload = z.infer<

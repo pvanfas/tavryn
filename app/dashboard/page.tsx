@@ -2,9 +2,13 @@ import {
   CheckCircle2,
   ExternalLink,
   Layers,
+  Plus,
+  Sparkles,
   TrendingDown,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import React from "react";
 
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -82,6 +86,9 @@ export default async function DashboardPage({
   try {
     // 1 & 2. Resolve Active Business (Session-aware single organization resolution)
     const active = await getActiveBusiness(businessId);
+    if (!active) {
+      redirect("/onboard");
+    }
     business = active;
     businesses = active ? [active] : [];
 
@@ -202,7 +209,7 @@ export default async function DashboardPage({
 
   return (
     <AppShell
-      businessName={business?.name || "Demo Co"}
+      businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
       isReal={Boolean(business?.is_real)}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },
@@ -262,6 +269,42 @@ export default async function DashboardPage({
             )}
           </div>
         </div>
+
+        {/* Welcome New Organization Quick-Start Banner */}
+        {contracts.length === 0 && (
+          <div className="p-6 sm:p-8 rounded-2xl bg-linear-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="h-12 w-12 rounded-2xl bg-[#107e65]/10 dark:bg-[#107e65]/20 flex items-center justify-center border border-[#107e65]/30 text-[#107e65] dark:text-[#34d399] shrink-0">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Welcome to {business?.name || "Your New Workspace"}!
+                  </h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    Your autonomous procurement agent is online. Import your SaaS contracts or PDF invoices to begin continuous renewal cliff monitoring, automated benchmarking, and smart contract escrow.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Link
+                  href="/import-bills"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white transition-colors shadow-xs"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Import Bills &amp; Invoices</span>
+                </Link>
+                <Link
+                  href="/settings"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+                >
+                  <span>Policy Settings</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 1. HERO SAVINGS DISPLAY FIRST */}
         <section
@@ -366,7 +409,8 @@ export default async function DashboardPage({
         >
           <ActivityTimeline
             businessId={business?.id}
-            businessName={business?.name || "Demo Co"}
+            businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
+            isReal={Boolean(business?.is_real)}
           />
         </section>
 

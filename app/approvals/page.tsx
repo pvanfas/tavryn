@@ -1,5 +1,6 @@
 import { ArrowRight, Bot, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import React from "react";
 
 import { ApprovalsHeader } from "@/components/ApprovalsHeader";
@@ -49,7 +50,10 @@ export default async function ApprovalsPage({
 
   // 1. Resolve Active Business (Session-aware single organization resolution)
   const business = await getActiveBusiness(businessId);
-  const businesses = business ? [business] : [];
+  if (!business) {
+    redirect("/onboard");
+  }
+  const businesses = [business];
 
   // Real-time on-chain balance & data queries in parallel
   let liveTreasuryBalance = business?.treasury_balance
@@ -107,7 +111,7 @@ export default async function ApprovalsPage({
 
   return (
     <AppShell
-      businessName={business?.name || "Demo Co"}
+      businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
       isReal={business?.is_real ?? false}
       businesses={businesses}
       activeBusinessId={business?.id}

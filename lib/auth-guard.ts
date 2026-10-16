@@ -123,9 +123,17 @@ export async function requireBusinessAccess(
     };
   }
 
-  // Simulated organizations (is_real = false) allow demo session / simulated testing access
+  // Simulated organizations (is_real = false) allow demo session / simulated testing access only.
+  // Signed-in users must sign out and log in as demo to access Demo Co.
   if (!businessRecord.is_real) {
     const user = await getAuthUser(req);
+    if (user && !user.isDemo) {
+      return {
+        authorized: false,
+        status: 403,
+        error: "Forbidden: Signed-in accounts cannot view or modify Demo Co. Please sign out and log in as demo.",
+      };
+    }
     return {
       authorized: true,
       user: user || {

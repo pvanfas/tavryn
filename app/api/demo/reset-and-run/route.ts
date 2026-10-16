@@ -7,6 +7,7 @@ import {
   verifyConfirmationTerms,
 } from "@/lib/agent/verification";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { getAuthUser } from "@/lib/auth-guard";
 import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
 import { evaluateContractOpportunity } from "@/lib/heuristics";
 import { logger } from "@/lib/logger";
@@ -20,6 +21,13 @@ export async function POST(req: Request) {
   const supabase = getServiceSupabase();
 
   try {
+    const user = await getAuthUser(req);
+    if (user && !user.isDemo) {
+      return apiError(
+        "Forbidden: Signed-in accounts cannot run Demo Co simulation. Please sign out and log in as demo.",
+        403,
+      );
+    }
     let businessId: string | null = null;
     try {
       const body = await req.json();

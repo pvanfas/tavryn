@@ -156,8 +156,13 @@ export function AppSidebar({
     Scale,
   };
 
+  const hasReal = isReal || businesses.some((b) => b.is_real);
   const visibleBusinesses = businesses.filter(
-    (b) => (b.is_real || b.name === "Demo Co") && !b.name?.startsWith("[Deleted"),
+    (b) =>
+      !b.name?.startsWith("[Deleted") &&
+      (hasReal
+        ? b.is_real && b.name !== "Demo Co"
+        : b.is_real || b.name === "Demo Co"),
   );
   const activeBusiness =
     visibleBusinesses.find((b) => b.id === activeBusinessId) ||
@@ -246,7 +251,7 @@ export function AppSidebar({
             <div className="flex items-center gap-2">
               <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                {formatBusinessName(activeBusiness?.name || businessName || "Demo Co")}
+                {formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "Demo Co")}
               </span>
             </div>
           </div>
@@ -255,7 +260,7 @@ export function AppSidebar({
         <div className="p-2 flex justify-center shrink-0">
           <div
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-            title={`Organization: ${activeBusiness?.name || businessName || "Demo Co"} (${activeBusiness?.is_real ? "Real" : "Demo"})`}
+            title={`Organization: ${formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "Demo Co")} (${activeBusiness?.is_real || hasReal ? "Real" : "Demo"})`}
             aria-label="Active Organization"
           >
             <Building2 className="h-4 w-4" />
