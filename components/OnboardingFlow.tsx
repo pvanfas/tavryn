@@ -8,18 +8,21 @@ import {
   CheckCircle2,
   FileText,
   Files,
+  Globe,
   Loader2,
   LogOut,
+  MapPin,
   Plus,
   Sparkles,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { clearAuthCookie, getBrowserSupabase } from "@/lib/auth";
-import { INDUSTRY_OPTIONS } from "@/lib/constants";
+import { COUNTRY_OPTIONS, INDUSTRY_OPTIONS } from "@/lib/constants";
 import { DEFAULT_POLICY_CONFIG, SubscriptionRow } from "@/lib/schemas";
 
 const BENCHMARK_SUBSCRIPTIONS: SubscriptionRow[] = [
@@ -99,9 +102,35 @@ export function OnboardingFlow() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Step 1: Company Profile
+  // Step 1: Company Profile & Localization
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState(INDUSTRY_OPTIONS[0].label);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [country, setCountry] = useState<string>("United States");
+  const [logoError, setLogoError] = useState<string | null>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setLogoError("Please upload an image file (PNG, JPG, SVG, WebP)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError("Logo size should be under 2MB");
+      return;
+    }
+    setLogoError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setLogoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   // Step 2: Bills / Subscriptions
   const [subscriptions, setSubscriptions] = useState<SubscriptionRow[]>([]);
@@ -326,7 +355,7 @@ export function OnboardingFlow() {
     }
   };
 
-  const handleFinalSubmit = async () => {
+  const handleFinalSubmit = async (overrideSubscriptions?: SubscriptionRow[]) => {
     if (!companyName.trim()) {
       setStep(1);
       setSubmitError("Company name is required.");
@@ -336,6 +365,9 @@ export function OnboardingFlow() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const rowsToSubmit =
+      overrideSubscriptions !== undefined ? overrideSubscriptions : subscriptions;
+
     try {
       const res = await fetch("/api/onboard", {
         method: "POST",
@@ -343,10 +375,13 @@ export function OnboardingFlow() {
         body: JSON.stringify({
           name: companyName.trim(),
           industry,
+          logo_url: logoUrl || undefined,
+          address: address.trim() || undefined,
+          country: country || undefined,
           treasury_balance: 50000,
           default_currency: "USDC",
           policy: DEFAULT_POLICY_CONFIG,
-          subscriptions,
+          subscriptions: rowsToSubmit,
         }),
       });
 
@@ -363,6 +398,12 @@ export function OnboardingFlow() {
       setSubmitError((err as Error).message);
       setIsSubmitting(false);
     }
+  };
+
+  const handleSkipNow = () => {
+    setSubscriptions([]);
+    setUploadedFiles([]);
+    return handleFinalSubmit([]);
   };
 
   const totalSpend = subscriptions.reduce((sum, s) => sum + s.annual_price, 0);
@@ -451,44 +492,133 @@ export function OnboardingFlow() {
               </div>
             ) : step === 1 ? (
               <form onSubmit={handleStep1Submit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Company or Organization Name <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      autoFocus
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="e.g. Acme Corporation"
-                      className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
-                    />
+                {/* Logo & Company Name */}
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                  {/* Company Logo Upload & Preview */}
+                  <div className="shrink-0 flex flex-col items-center sm:items-start gap-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Logo <span className="text-slate-400 font-normal lowercase">(opt)</span>
+                    </label>
+                    <div className="relative group">
+                      <label
+                        htmlFor="onboard-logo-input"
+                        className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-[#107e65] dark:hover:border-[#34d399] bg-slate-50 dark:bg-[#151c19] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative"
+                      >
+                        {logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoUrl}
+                            alt="Company logo preview"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-1.5 text-center text-slate-400 group-hover:text-[#107e65] dark:group-hover:text-[#34d399]">
+                            <Upload className="h-4 w-4 mb-0.5" />
+                            <span className="text-[9px] font-semibold leading-tight">Upload</span>
+                          </div>
+                        )}
+                      </label>
+                      <input
+                        id="onboard-logo-input"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      {logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setLogoUrl("")}
+                          className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-xs text-xs cursor-pointer"
+                          title="Remove logo"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    {logoError && <span className="text-[10px] text-rose-500">{logoError}</span>}
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                    This creates your organization and dedicated non-custodial Arc treasury.
-                  </p>
+
+                  {/* Company Name */}
+                  <div className="flex-1 w-full">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                      Company or Organization Name <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        autoFocus
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="e.g. Acme Corporation"
+                        className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                      This initializes your dedicated non-custodial Arc treasury.
+                    </p>
+                  </div>
                 </div>
 
+                {/* Industry & Country in 2 cols */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                      Industry Type
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <select
+                        value={industry}
+                        onChange={(e) => setIndustry(e.target.value)}
+                        className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                      >
+                        {INDUSTRY_OPTIONS.map((opt) => (
+                          <option key={opt.id} value={opt.label}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                      Country
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                      >
+                        {COUNTRY_OPTIONS.map((c) => (
+                          <option key={c.code} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Headquarters / Address */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Industry Type
+                    Headquarters / Billing Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
                   </label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <select
-                      value={industry}
-                      onChange={(e) => setIndustry(e.target.value)}
-                      className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
-                    >
-                      {INDUSTRY_OPTIONS.map((opt) => (
-                        <option key={opt.id} value={opt.label}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                    <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="e.g. 548 Market St, Suite 300, San Francisco, CA 94104"
+                      className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                    />
                   </div>
                 </div>
 
@@ -543,7 +673,7 @@ export function OnboardingFlow() {
                     </p>
                   </div>
 
-                  <div>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
                     <label
                       htmlFor="onboarding-fullpage-multi-pdf"
                       className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
@@ -557,9 +687,19 @@ export function OnboardingFlow() {
                         accept=".pdf,.csv,application/pdf,text/csv"
                         onChange={handleFileInputChange}
                         className="hidden"
-                        disabled={isUploading}
+                        disabled={isUploading || isSubmitting}
                       />
                     </label>
+
+                    <button
+                      type="button"
+                      onClick={handleSkipNow}
+                      disabled={isSubmitting}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
+                    >
+                      <span>Skip now</span>
+                      <ArrowRight className="h-3 w-3 text-slate-400" />
+                    </button>
                   </div>
 
                   {isUploading && (
@@ -727,10 +867,19 @@ export function OnboardingFlow() {
                     &larr; Back to Company Profile
                   </button>
 
-                  <div className="w-full sm:w-auto flex items-center gap-2">
+                  <div className="w-full sm:w-auto flex items-center justify-end gap-3">
                     <button
                       type="button"
-                      onClick={handleFinalSubmit}
+                      onClick={handleSkipNow}
+                      disabled={isSubmitting}
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer px-2 py-1"
+                    >
+                      Skip now
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFinalSubmit()}
                       disabled={isSubmitting}
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-md shadow-[#107e65]/20 transition-all disabled:opacity-50 cursor-pointer"
                     >

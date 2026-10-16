@@ -8,7 +8,9 @@ import {
   CheckCircle2,
   FileText,
   Files,
+  Globe,
   Loader2,
+  MapPin,
   Plus,
   Sparkles,
   Trash2,
@@ -19,7 +21,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import { getCurrentUser } from "@/lib/auth";
-import { INDUSTRY_OPTIONS } from "@/lib/constants";
+import { COUNTRY_OPTIONS, INDUSTRY_OPTIONS } from "@/lib/constants";
 import {
   DEFAULT_POLICY_CONFIG,
   SubscriptionRow,
@@ -110,9 +112,35 @@ export function FirstTimeOnboardingModal({
   const [userId, setUserId] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Step 1: Company Profile
+  // Step 1: Company Profile & Localization
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState(INDUSTRY_OPTIONS[0].label);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [country, setCountry] = useState<string>("United States");
+  const [logoError, setLogoError] = useState<string | null>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setLogoError("Please upload an image file (PNG, JPG, SVG, WebP)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError("Logo size should be under 2MB");
+      return;
+    }
+    setLogoError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setLogoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   // Step 2: Bills / Subscriptions
   const [subscriptions, setSubscriptions] = useState<SubscriptionRow[]>([]);
@@ -367,14 +395,12 @@ export function FirstTimeOnboardingModal({
     }
   };
 
-  const handleFinalSubmit = async () => {
-    if (subscriptions.length === 0) {
-      setSubmitError("Please import at least one bill or load the benchmark stack.");
-      return;
-    }
-
+  const handleFinalSubmit = async (overrideSubscriptions?: SubscriptionRow[]) => {
     setIsSubmitting(true);
     setSubmitError(null);
+
+    const rowsToSubmit =
+      overrideSubscriptions !== undefined ? overrideSubscriptions : subscriptions;
 
     try {
       const res = await fetch("/api/onboard", {
@@ -383,11 +409,14 @@ export function FirstTimeOnboardingModal({
         body: JSON.stringify({
           name: companyName.trim(),
           industry,
+          logo_url: logoUrl || undefined,
+          address: address.trim() || undefined,
+          country: country || undefined,
           treasury_balance: 50000,
           default_currency: "USDC",
           userId: userId || undefined,
           policy: DEFAULT_POLICY_CONFIG,
-          subscriptions,
+          subscriptions: rowsToSubmit,
         }),
       });
 
@@ -404,11 +433,17 @@ export function FirstTimeOnboardingModal({
       setTimeout(() => {
         setIsOpen(false);
         router.refresh();
-      }, 1500);
+      }, 1000);
     } catch (err) {
       setSubmitError((err as Error).message);
       setIsSubmitting(false);
     }
+  };
+
+  const handleSkipNow = () => {
+    setSubscriptions([]);
+    setUploadedFiles([]);
+    return handleFinalSubmit([]);
   };
 
   if (!isOpen) return null;
@@ -474,41 +509,133 @@ export function FirstTimeOnboardingModal({
               </p>
             </div>
           ) : step === 1 ? (
-            <form onSubmit={handleStep1Submit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Company or Organization Name
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Acme Corporation"
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
-                  />
+            <form onSubmit={handleStep1Submit} className="space-y-3.5">
+              {/* Logo & Company Name */}
+              <div className="flex flex-col sm:flex-row gap-3.5 items-start">
+                {/* Logo Upload & Preview */}
+                <div className="shrink-0 flex flex-col items-center sm:items-start gap-1">
+                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                    Logo <span className="text-slate-400 font-normal lowercase">(opt)</span>
+                  </label>
+                  <div className="relative group">
+                    <label
+                      htmlFor="modal-logo-input"
+                      className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-[#107e65] dark:hover:border-[#34d399] bg-slate-50 dark:bg-[#151c19] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative"
+                    >
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={logoUrl}
+                          alt="Company logo preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-1 text-center text-slate-400 group-hover:text-[#107e65] dark:group-hover:text-[#34d399]">
+                          <Upload className="h-3.5 w-3.5 mb-0.5" />
+                          <span className="text-[8px] font-semibold leading-tight">Upload</span>
+                        </div>
+                      )}
+                    </label>
+                    <input
+                      id="modal-logo-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    {logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setLogoUrl("")}
+                        className="absolute -top-1.5 -right-1.5 h-4.5 w-4.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-xs text-xs cursor-pointer"
+                        title="Remove logo"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
+                  {logoError && <span className="text-[9px] text-rose-500">{logoError}</span>}
+                </div>
+
+                {/* Company Name */}
+                <div className="flex-1 w-full">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Company or Organization Name <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. Acme Corporation"
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    Initializes your dedicated non-custodial Arc treasury.
+                  </p>
                 </div>
               </div>
 
+              {/* Industry & Country in 2 cols */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Industry Type
+                  </label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <select
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                    >
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.label}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Country
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.code} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Industry Type
+                  Headquarters / Billing Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <div className="relative">
-                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <select
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
+                  <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="e.g. 548 Market St, Suite 300, San Francisco, CA 94104"
                     className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
-                  >
-                    {INDUSTRY_OPTIONS.map((opt) => (
-                      <option key={opt.id} value={opt.label}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -563,7 +690,7 @@ export function FirstTimeOnboardingModal({
                   </p>
                 </div>
 
-                <div>
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
                   <label
                     htmlFor="onboarding-multi-pdf-input"
                     className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
@@ -577,9 +704,19 @@ export function FirstTimeOnboardingModal({
                       accept=".pdf,.csv,application/pdf,text/csv"
                       onChange={handleFileInputChange}
                       className="hidden"
-                      disabled={isUploading}
+                      disabled={isUploading || isSubmitting}
                     />
                   </label>
+
+                  <button
+                    type="button"
+                    onClick={handleSkipNow}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
+                  >
+                    <span>Skip now</span>
+                    <ArrowRight className="h-3 w-3 text-slate-400" />
+                  </button>
                 </div>
 
                 {isUploading && (
@@ -746,24 +883,40 @@ export function FirstTimeOnboardingModal({
                 >
                   &larr; Back to Profile
                 </button>
-                <button
-                  type="button"
-                  onClick={handleFinalSubmit}
-                  disabled={subscriptions.length === 0 || isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Creating Organization...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Complete Setup & Launch ({subscriptions.length})</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </button>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleSkipNow}
+                    disabled={isSubmitting}
+                    className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer px-2 py-1"
+                  >
+                    Skip now
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleFinalSubmit()}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Creating Organization...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {subscriptions.length > 0
+                            ? `Complete Setup & Launch (${subscriptions.length})`
+                            : "Launch Empty Dashboard"}
+                        </span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}

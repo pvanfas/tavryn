@@ -31,7 +31,9 @@ export async function getSession(): Promise<Session | null> {
 
   if (
     typeof document !== "undefined" &&
-    document.cookie.includes("sb-tavryn-auth-token")
+    document.cookie
+      .split(";")
+      .some((c) => c.trim() === "sb-tavryn-auth-token=demo-tavryn-session-token")
   ) {
     return {
       access_token: "demo-tavryn-session-token",
@@ -61,7 +63,9 @@ export async function getCurrentUser(): Promise<User | null> {
 
   if (
     typeof document !== "undefined" &&
-    document.cookie.includes("sb-tavryn-auth-token")
+    document.cookie
+      .split(";")
+      .some((c) => c.trim() === "sb-tavryn-auth-token=demo-tavryn-session-token")
   ) {
     return {
       id: "demo-user-001",

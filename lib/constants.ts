@@ -267,3 +267,33 @@ export const INDUSTRY_OPTIONS: readonly IndustryOption[] = [
   { id: "other", label: "Other" },
 ] as const;
 
+export interface CountryOption {
+  code: string;
+  name: string;
+}
+
+/** Supported countries for business profile and invoicing localization */
+export const COUNTRY_OPTIONS: readonly CountryOption[] = [
+  { code: "US", name: "United States" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "CA", name: "Canada" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "SG", name: "Singapore" },
+  { code: "IN", name: "India" },
+  { code: "AU", name: "Australia" },
+  { code: "JP", name: "Japan" },
+  { code: "CH", name: "Switzerland" },
+  { code: "NL", name: "Netherlands" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "IE", name: "Ireland" },
+  { code: "IL", name: "Israel" },
+  { code: "SE", name: "Sweden" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "BR", name: "Brazil" },
+  { code: "MX", name: "Mexico" },
+  { code: "other", name: "Other" },
+] as const;
+
+

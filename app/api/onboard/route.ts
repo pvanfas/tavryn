@@ -67,15 +67,40 @@ export async function POST(req: Request) {
     if (payload.industry) {
       insertData.industry = payload.industry;
     }
+    if (payload.logo_url) {
+      insertData.logo_url = payload.logo_url;
+    }
+    if (payload.address) {
+      insertData.address = payload.address;
+    }
+    if (payload.country) {
+      insertData.country = payload.country;
+    }
 
-    let { data: business, error: businessError } = await supabase
+    let business: {
+      id: string;
+      name: string;
+      logo_url?: string | null;
+      address?: string | null;
+      country?: string | null;
+    } | null = null;
+    let businessError: any = null;
+
+    const initialResult = await supabase
       .from("businesses")
       .insert(insertData)
-      .select("id, name")
+      .select("id, name, logo_url, address, country")
       .single();
 
-    if (businessError && businessError.message?.includes("industry")) {
-      delete insertData.industry;
+    business = initialResult.data;
+    businessError = initialResult.error;
+
+    if (businessError) {
+      if (businessError.message?.includes("industry")) delete insertData.industry;
+      if (businessError.message?.includes("logo_url")) delete insertData.logo_url;
+      if (businessError.message?.includes("address")) delete insertData.address;
+      if (businessError.message?.includes("country")) delete insertData.country;
+
       const retryResult = await supabase
         .from("businesses")
         .insert(insertData)

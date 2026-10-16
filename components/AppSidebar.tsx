@@ -248,8 +248,17 @@ export function AppSidebar({
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+            <div className="flex items-center gap-2 min-w-0">
+              {activeBusiness?.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={activeBusiness.logo_url}
+                  alt={activeBusiness.name || "Organization"}
+                  className="h-4 w-4 rounded-md object-cover shrink-0 border border-slate-200 dark:border-slate-700"
+                />
+              ) : (
+                <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
+              )}
               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                 {formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "Demo Co")}
               </span>

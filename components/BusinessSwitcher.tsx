@@ -13,6 +13,9 @@ export interface BusinessItem {
   treasury_balance: number | null;
   default_currency: string | null;
   wallet_address?: string | null;
+  logo_url?: string | null;
+  address?: string | null;
+  country?: string | null;
 }
 
 interface BusinessSwitcherProps {

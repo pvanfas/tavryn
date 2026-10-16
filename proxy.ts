@@ -35,10 +35,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for Supabase auth cookie (any sb-*-auth-token cookie)
+  // Check for Supabase auth cookie (direct sb-access-token or chunked sb-*-auth-token)
   const cookies = request.cookies.getAll();
   const hasAuthCookie = cookies.some(
-    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"),
+    (c) =>
+      c.name === "sb-access-token" ||
+      (c.name.startsWith("sb-") && c.name.includes("-auth-token")),
   );
 
   if (!hasAuthCookie) {

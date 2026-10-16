@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { extractAuthTokenFromCookies } from "@/lib/active-business";
 import { logger } from "@/lib/logger";
 import { getServiceSupabase } from "@/lib/supabase";
 
@@ -42,18 +43,15 @@ export async function getAuthUser(req: Request | NextRequest): Promise<AuthUser 
   // 2. Parse cookie header for session tokens
   const cookieHeader = req.headers.get("cookie") || "";
   if (cookieHeader) {
-    const cookies = Object.fromEntries(
-      cookieHeader.split(";").map((c) => {
-        const [k, ...v] = c.trim().split("=");
-        return [k, decodeURIComponent(v.join("="))];
-      }),
-    );
+    const cookiesList = cookieHeader.split(";").map((c) => {
+      const [k, ...v] = c.trim().split("=");
+      return { name: k, value: decodeURIComponent(v.join("=")) };
+    });
 
-    // Check standard Supabase access token cookies
-    const accessToken = cookies["sb-access-token"];
-    if (accessToken) {
+    const token = extractAuthTokenFromCookies(cookiesList);
+    if (token) {
       try {
-        const { data, error } = await supabase.auth.getUser(accessToken);
+        const { data, error } = await supabase.auth.getUser(token);
         if (!error && data?.user?.id) {
           return {
             userId: data.user.id,
@@ -63,33 +61,18 @@ export async function getAuthUser(req: Request | NextRequest): Promise<AuthUser 
       } catch {}
     }
 
-    // Check supabase chunked or project auth cookies (sb-*-auth-token)
-    for (const [key, val] of Object.entries(cookies)) {
-      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
-        try {
-          // If stored as JSON string [access_token, refresh_token]
-          const parsed = JSON.parse(val);
-          const rawToken = Array.isArray(parsed) ? parsed[0] : parsed?.access_token;
-          if (rawToken && typeof rawToken === "string") {
-            const { data, error } = await supabase.auth.getUser(rawToken);
-            if (!error && data?.user?.id) {
-              return {
-                userId: data.user.id,
-                email: data.user.email,
-              };
-            }
-          }
-        } catch {}
-
-        // Check if demo cookie
-        if (val === "demo-tavryn-session-token") {
-          return {
-            userId: "00000000-0000-0000-0000-000000000001",
-            email: "demo@tavryn.network",
-            isDemo: true,
-          };
-        }
-      }
+    // Check if explicit demo session cookie
+    const isDemo = cookiesList.some(
+      (c) =>
+        c.name === "sb-tavryn-auth-token" &&
+        c.value === "demo-tavryn-session-token",
+    );
+    if (isDemo) {
+      return {
+        userId: "00000000-0000-0000-0000-000000000001",
+        email: "demo@tavryn.network",
+        isDemo: true,
+      };
     }
   }
 
