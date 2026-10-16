@@ -158,68 +158,76 @@ function LandingPage({
           {/* Subtle Ambient Background Gradients */}
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Protocol Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121915] border border-slate-200/80 dark:border-slate-800/80 shadow-xs mb-8">
-              <span className="h-2 w-2 rounded-full bg-[#107e65] animate-pulse" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Autonomous Procurement • Arc & Circle Track
-              </span>
-            </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
+              {/* Left Column: Content */}
+              <div className="lg:col-span-7 z-10">
+                {/* Protocol Pill */}
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121915] border border-slate-200/80 dark:border-slate-800/80 shadow-xs mb-8">
+                  <span className="h-2 w-2 rounded-full bg-[#107e65] animate-pulse" />
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Autonomous Procurement • Arc & Circle Track
+                  </span>
+                </div>
 
-            {/* Main Catchphrase Headline */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15] sm:leading-[1.12]">
-              An open-source AI agent that turns spend inefficiencies into real
-              savings.
-            </h1>
+                {/* Main Catchphrase Headline */}
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.2] sm:leading-[1.16]">
+                  An open-source AI agent that turns spend inefficiencies into
+                  real savings.
+                </h1>
 
-            {/* Subtitle */}
-            <p className="mt-6 text-base sm:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
-              Tavryn autonomously monitors SaaS and cloud renewal cliffs,
-              negotiates multi-round concession curves, enforces deterministic
-              financial policy, and escrows USDC on Arc smart contracts until
-              vendor delivery is verified.
-            </p>
+                {/* Subtitle */}
+                <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl font-normal leading-relaxed">
+                  Tavryn autonomously monitors SaaS and cloud renewal cliffs,
+                  negotiates multi-round concession curves, enforces
+                  deterministic financial policy, and escrows USDC on Arc smart
+                  contracts until vendor delivery is verified.
+                </p>
 
-            {/* Primary Call-to-Action Buttons */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
-              <Link
-                id="hero-primary-cta"
-                href="/auth/login?demo=true"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-base font-bold shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-              >
-                <span>Try the demo</span>
-                <ArrowRight className="h-4 w-4 ml-0.5" />
-              </Link>
+                {/* Primary Call-to-Action Buttons */}
+                <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3.5 sm:gap-4">
+                  <Link
+                    id="hero-primary-cta"
+                    href="/auth/login?demo=true"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-base font-bold shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  >
+                    <span>Try the demo</span>
+                    <ArrowRight className="h-4 w-4 ml-0.5" />
+                  </Link>
 
-              <a
-                id="hero-video-cta"
-                href="#how-it-works"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
-              >
-                <PlayCircle className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
-                <span>Watch Video Walkthrough</span>
-              </a>
+                  <a
+                    id="hero-video-cta"
+                    href="#how-it-works"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
+                  >
+                    <PlayCircle className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
+                    <span>Watch the Video</span>
+                  </a>
 
-              <a
-                id="hero-github-cta"
-                href="https://github.com/pvanfas/tavryn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
-              >
-                <GithubIcon className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-                <span>GitHub Repo</span>
-              </a>
+                  <Link
+                    id="hero-metrics-cta"
+                    href="/public-metrics"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
+                  >
+                    <BarChart3 className="h-5 w-5" />
+                    <span>Live Metrics</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                id="hero-metrics-cta"
-                href="/public-metrics"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span>Public Metrics</span>
-              </Link>
+              {/* Right Column: desk-hero.png without card or borders, like a clipped bg */}
+              <div className="lg:col-span-5 relative mt-8 lg:mt-0 flex justify-center lg:justify-end select-none pointer-events-none">
+                <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-none lg:w-[110%] lg:-mr-6 xl:-mr-12">
+                  <Image
+                    src="/desk-hero.png"
+                    alt="Tavryn Autonomous Procurement Dashboard on iPad"
+                    width={1670}
+                    height={1662}
+                    priority
+                    className="w-full h-auto object-contain drop-shadow-2xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>

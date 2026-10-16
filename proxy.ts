@@ -27,7 +27,9 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/logo") ||
-    pathname.startsWith("/icon");
+    pathname.startsWith("/desk") ||
+    pathname.startsWith("/icon") ||
+    /\.(?:png|jpg|jpeg|gif|webp|svg|ico|csv)$/i.test(pathname);
 
   if (isPublic) {
     return NextResponse.next();
@@ -57,6 +59,6 @@ export const config = {
      * Match all request paths except static assets.
      * Auth check runs on all app routes.
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|logo\\.png|icon\\.png|sample-subscriptions\\.csv).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|csv)$).*)",
   ],
 };

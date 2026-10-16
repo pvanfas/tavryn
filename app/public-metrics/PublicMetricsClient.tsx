@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Bot,
   CheckCircle2,
-  Clock,
   ExternalLink,
   ShieldCheck,
   TrendingDown,
@@ -58,7 +57,10 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-[#0e1411]/80 border-b border-slate-200/60 dark:border-slate-800/60 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3 group cursor-pointer">
+          <Link
+            href="/"
+            className="flex items-center gap-3 group cursor-pointer"
+          >
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center p-1.5 shadow-xs group-hover:border-[#107e65]/50 transition-colors">
               <Image
                 src="/logo.png"
@@ -112,31 +114,21 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
         {/* Header Hero Banner */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-200/80 dark:border-slate-800/80">
           <div className="space-y-3 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Live Verified Only · Zero Demo/Simulated Data</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                Arc Chain ID 5042002
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <Clock className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                <span>Reconciled {liveTimestamp}</span>
-              </span>
-            </div>
-
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Verified Protocol Telemetry
             </h1>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-              Cryptographically verified macroeconomic telemetry from production SaaS contracts and live Circle USDC smart contract escrows on Arc Testnet. Shows non-sensitive verified volume only: zero simulated data, zero synthetic mocks, zero private tenant identifiers.
+              Cryptographically verified macroeconomic telemetry from production
+              SaaS contracts and live Circle USDC smart contract escrows on Arc
+              Testnet. Shows non-sensitive verified volume only: zero simulated
+              data, zero synthetic mocks, zero private tenant identifiers.
             </p>
           </div>
 
           <div className="px-4 py-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300 self-start lg:self-end">
-            <span className="font-bold">{metrics.businesses.realCount} Verified Production Organizations</span>
+            <span className="font-bold">
+              {metrics.businesses.realCount} Verified Production Organizations
+            </span>
           </div>
         </div>
 
@@ -158,14 +150,22 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-xs font-bold text-slate-400 font-mono">USDC</span>
+              <span className="text-xs font-bold text-slate-400 font-mono">
+                USDC
+              </span>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
               <span>
-                Released: <strong className="text-slate-700 dark:text-slate-300">${metrics.usdcVolume.released.toLocaleString()}</strong>
+                Released:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  ${metrics.usdcVolume.released.toLocaleString()}
+                </strong>
               </span>
               <span>
-                Refunded: <strong className="text-slate-700 dark:text-slate-300">${metrics.usdcVolume.refunded.toLocaleString()}</strong>
+                Refunded:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  ${metrics.usdcVolume.refunded.toLocaleString()}
+                </strong>
               </span>
             </div>
           </div>
@@ -192,10 +192,16 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
               <span>
-                Negotiated: <strong className="text-slate-700 dark:text-slate-300">${metrics.savings.negotiated.toLocaleString()}</strong>
+                Negotiated:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  ${metrics.savings.negotiated.toLocaleString()}
+                </strong>
               </span>
               <span>
-                Off-Chain: <strong className="text-slate-700 dark:text-slate-300">${metrics.savings.offChainSavings.toLocaleString()}</strong>
+                Off-Chain:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  ${metrics.savings.offChainSavings.toLocaleString()}
+                </strong>
               </span>
             </div>
           </div>
@@ -216,14 +222,22 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-xs font-bold text-slate-400 font-mono">USD</span>
+              <span className="text-xs font-bold text-slate-400 font-mono">
+                USD
+              </span>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
               <span>
-                Contracts: <strong className="text-slate-700 dark:text-slate-300">{metrics.contractsAndNegotiations.contractsTotal}</strong>
+                Contracts:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  {metrics.contractsAndNegotiations.contractsTotal}
+                </strong>
               </span>
               <span>
-                Optimized: <strong className="text-slate-700 dark:text-slate-300">{metrics.contractsAndNegotiations.contractsOptimized}</strong>
+                Optimized:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  {metrics.contractsAndNegotiations.contractsOptimized}
+                </strong>
               </span>
             </div>
           </div>
@@ -246,10 +260,16 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
               <span>
-                Dual-Reviews: <strong className="text-slate-700 dark:text-slate-300">{metrics.reviewer.totalReviews}</strong>
+                Dual-Reviews:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  {metrics.reviewer.totalReviews}
+                </strong>
               </span>
               <span>
-                Receipts: <strong className="text-slate-700 dark:text-slate-300">{metrics.receiptsCount}</strong>
+                Receipts:{" "}
+                <strong className="text-slate-700 dark:text-slate-300">
+                  {metrics.receiptsCount}
+                </strong>
               </span>
             </div>
           </div>
@@ -267,7 +287,8 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
                   Autonomous Governance &amp; Multi-Agent Velocity
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Deterministic code safeguards each LLM decision. All actions write to an append-only audit trail.
+                  Deterministic code safeguards each LLM decision. All actions
+                  write to an append-only audit trail.
                 </p>
               </div>
             </div>
@@ -279,7 +300,9 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0c120f] border border-slate-200/60 dark:border-slate-800/60">
-              <div className="text-xs font-semibold text-slate-500">Autonomous Decisions</div>
+              <div className="text-xs font-semibold text-slate-500">
+                Autonomous Decisions
+              </div>
               <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">
                 {metrics.governance.agentDecisionsCount}
               </div>
@@ -289,17 +312,22 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0c120f] border border-slate-200/60 dark:border-slate-800/60">
-              <div className="text-xs font-semibold text-slate-500">Dual-Agent Reviews</div>
+              <div className="text-xs font-semibold text-slate-500">
+                Dual-Agent Reviews
+              </div>
               <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">
                 {metrics.reviewer.totalReviews}
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
-                {metrics.reviewer.agreedCount} agreed · {metrics.reviewer.challengedCount} challenged
+                {metrics.reviewer.agreedCount} agreed ·{" "}
+                {metrics.reviewer.challengedCount} challenged
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0c120f] border border-slate-200/60 dark:border-slate-800/60">
-              <div className="text-xs font-semibold text-slate-500">Negotiation Velocity</div>
+              <div className="text-xs font-semibold text-slate-500">
+                Negotiation Velocity
+              </div>
               <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">
                 {metrics.efficiency.avgRoundsToClose} rounds
               </div>
@@ -309,12 +337,15 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0c120f] border border-slate-200/60 dark:border-slate-800/60">
-              <div className="text-xs font-semibold text-slate-500">Human Escalation Pass Rate</div>
+              <div className="text-xs font-semibold text-slate-500">
+                Human Escalation Pass Rate
+              </div>
               <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white mt-1">
                 {metrics.governance.humanApprovalRatePct}%
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
-                {metrics.governance.humanApprovedCount} approved · {metrics.governance.humanRejectedCount} rejected
+                {metrics.governance.humanApprovedCount} approved ·{" "}
+                {metrics.governance.humanRejectedCount} rejected
               </div>
             </div>
           </div>
@@ -331,7 +362,9 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
                 </h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Reconciled Arc Testnet transaction proofs. Displays recipient vendor and settlement parameters only; tenant identity remains anonymous.
+                Reconciled Arc Testnet transaction proofs. Displays recipient
+                vendor and settlement parameters only; tenant identity remains
+                anonymous.
               </p>
             </div>
 
@@ -356,7 +389,10 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {verifiedTransactions.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-8 text-center text-slate-400">
+                      <td
+                        colSpan={6}
+                        className="px-5 py-8 text-center text-slate-400"
+                      >
                         No verified settlements recorded yet.
                       </td>
                     </tr>
@@ -430,7 +466,12 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-4xl">
-            Tavryn operates on a strict separation of concerns: LLMs reason and negotiate with SaaS vendors, but only deterministic TypeScript code acts. Escrow smart contracts lock Circle USDC on Arc Testnet until deterministic vendor milestone verification passes. Gas is denominated exclusively in USDC, eliminating fee volatility and third-party token exposure.
+            Tavryn operates on a strict separation of concerns: LLMs reason and
+            negotiate with SaaS vendors, but only deterministic TypeScript code
+            acts. Escrow smart contracts lock Circle USDC on Arc Testnet until
+            deterministic vendor milestone verification passes. Gas is
+            denominated exclusively in USDC, eliminating fee volatility and
+            third-party token exposure.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -438,19 +479,25 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
               <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
                 Gas Currency
               </span>
-              <span className="text-slate-500">Native Circle USDC on Arc (No ETH or AVAX)</span>
+              <span className="text-slate-500">
+                Native Circle USDC on Arc (No ETH or AVAX)
+              </span>
             </div>
             <div className="p-3.5 rounded-xl bg-white dark:bg-[#121915] border border-slate-200/70 dark:border-slate-800/70 text-xs">
               <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
                 Finality
               </span>
-              <span className="text-slate-500">Sub-second atomic escrow releases</span>
+              <span className="text-slate-500">
+                Sub-second atomic escrow releases
+              </span>
             </div>
             <div className="p-3.5 rounded-xl bg-white dark:bg-[#121915] border border-slate-200/70 dark:border-slate-800/70 text-xs">
               <span className="font-bold text-slate-900 dark:text-white block mb-0.5">
                 Cryptographic Receipts
               </span>
-              <span className="text-slate-500">SHA-256 canonical hash verification</span>
+              <span className="text-slate-500">
+                SHA-256 canonical hash verification
+              </span>
             </div>
           </div>
         </section>
@@ -462,7 +509,8 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
               Ready to automate your enterprise procurement?
             </h3>
             <p className="text-sm text-emerald-200/80">
-              Set deterministic policy ceilings, let autonomous agents negotiate renewals, and settle vendor invoices via Arc USDC escrow.
+              Set deterministic policy ceilings, let autonomous agents negotiate
+              renewals, and settle vendor invoices via Arc USDC escrow.
             </p>
           </div>
 
@@ -487,14 +535,22 @@ export function PublicMetricsClient({ metrics }: PublicMetricsClientProps) {
       <footer className="border-t border-slate-200/60 dark:border-slate-800/60 py-8 bg-white/50 dark:bg-[#0c120f]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <span>© {new Date().getFullYear()} Tavryn. Built on Arc + Circle.</span>
+            <span>
+              © {new Date().getFullYear()} Tavryn. Built on Arc + Circle.
+            </span>
           </div>
 
           <div className="flex items-center gap-6 font-semibold">
-            <Link href="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+            <Link
+              href="/"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
               Home
             </Link>
-            <Link href="/dashboard" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+            <Link
+              href="/dashboard"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
               Workspace
             </Link>
             <a
