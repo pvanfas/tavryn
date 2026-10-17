@@ -9,6 +9,12 @@ import { logAgentAction } from "@/lib/tools/audit";
 
 const UpdateSettingsSchema = z.object({
   action: z.enum(["update", "test_webhook"]).default("update"),
+  name: z.string().trim().min(2).optional(),
+  display_name: z.string().trim().optional(),
+  industry: z.string().trim().optional(),
+  logo_url: z.string().trim().optional().or(z.literal("")),
+  address: z.string().trim().optional().or(z.literal("")),
+  country: z.string().trim().optional().or(z.literal("")),
   webhook_url: z.string().url().nullable().optional().or(z.literal("")),
   policy: z
     .object({
@@ -41,7 +47,7 @@ export async function GET(
     const { data: business, error: bError } = await supabase
       .from("businesses")
       .select(
-        "id, name, wallet_address, default_currency, is_real, treasury_balance, webhook_url, created_at",
+        "id, name, wallet_address, default_currency, is_real, treasury_balance, webhook_url, created_at, logo_url, address, country, industry",
       )
       .eq("id", businessId)
       .maybeSingle();
@@ -100,20 +106,74 @@ export async function PUT(
       return apiError("Validation failed", 400, validation.error.format());
     }
 
-    const { webhook_url, policy } = validation.data;
+    const {
+      webhook_url,
+      policy,
+      name,
+      display_name,
+      industry,
+      logo_url,
+      address,
+      country,
+    } = validation.data;
     const supabase = getServiceSupabase();
 
-    // 1. Update business webhook_url
+    // 1. Update business details
+    const bUpdates: Record<string, any> = {};
     if (webhook_url !== undefined) {
-      const cleanUrl = webhook_url === "" ? null : webhook_url;
+      bUpdates.webhook_url = webhook_url === "" ? null : webhook_url;
+    }
+    if (name !== undefined) {
+      bUpdates.name = name;
+    }
+    if (industry !== undefined) {
+      bUpdates.industry = industry;
+    }
+    if (logo_url !== undefined) {
+      bUpdates.logo_url = logo_url;
+    }
+    if (address !== undefined) {
+      bUpdates.address = address;
+    }
+    if (country !== undefined) {
+      bUpdates.country = country;
+    }
+
+    if (Object.keys(bUpdates).length > 0) {
       const { error: bErr } = await supabase
         .from("businesses")
-        .update({ webhook_url: cleanUrl })
+        .update(bUpdates)
         .eq("id", businessId);
 
       if (bErr) {
-        logger.error("Failed to update business webhook URL", bErr);
+        logger.error("Failed to update business settings", bErr);
         throw bErr;
+      }
+    }
+
+    // 1b. Update user display_name and company in Supabase Auth if provided
+    if (authCheck.user?.userId && (display_name || name)) {
+      const targetDisplayName = display_name || name;
+      try {
+        const { data: uData } = await supabase.auth.admin.getUserById(
+          authCheck.user.userId,
+        );
+        const curMeta = uData?.user?.user_metadata || {};
+        await supabase.auth.admin.updateUserById(authCheck.user.userId, {
+          user_metadata: {
+            ...curMeta,
+            name: targetDisplayName,
+            full_name: targetDisplayName,
+            display_name: targetDisplayName,
+            company: name || curMeta.company,
+            business_name: name || curMeta.business_name,
+          },
+        });
+      } catch (userErr) {
+        logger.warn(
+          "Failed to update auth user display_name in settings",
+          userErr,
+        );
       }
     }
 

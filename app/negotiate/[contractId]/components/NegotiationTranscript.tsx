@@ -37,7 +37,7 @@ export function NegotiationTranscript({
 
       {sortedRoundNumbers.length === 0 ? (
         <div className="py-10 text-center text-xs font-medium text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-          No rounds exchanged yet. Use either the Real Vendor email outreach or
+          No rounds exchanged yet. Use either the Manual email outreach or
           Autonomous Rounds above.
         </div>
       ) : (

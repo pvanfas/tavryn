@@ -4,17 +4,21 @@ import {
   AlertCircle,
   AlertTriangle,
   Bell,
+  Briefcase,
   Building2,
   Check,
   CheckCircle2,
   Copy,
   ExternalLink,
+  Globe,
   Loader2,
   Mail,
+  MapPin,
   Save,
   Send,
   ShieldCheck,
   Trash2,
+  User,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +29,11 @@ import { AppShell } from "@/components/AppShell";
 import { BusinessItem } from "@/components/BusinessSwitcher";
 import { clearAuthCookie, getBrowserSupabase } from "@/lib/auth";
 import { ARC_CONFIG } from "@/lib/circle";
-import { DEV_TREASURY_ADDRESS } from "@/lib/constants";
+import {
+  COUNTRY_OPTIONS,
+  DEV_TREASURY_ADDRESS,
+  INDUSTRY_OPTIONS,
+} from "@/lib/constants";
 
 export interface PolicyState {
   max_auto_transaction: number;
@@ -43,6 +51,10 @@ export interface BusinessState {
   is_real: boolean;
   treasury_balance: number;
   webhook_url: string | null;
+  logo_url?: string | null;
+  address?: string | null;
+  country?: string | null;
+  industry?: string | null;
 }
 
 interface SettingsClientProps {
@@ -77,6 +89,15 @@ export function SettingsClient({
   const [business, setBusiness] = useState<BusinessState | null>(
     initialBusiness,
   );
+  const [bizName, setBizName] = useState(initialBusiness?.name || "");
+  const [operatorDisplayName, setOperatorDisplayName] = useState("");
+  const [address, setAddress] = useState(initialBusiness?.address || "");
+  const [country, setCountry] = useState(
+    initialBusiness?.country || "United States",
+  );
+  const [industry, setIndustry] = useState(
+    initialBusiness?.industry || INDUSTRY_OPTIONS[0].label,
+  );
   const [webhookUrl, setWebhookUrl] = useState(
     initialBusiness?.webhook_url || "",
   );
@@ -85,8 +106,23 @@ export function SettingsClient({
   // Sync state if initial props change (e.g., when switching active business)
   useEffect(() => {
     setBusiness(initialBusiness);
+    setBizName(initialBusiness?.name || "");
+    setAddress(initialBusiness?.address || "");
+    setCountry(initialBusiness?.country || "United States");
+    setIndustry(initialBusiness?.industry || INDUSTRY_OPTIONS[0].label);
     setWebhookUrl(initialBusiness?.webhook_url || "");
     setPolicy(initialPolicy);
+
+    try {
+      const supabase = getBrowserSupabase();
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) {
+          const meta = data.user.user_metadata || {};
+          const dn = meta.display_name || meta.full_name || meta.name;
+          if (dn) setOperatorDisplayName(dn);
+        }
+      });
+    } catch {}
   }, [initialBusiness?.id, initialPolicy]);
 
   const handleCopy = (text: string, field: string) => {
@@ -126,6 +162,11 @@ export function SettingsClient({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: bizName.trim() || undefined,
+          display_name: operatorDisplayName.trim() || undefined,
+          address: address.trim() || undefined,
+          country: country || undefined,
+          industry: industry || undefined,
           webhook_url: webhookUrl.trim() || "",
           policy,
         }),
@@ -136,7 +177,9 @@ export function SettingsClient({
         throw new Error(errJson.error || "Failed to update settings");
       }
 
-      setSuccessMsg("Settings and deterministic policy updated successfully.");
+      setSuccessMsg(
+        "Organization profile, settings, and deterministic policy updated successfully.",
+      );
       setTimeout(() => setSuccessMsg(null), 4000);
       router.refresh();
     } catch (err) {
@@ -306,6 +349,117 @@ export function SettingsClient({
         )}
 
         <form onSubmit={handleSave} className="space-y-7">
+          {/* Section 0: Organization Profile Card */}
+          <div
+            id="organization-profile"
+            className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-4 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] space-y-5"
+          >
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800/70">
+              <div className="h-8 w-8 rounded-xl bg-[#107e65]/10 flex items-center justify-center text-[#107e65]">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Organization Profile
+                </h2>
+                <p className="text-[11px] text-slate-500">
+                  Update your organization name, operator display name, and localization details
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Company / Organization Name
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={bizName}
+                    onChange={(e) => setBizName(e.target.value)}
+                    placeholder="e.g. Acme Corporation"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Operator Display Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={operatorDisplayName}
+                    onChange={(e) => setOperatorDisplayName(e.target.value)}
+                    placeholder="e.g. Alex Morgan"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Industry Type
+                </label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <select
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                  >
+                    {INDUSTRY_OPTIONS.map((opt) => (
+                      <option key={opt.id} value={opt.label}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Country
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                  >
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <option key={c.code} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Headquarters / Billing Address
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="e.g. 548 Market St, Suite 300, San Francisco, CA 94104"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Section 1: Arc Treasury Wallet Card */}
           <div
             id="treasury"

@@ -31,24 +31,14 @@ export async function getCircleGatewayUnifiedBalance(
   walletAddress?: string | null,
   activeTreasury: number = 42850,
 ): Promise<CircleGatewayUnifiedBalanceResult> {
-  // Reuse activeTreasury if provided, or query live on-chain balance on Arc
+  // Ground-truth Arc treasury balance
   let arcLiveBalance = activeTreasury > 0 ? activeTreasury : 0;
   if (arcLiveBalance === 0 && walletAddress && walletAddress.startsWith("0x")) {
     arcLiveBalance = await getArcUsdcBalance(walletAddress);
   }
 
-  // If live on-chain balance on Arc is zero or test wallet, blend with active treasury
-  const arcEffectiveBalance =
-    arcLiveBalance > 0 ? arcLiveBalance : Math.round(activeTreasury * 0.45);
-  const baseSepoliaBalance = Math.round(activeTreasury * 0.35);
-  const ethSepoliaBalance = Math.round(activeTreasury * 0.15);
-  const solanaDevnetBalance = Math.round(activeTreasury * 0.05);
-
-  const totalUnifiedUsdc =
-    arcEffectiveBalance +
-    baseSepoliaBalance +
-    ethSepoliaBalance +
-    solanaDevnetBalance;
+  const arcEffectiveBalance = arcLiveBalance > 0 ? arcLiveBalance : activeTreasury;
+  const totalUnifiedUsdc = arcEffectiveBalance;
 
   return {
     totalUnifiedUsdc,
@@ -70,29 +60,29 @@ export async function getCircleGatewayUnifiedBalance(
       {
         chain: "Base Sepolia",
         chainId: 84532,
-        balance: baseSepoliaBalance,
-        availableForGatewayMint: baseSepoliaBalance,
+        balance: 0,
+        availableForGatewayMint: 0,
         fastFinalityLatencyMs: 450,
         explorerUrl: "https://sepolia.basescan.org",
-        status: "active",
+        status: "standby",
       },
       {
         chain: "Ethereum Sepolia",
         chainId: 11155111,
-        balance: ethSepoliaBalance,
-        availableForGatewayMint: ethSepoliaBalance,
+        balance: 0,
+        availableForGatewayMint: 0,
         fastFinalityLatencyMs: 490,
         explorerUrl: "https://sepolia.etherscan.io",
-        status: "active",
+        status: "standby",
       },
       {
         chain: "Solana Devnet",
         chainId: "devnet",
-        balance: solanaDevnetBalance,
-        availableForGatewayMint: solanaDevnetBalance,
+        balance: 0,
+        availableForGatewayMint: 0,
         fastFinalityLatencyMs: 400,
         explorerUrl: "https://explorer.solana.com/?cluster=devnet",
-        status: "active",
+        status: "standby",
       },
     ],
   };

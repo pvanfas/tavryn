@@ -118,6 +118,7 @@ export const OnboardBusinessPayloadSchema = z.object({
   address: z.string().trim().optional().or(z.literal("")),
   country: z.string().trim().optional().or(z.literal("")),
   userId: z.string().uuid().optional(),
+  user_display_name: z.string().trim().optional(),
   webhook_url: z.string().url().optional().or(z.literal("")),
   policy: PolicyConfigSchema,
   subscriptions: z

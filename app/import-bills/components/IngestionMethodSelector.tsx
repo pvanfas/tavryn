@@ -21,7 +21,8 @@ interface IngestionMethodSelectorProps {
   uploadProgress: number;
   importError: string | null;
   importSuccess: string | null;
-  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFilesSelected?: (files: File[]) => void;
   manualVendor: string;
   setManualVendor: (s: string) => void;
   manualService: string;
@@ -47,6 +48,7 @@ export function IngestionMethodSelector({
   importError,
   importSuccess,
   onFileUpload,
+  onFilesSelected,
   manualVendor,
   setManualVendor,
   manualService,
@@ -62,6 +64,34 @@ export function IngestionMethodSelector({
   manualErrors,
   onAddManual,
 }: IngestionMethodSelectorProps) {
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const droppedFiles = Array.from(e.dataTransfer.files || []);
+    if (droppedFiles.length > 0) {
+      if (onFilesSelected) {
+        onFilesSelected(droppedFiles);
+      } else if (onFileUpload) {
+        onFileUpload({ target: { files: e.dataTransfer.files } } as any);
+      }
+    }
+  };
+
   return (
     <div className="space-y-4 pb-6 border-b border-slate-100 dark:border-slate-800">
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -103,21 +133,40 @@ export function IngestionMethodSelector({
       {/* Mode 1: Import Statement CSV or Invoice PDF/Image */}
       {ingestMode === "statement_invoice" && (
         <div className="space-y-3">
-          <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl hover:bg-slate-50/50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors text-center relative overflow-hidden group">
+          <label
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all text-center relative overflow-hidden group ${
+              isDragging
+                ? "border-[#107e65] bg-emerald-500/10 dark:bg-emerald-950/30 ring-2 ring-[#107e65]/40 scale-[1.01]"
+                : "border-slate-300 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+            }`}
+          >
             <UploadCloud className="h-9 w-9 text-[#107e65] mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
               {fileName
-                ? `File Selected: ${fileName}`
-                : "Drop your bank statement (CSV) or invoice (PDF, PNG, JPG) here"}
+                ? `Files Selected: ${fileName}`
+                : "Drop your bank statements (CSV) or invoices (PDF, PNG, JPG) here"}
             </span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              Max 10 MB &bull; Card digits and account numbers are strictly
-              scrubbed in-memory
+              Multi-file select supported &bull; Max 10 MB per file &bull; Card digits and account numbers scrubbed in-memory
             </span>
             <input
               type="file"
+              multiple
               accept=".csv,.pdf,.png,.jpg,.jpeg,text/csv,application/pdf,image/*"
-              onChange={onFileUpload}
+              onChange={(e) => {
+                const selected = Array.from(e.target.files || []);
+                if (selected.length > 0) {
+                  if (onFilesSelected) {
+                    onFilesSelected(selected);
+                  } else if (onFileUpload) {
+                    onFileUpload(e);
+                  }
+                }
+              }}
               className="hidden"
             />
 
@@ -125,7 +174,7 @@ export function IngestionMethodSelector({
               <div className="absolute inset-0 bg-white/90 dark:bg-[#111714]/90 flex flex-col items-center justify-center p-6 space-y-2">
                 <Loader2 className="h-6 w-6 animate-spin text-[#107e65]" />
                 <span className="text-xs font-bold text-slate-900 dark:text-white">
-                  Analyzing recurring charges and extracting fields...
+                  Analyzing documents and extracting recurring renewals...
                 </span>
                 <div className="w-48 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                   <div

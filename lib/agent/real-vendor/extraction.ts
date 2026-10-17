@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { getAgentLanguageModel } from "@/lib/agent/provider";
+import { getAgentLanguageModel, isLiveLLMConfigured } from "@/lib/agent/provider";
 
 import { VendorReplyExtraction, VendorReplyExtractionSchema } from "./types";
 
@@ -195,11 +195,7 @@ export async function extractTermsFromVendorReplyAsync(
   baselinePrice: number,
 ): Promise<VendorReplyExtraction> {
   const provider = (process.env.LLM_PROVIDER || "mock").toLowerCase();
-  const hasKey = Boolean(
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.LLM_API_KEY,
-  );
+  const hasKey = isLiveLLMConfigured();
 
   if (hasKey && provider !== "mock") {
     try {

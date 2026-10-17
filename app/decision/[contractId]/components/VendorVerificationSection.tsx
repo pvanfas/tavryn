@@ -59,22 +59,27 @@ export function VendorVerificationSection({
           </BodySmall>
         </div>
 
-        {/* Tamper Simulator Selector */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => {
-              onSelectTamper(null);
-              onRunVerification(null, "verify");
-            }}
-            className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
-              selectedTamper === null
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            Exact Match
-          </button>
+        {/* Tamper Test Suite Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full sm:w-auto">
+          <span className="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">
+            Test Harness:
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTamper(null);
+                onRunVerification(null, "verify");
+              }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                selectedTamper === null
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Test standard agreement verification where document terms match negotiation exactly"
+            >
+              Exact Match
+            </button>
           <button
             type="button"
             onClick={() => {
@@ -89,20 +94,22 @@ export function VendorVerificationSection({
           >
             Tamper: Price
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              onSelectTamper("seats");
-              onRunVerification("seats", "verify");
-            }}
-            className={`flex-1 sm:flex-none text-center px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all ${
-              selectedTamper === "seats"
-                ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            Tamper: Seats
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTamper("seats");
+                onRunVerification("seats", "verify");
+              }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                selectedTamper === "seats"
+                  ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 font-bold"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title="Test tampering seats to verify the agent disputes the escrow"
+            >
+              Tamper: Seats
+            </button>
+          </div>
         </div>
       </div>
 

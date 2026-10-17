@@ -29,18 +29,18 @@ export function FundingResultCard({ fundingResult }: FundingResultCardProps) {
         </div>
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-            Organization Provisioned Successfully
+            Bills &amp; Subscriptions Imported Successfully
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Created <strong>{fundingResult.businessName}</strong> with{" "}
-            {fundingResult.contractsCount} verified contracts
+            Imported <strong>{fundingResult.contractsCount}</strong> verified contracts into{" "}
+            <strong>{fundingResult.businessName}</strong>
           </p>
         </div>
       </div>
 
       <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 space-y-3">
         <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Provisioned Arc Treasury Wallet
+          Active Arc Treasury Wallet
         </span>
         <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-xs">
           <span className="truncate text-slate-800 dark:text-slate-200">
@@ -61,10 +61,17 @@ export function FundingResultCard({ fundingResult }: FundingResultCardProps) {
         </div>
       </div>
 
-      <div className="flex justify-end pt-2">
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <Link
+          href="/contracts"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold shadow-2xs transition-colors"
+        >
+          <span>View Contracts Ledger</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
         >
           <span>Go to Overview</span>
           <ArrowRight className="h-3.5 w-3.5" />

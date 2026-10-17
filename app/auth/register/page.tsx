@@ -15,6 +15,7 @@ import { OAuthButtons } from "@/components/OAuthButtons";
 import { getBrowserSupabase } from "@/lib/auth";
 
 function RegisterForm() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,10 +40,16 @@ function RegisterForm() {
     setLoading(true);
     try {
       const supabase = getBrowserSupabase();
+      const trimmedName = fullName.trim();
       const { error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
+          data: {
+            name: trimmedName || undefined,
+            full_name: trimmedName || undefined,
+            display_name: trimmedName || undefined,
+          },
           emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
@@ -110,6 +117,24 @@ function RegisterForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="reg-name"
+              className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+            >
+              Full Name / Display Name
+            </label>
+            <input
+              id="reg-name"
+              type="text"
+              autoComplete="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="e.g. Alex Morgan"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-[#107e65]/25 focus:border-[#107e65] transition-all"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="reg-email"

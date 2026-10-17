@@ -42,11 +42,10 @@ export async function POST(req: Request) {
       Boolean(process.env.NODE_TEST_CONTEXT) ||
       Boolean(process.env.CI);
 
+    let isDevFallback = false;
     if (!resolvedUserId && isTestOrDev) {
-      const { data: usersList } = await supabase.auth.admin.listUsers();
-      if (usersList?.users?.length) {
-        resolvedUserId = usersList.users[0].id;
-      }
+      isDevFallback = true;
+      resolvedUserId = "00000000-0000-0000-0000-000000000001";
     }
 
     if (!resolvedUserId) {
@@ -56,25 +55,30 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Create Real Business (is_real = true)
-    const insertData: Record<string, any> = {
-      name: payload.name,
-      is_real: true,
-      default_currency: payload.default_currency || "USDC",
-      treasury_balance: payload.treasury_balance,
-      webhook_url: payload.webhook_url || null,
-    };
-    if (payload.industry) {
-      insertData.industry = payload.industry;
-    }
-    if (payload.logo_url) {
-      insertData.logo_url = payload.logo_url;
-    }
-    if (payload.address) {
-      insertData.address = payload.address;
-    }
-    if (payload.country) {
-      insertData.country = payload.country;
+    // 1. Check if user already owns an existing real business to update instead of creating duplicates
+    // (Only allowed for explicit authenticated requests, never unauthenticated dev fallback)
+    let existingBusinessId: string | null = null;
+    if (!isDevFallback) {
+      const { data: userMemberships } = await supabase
+        .from("business_members")
+        .select("business_id, role")
+        .eq("user_id", resolvedUserId)
+        .eq("role", "owner");
+
+      if (userMemberships && userMemberships.length > 0) {
+      const { data: realBusinesses } = await supabase
+        .from("businesses")
+        .select("id, name, wallet_address")
+        .in("id", userMemberships.map((m) => m.business_id))
+        .eq("is_real", true)
+        .not("name", "ilike", "[Deleted%")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+        if (realBusinesses && realBusinesses.length > 0) {
+          existingBusinessId = realBusinesses[0].id;
+        }
+      }
     }
 
     let business: {
@@ -83,35 +87,80 @@ export async function POST(req: Request) {
       logo_url?: string | null;
       address?: string | null;
       country?: string | null;
+      wallet_address?: string | null;
     } | null = null;
     let businessError: any = null;
 
-    const initialResult = await supabase
-      .from("businesses")
-      .insert(insertData)
-      .select("id, name, logo_url, address, country")
-      .single();
+    if (existingBusinessId) {
+      const updateData: Record<string, any> = {
+        name: payload.name,
+        is_real: true,
+        default_currency: payload.default_currency || "USDC",
+        treasury_balance: payload.treasury_balance,
+      };
+      if (payload.industry !== undefined) updateData.industry = payload.industry;
+      if (payload.logo_url !== undefined) updateData.logo_url = payload.logo_url;
+      if (payload.address !== undefined) updateData.address = payload.address;
+      if (payload.country !== undefined) updateData.country = payload.country;
+      if (payload.webhook_url !== undefined) updateData.webhook_url = payload.webhook_url || null;
 
-    business = initialResult.data;
-    businessError = initialResult.error;
+      const updateResult = await supabase
+        .from("businesses")
+        .update(updateData)
+        .eq("id", existingBusinessId)
+        .select("id, name, logo_url, address, country, wallet_address")
+        .single();
 
-    if (businessError) {
-      if (businessError.message?.includes("industry")) delete insertData.industry;
-      if (businessError.message?.includes("logo_url")) delete insertData.logo_url;
-      if (businessError.message?.includes("address")) delete insertData.address;
-      if (businessError.message?.includes("country")) delete insertData.country;
+      business = updateResult.data;
+      businessError = updateResult.error;
+    } else {
+      const insertData: Record<string, any> = {
+        name: payload.name,
+        is_real: true,
+        default_currency: payload.default_currency || "USDC",
+        treasury_balance: payload.treasury_balance,
+        webhook_url: payload.webhook_url || null,
+      };
+      if (payload.industry) {
+        insertData.industry = payload.industry;
+      }
+      if (payload.logo_url) {
+        insertData.logo_url = payload.logo_url;
+      }
+      if (payload.address) {
+        insertData.address = payload.address;
+      }
+      if (payload.country) {
+        insertData.country = payload.country;
+      }
 
-      const retryResult = await supabase
+      const initialResult = await supabase
         .from("businesses")
         .insert(insertData)
-        .select("id, name")
+        .select("id, name, logo_url, address, country, wallet_address")
         .single();
-      business = retryResult.data;
-      businessError = retryResult.error;
+
+      business = initialResult.data;
+      businessError = initialResult.error;
+
+      if (businessError) {
+        if (businessError.message?.includes("industry")) delete insertData.industry;
+        if (businessError.message?.includes("logo_url")) delete insertData.logo_url;
+        if (businessError.message?.includes("address")) delete insertData.address;
+        if (businessError.message?.includes("country")) delete insertData.country;
+
+        const retryResult = await supabase
+          .from("businesses")
+          .insert(insertData)
+          .select("id, name, wallet_address")
+          .single();
+        business = retryResult.data;
+        businessError = retryResult.error;
+      }
     }
 
     if (businessError || !business) {
-      logger.error("Failed to insert business", businessError);
+      logger.error("Failed to save business", businessError);
       return apiError(
         `Database error: ${businessError?.message || "Failed to create business"}`,
         500,
@@ -119,47 +168,75 @@ export async function POST(req: Request) {
     }
 
     // 1b. Associate User with Business as Owner IMMEDIATELY (Atomic ownership guarantee)
-    const { error: memberError } = await supabase
-      .from("business_members")
-      .insert({
-        business_id: business.id,
-        user_id: resolvedUserId,
-        role: "owner",
-      });
+    if (!existingBusinessId) {
+      const { error: memberError } = await supabase
+        .from("business_members")
+        .insert({
+          business_id: business.id,
+          user_id: resolvedUserId,
+          role: "owner",
+        });
 
-    if (memberError) {
-      logger.error("Failed to map business member, aborting business creation", memberError);
-      // Clean up orphaned business immediately
-      await supabase.from("businesses").delete().eq("id", business.id);
-      return apiError(
-        `Failed to establish organization ownership: ${memberError.message}`,
-        500,
-      );
+      if (memberError) {
+        logger.error("Failed to map business member, aborting business creation", memberError);
+        // Clean up orphaned business immediately
+        await supabase.from("businesses").delete().eq("id", business.id);
+        return apiError(
+          `Failed to establish organization ownership: ${memberError.message}`,
+          500,
+        );
+      }
     }
 
-    // 1c. Create Distinct Arc Treasury Wallet (Guarantees distinct wallet per business, zero sharing)
-    let treasuryAddress: string;
+    // 1c. Synchronize Display Name and Company in Supabase Auth (auth.users user_metadata)
+    const userDisplayName = payload.user_display_name || payload.name;
     try {
-      const walletResult = await createTreasuryWallet({
-        businessId: business.id,
-        businessName: business.name,
+      const { data: userData } = await supabase.auth.admin.getUserById(resolvedUserId);
+      const existingMeta = userData?.user?.user_metadata || {};
+      await supabase.auth.admin.updateUserById(resolvedUserId, {
+        user_metadata: {
+          ...existingMeta,
+          name: userDisplayName,
+          full_name: userDisplayName,
+          display_name: userDisplayName,
+          company: payload.name,
+          business_name: payload.name,
+        },
       });
-      treasuryAddress = walletResult.address;
-    } catch (walletErr) {
-      // Deterministic per-business unique fallback — NEVER shared DEV_TREASURY_ADDRESS
-      const { default: crypto } = await import("crypto");
-      const hash = crypto
-        .createHash("sha256")
-        .update(`tavryn-treasury-${business.id}`)
-        .digest("hex");
-      treasuryAddress = `0x${hash.slice(0, 40)}`;
-      logger.warn("Per-business fallback treasury address generated", { businessId: business.id, treasuryAddress });
+    } catch (metaErr) {
+      logger.warn("Failed to sync user metadata display_name", metaErr);
     }
 
-    await supabase
-      .from("businesses")
-      .update({ wallet_address: treasuryAddress })
-      .eq("id", business.id);
+    // 1d. Create or reuse Distinct Arc Treasury Wallet
+    let treasuryAddress: string;
+    if (business.wallet_address && business.wallet_address.startsWith("0x")) {
+      treasuryAddress = business.wallet_address;
+    } else {
+      try {
+        const walletResult = await createTreasuryWallet({
+          businessId: business.id,
+          businessName: business.name,
+        });
+        treasuryAddress = walletResult.address;
+      } catch (walletErr) {
+        // Deterministic per-business unique fallback — NEVER shared DEV_TREASURY_ADDRESS
+        const { default: crypto } = await import("crypto");
+        const hash = crypto
+          .createHash("sha256")
+          .update(`tavryn-treasury-${business.id}`)
+          .digest("hex");
+        treasuryAddress = `0x${hash.slice(0, 40)}`;
+        logger.warn("Per-business fallback treasury address generated", {
+          businessId: business.id,
+          treasuryAddress,
+        });
+      }
+
+      await supabase
+        .from("businesses")
+        .update({ wallet_address: treasuryAddress })
+        .eq("id", business.id);
+    }
 
     // 2. Resolve Vendors (is_simulated = false for real onboarding)
     let totalSpend = 0;
@@ -234,20 +311,23 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Create Policy
-    const { error: policyError } = await supabase.from("policies").insert({
-      business_id: business.id,
-      max_auto_transaction: payload.policy.max_auto_transaction,
-      min_savings: payload.policy.min_savings,
-      human_approval_required_above:
-        payload.policy.human_approval_required_above,
-      allowed_categories: payload.policy.allowed_categories,
-      category_budgets: {
-        software: 25000,
-        cloud: 50000,
-        contractors: 25000,
+    // 4. Create or Update Policy
+    const { error: policyError } = await supabase.from("policies").upsert(
+      {
+        business_id: business.id,
+        max_auto_transaction: payload.policy.max_auto_transaction,
+        min_savings: payload.policy.min_savings,
+        human_approval_required_above:
+          payload.policy.human_approval_required_above,
+        allowed_categories: payload.policy.allowed_categories,
+        category_budgets: {
+          software: 25000,
+          cloud: 50000,
+          contractors: 25000,
+        },
       },
-    });
+      { onConflict: "business_id" },
+    );
 
     if (policyError) {
       logger.error("Failed to insert policy", policyError);

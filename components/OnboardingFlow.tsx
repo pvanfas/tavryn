@@ -16,6 +16,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  User,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -104,11 +105,31 @@ export function OnboardingFlow() {
 
   // Step 1: Company Profile & Localization
   const [companyName, setCompanyName] = useState("");
+  const [userDisplayName, setUserDisplayName] = useState("");
   const [industry, setIndustry] = useState(INDUSTRY_OPTIONS[0].label);
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [country, setCountry] = useState<string>("United States");
   const [logoError, setLogoError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      const supabase = getBrowserSupabase();
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) {
+          const meta = data.user.user_metadata || {};
+          const existingDisplayName =
+            meta.display_name || meta.full_name || meta.name;
+          if (existingDisplayName) {
+            setUserDisplayName(existingDisplayName);
+          }
+          if (meta.company || meta.business_name) {
+            setCompanyName(meta.company || meta.business_name);
+          }
+        }
+      });
+    } catch {}
+  }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -374,6 +395,7 @@ export function OnboardingFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: companyName.trim(),
+          user_display_name: userDisplayName.trim() || undefined,
           industry,
           logo_url: logoUrl || undefined,
           address: address.trim() || undefined,
@@ -559,6 +581,28 @@ export function OnboardingFlow() {
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                       This initializes your dedicated non-custodial Arc treasury.
                     </p>
+                  </div>
+                </div>
+
+                {/* Operator / Display Name */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Your Name / Display Name{" "}
+                    <span className="text-slate-400 font-normal lowercase">
+                      (optional &bull; defaults to company name)
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={userDisplayName}
+                      onChange={(e) => setUserDisplayName(e.target.value)}
+                      placeholder={
+                        companyName ? `e.g. ${companyName} Admin` : "e.g. Alex Morgan"
+                      }
+                      className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-[#151c19] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#107e65]"
+                    />
                   </div>
                 </div>
 

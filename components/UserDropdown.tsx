@@ -22,6 +22,9 @@ import type { BusinessItem } from "./BusinessSwitcher";
 
 export function formatBusinessName(name?: string | null): string {
   if (!name) return "";
+  if (name.includes("Test Real Business") || name.startsWith("[Deleted]")) {
+    return "";
+  }
   // Strip trailing numeric timestamps, IDs, or numbers (e.g. "Test Real Business 1790488549038" -> "Test Real Business")
   const cleaned = name
     .replace(/\s+\d+$/g, "")
@@ -71,8 +74,15 @@ export function UserDropdown({
         if (meta?.avatar_url || meta?.picture) {
           setAvatarUrl(meta.avatar_url || meta.picture);
         }
-        if (meta?.full_name || meta?.name) {
-          setFullName(meta.full_name || meta.name);
+        const candidate = meta?.full_name || meta?.name || meta?.display_name;
+        if (
+          candidate &&
+          !candidate.includes("Test Real Business") &&
+          !candidate.startsWith("[Deleted]")
+        ) {
+          setFullName(candidate);
+        } else if (meta?.company && !meta.company.includes("Test Real Business")) {
+          setFullName(meta.company);
         }
       }
     });
@@ -115,7 +125,12 @@ export function UserDropdown({
     }
   };
 
-  const displayName = fullName || userEmail?.split("@")[0] || "User";
+  const rawDisplayName = fullName || userEmail?.split("@")[0] || "User";
+  const displayName =
+    rawDisplayName.includes("Test Real Business") ||
+    rawDisplayName.startsWith("[Deleted]")
+      ? displayOrgName || userEmail?.split("@")[0] || "User"
+      : rawDisplayName;
 
   return (
     <div ref={dropdownRef} className="relative flex items-center">

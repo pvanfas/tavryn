@@ -123,18 +123,33 @@ export async function getActiveBusiness(
     try {
       const { data: userData } = await supabase.auth.getUser(token);
       if (userData?.user?.id) {
-        // Look up user's membership in business_members
-        const { data: member } = await supabase
+        // Look up user's membership in business_members (ordered by most recent first)
+        const { data: memberRows } = await supabase
           .from("business_members")
-          .select("business_id")
+          .select("business_id, created_at")
           .eq("user_id", userData.user.id)
-          .maybeSingle();
+          .order("created_at", { ascending: false });
 
-        if (member?.business_id) {
-          const matched = businesses.find((b) => b.id === member.business_id);
-          // Authenticated users strictly resolve to their real organization
+        if (memberRows && memberRows.length > 0) {
+          // If preferredId was passed and is one of user's memberships, prioritize it
+          const preferredMember = preferredId
+            ? memberRows.find((m) => m.business_id === preferredId)
+            : null;
+
+          const targetId = preferredMember
+            ? preferredMember.business_id
+            : memberRows[0].business_id;
+
+          const matched = businesses.find((b) => b.id === targetId);
           if (matched && matched.name !== "Demo Co") return matched;
           if (matched) return matched;
+
+          // If the primary match wasn't found (e.g. deleted), check other memberships
+          for (const m of memberRows) {
+            const candidate = businesses.find((b) => b.id === m.business_id);
+            if (candidate && candidate.name !== "Demo Co") return candidate;
+            if (candidate) return candidate;
+          }
         }
 
         // New signup user has an authenticated account but no organization yet — strictly return null (redirect to onboard)

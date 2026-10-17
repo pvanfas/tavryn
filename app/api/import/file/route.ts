@@ -101,11 +101,15 @@ async function processSingleFile(file: File): Promise<ProcessFileResult> {
     }
   }
 
-  // 4. Process PDF
+  // 4. Process PDF with Vercel AI Vision OCR
   if (isPDF) {
     try {
       const extractedText = extractTextFromPDFBuffer(buffer);
-      const invoiceItem = await extractInvoiceData(extractedText, file.name);
+      const invoiceItem = await extractInvoiceData(extractedText, {
+        fileName: file.name,
+        buffer,
+        mediaType: "application/pdf",
+      });
 
       return {
         success: true,
@@ -126,11 +130,21 @@ async function processSingleFile(file: File): Promise<ProcessFileResult> {
     }
   }
 
-  // 5. Process Image
+  // 5. Process Image with Vercel AI Vision OCR
   if (isImage) {
     try {
-      const pseudoText = `Vendor Invoice Scan: ${file.name}\nImage Size: ${file.size} bytes\nData: image/jpeg`;
-      const invoiceItem = await extractInvoiceData(pseudoText, file.name);
+      const mime =
+        fileName.endsWith(".png")
+          ? "image/png"
+          : fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")
+            ? "image/jpeg"
+            : file.type || "image/jpeg";
+
+      const invoiceItem = await extractInvoiceData(`Image Document: ${file.name}`, {
+        fileName: file.name,
+        buffer,
+        mediaType: mime,
+      });
 
       return {
         success: true,

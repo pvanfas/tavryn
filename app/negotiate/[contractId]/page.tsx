@@ -471,7 +471,7 @@ export default function NegotiationDetailPage({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                Real Vendor
+                Manual
               </button>
               <button
                 type="button"

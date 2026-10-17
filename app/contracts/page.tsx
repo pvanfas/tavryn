@@ -6,7 +6,6 @@ import React from "react";
 import { AppShell } from "@/components/AppShell";
 import { ContractsDataTable } from "@/components/contracts/ContractsDataTable";
 import { PageHeader } from "@/components/PageHeader";
-import { QuickInvoiceDropzone } from "@/components/QuickInvoiceDropzone";
 import { getActiveBusiness } from "@/lib/active-business";
 import { getOnChainUSDCBalance } from "@/lib/circle";
 import { ContractLike } from "@/lib/heuristics";
@@ -126,8 +125,7 @@ export default async function ContractsPage({
           title="Contracts Ledger"
           description="All tracked vendor agreements, renewal cliffs, and calculated waste reduction potential."
         >
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            {business?.id && <QuickInvoiceDropzone businessId={business.id} />}
+          <div className="flex items-center gap-2">
             <Link
               href="/import-bills"
               className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
