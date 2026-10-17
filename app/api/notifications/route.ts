@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
+import { requireBusinessAccess } from "@/lib/auth-guard";
 import { logger } from "@/lib/logger";
 import {
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "@/lib/notifications";
+import { getServiceSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,13 @@ export async function GET(req: Request) {
     }
 
     const { businessId, limit } = parsed.data;
+
+    // Verify the caller is authenticated and belongs to this business
+    const auth = await requireBusinessAccess(req, businessId);
+    if (!auth.authorized) {
+      return apiError(auth.error, auth.status);
+    }
+
     const notifications = await getNotifications(businessId, limit);
     const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -70,11 +79,35 @@ export async function POST(req: Request) {
     }
 
     if ("all" in parsed.data && parsed.data.all) {
+      // Verify caller belongs to the business before marking all read
+      const auth = await requireBusinessAccess(req, parsed.data.businessId);
+      if (!auth.authorized) {
+        return apiError(auth.error, auth.status);
+      }
       await markAllNotificationsAsRead(parsed.data.businessId);
       return apiSuccess({ allRead: true });
     }
 
     if ("id" in parsed.data) {
+      const supabase = getServiceSupabase();
+
+      // Look up the notification to find its business_id, then verify access
+      const { data: notif, error: lookupErr } = await supabase
+        .from("notifications")
+        .select("id, business_id")
+        .eq("id", parsed.data.id)
+        .maybeSingle();
+
+      if (lookupErr || !notif) {
+        return apiError("Notification not found", 404);
+      }
+
+      const auth = await requireBusinessAccess(req, notif.business_id);
+      if (!auth.authorized) {
+        // Return 404 to avoid leaking that the notification exists
+        return apiError("Notification not found", 404);
+      }
+
       await markNotificationAsRead(parsed.data.id);
       return apiSuccess({ id: parsed.data.id, read: true });
     }

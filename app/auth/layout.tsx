@@ -19,7 +19,7 @@ export default function AuthLayout({
 
       {/* Topbar */}
       <header className="relative z-10 h-14 px-6 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-[#0e1411]/60 backdrop-blur-md">
-        <Link href="/auth/login" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm overflow-hidden p-0.5">
             <Image
               src="/logo.png"

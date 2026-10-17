@@ -42,7 +42,7 @@ export function AppShell({
   const effectiveBusinessName =
     rawBusinessName ||
     activeBusiness?.name ||
-    (isRealAccount ? "Organization" : "Demo Co");
+    (isRealAccount ? "Organization" : "");
   const effectiveWallet = walletAddress || activeBusiness?.wallet_address;
 
   return (

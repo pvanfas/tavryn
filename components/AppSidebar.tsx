@@ -48,7 +48,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  businessName = "Demo Co",
+  businessName = "",
   isReal = false,
   businesses = [],
   activeBusinessId,
@@ -260,7 +260,7 @@ export function AppSidebar({
                 <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
               )}
               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                {formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "Demo Co")}
+                {formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "")}
               </span>
             </div>
           </div>
@@ -269,7 +269,7 @@ export function AppSidebar({
         <div className="p-2 flex justify-center shrink-0">
           <div
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-            title={`Organization: ${formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "Demo Co")} (${activeBusiness?.is_real || hasReal ? "Real" : "Demo"})`}
+            title={`Organization: ${formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "")} (${activeBusiness?.is_real || hasReal ? "Real" : "Demo"})`}
             aria-label="Active Organization"
           >
             <Building2 className="h-4 w-4" />

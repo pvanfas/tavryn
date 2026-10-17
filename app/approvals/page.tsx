@@ -91,7 +91,9 @@ export default async function ApprovalsPage({
     if (polRes.data?.max_auto_transaction) {
       policyCeiling = Number(polRes.data.max_auto_transaction);
     }
-    liveTreasuryBalance = balRes;
+    if (balRes > 0) {
+      liveTreasuryBalance = balRes;
+    }
   }
 
   const currentFilter = selectedFilter || "pending";

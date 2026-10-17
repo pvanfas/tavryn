@@ -50,12 +50,13 @@ function LoginForm() {
       const { error: otpError } = await signInWithOtp(email, next);
       if (otpError) {
         setError(otpError.message);
+        setLoading(false);
         return;
       }
       setMagicLinkSent(true);
+      setLoading(false);
     } catch {
       setError("Failed to send magic link. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -88,15 +89,18 @@ function LoginForm() {
           setAuthCookie("demo-tavryn-session-token");
           router.push(next);
           router.refresh();
+          // Keep loading=true — button stays in "Signing in…" until navigation completes
           return;
         }
         setError(authError.message);
+        setLoading(false);
         return;
       }
 
       setAuthCookie(data.session?.access_token || "active");
       router.push(next);
       router.refresh();
+      // Keep loading=true — button stays in "Signing in…" until navigation completes
     } catch {
       const cleanEmail = email.trim().toLowerCase();
       if (
@@ -106,10 +110,10 @@ function LoginForm() {
         setAuthCookie("demo-tavryn-session-token");
         router.push(next);
         router.refresh();
+        // Keep loading=true — button stays in "Signing in…" until navigation completes
         return;
       }
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setLoading(false);
     }
   };

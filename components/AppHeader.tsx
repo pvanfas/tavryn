@@ -52,7 +52,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const isRealAccount = isReal || businesses.some((b) => b.is_real);
   const businessName =
-    rawBusinessName || (isRealAccount ? "Organization" : "Demo Co");
+    rawBusinessName || (isRealAccount ? "Organization" : "");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);

@@ -44,7 +44,7 @@ export function UserDropdown({
   activeBusinessId,
 }: UserDropdownProps) {
   const isRealAccount = isReal || businesses.some((b) => b.is_real);
-  const fallbackOrg = isRealAccount ? "Organization" : "Demo Co";
+  const fallbackOrg = isRealAccount ? "Organization" : "";
   const displayOrgName = formatBusinessName(businessName) || fallbackOrg;
   const router = useRouter();
   const [open, setOpen] = useState(false);

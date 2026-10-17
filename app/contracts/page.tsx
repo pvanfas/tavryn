@@ -98,7 +98,9 @@ export default async function ContractsPage({
         }
       }
     }
-    liveTreasuryBalance = balRes;
+    if (balRes > 0) {
+      liveTreasuryBalance = balRes;
+    }
   }
 
   const currentFilter = selectedStatus || "all";

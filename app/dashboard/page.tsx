@@ -1,9 +1,8 @@
 import {
   CheckCircle2,
   ExternalLink,
+  FileUp,
   Layers,
-  Plus,
-  Sparkles,
   TrendingDown,
   Wallet,
 } from "lucide-react";
@@ -134,10 +133,11 @@ export default async function DashboardPage({
         latestTx = txResult.data;
       }
 
-      treasuryBalance = liveBal;
-      balanceSource = business.wallet_address && liveBal !== Number(business.treasury_balance ?? 0)
-        ? "chain"
-        : "db_fallback";
+      treasuryBalance = liveBal > 0 ? liveBal : Number(business?.treasury_balance ?? 0);
+      balanceSource =
+        business.wallet_address && liveBal > 0
+          ? "chain"
+          : "db_fallback";
 
       // 4. Fetch Realized Savings from Negotiations
       if (contracts.length > 0) {
@@ -270,161 +270,148 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        {/* Welcome New Organization Quick-Start Banner */}
-        {contracts.length === 0 && (
-          <div className="p-6 sm:p-8 rounded-2xl bg-linear-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="h-12 w-12 rounded-2xl bg-[#107e65]/10 dark:bg-[#107e65]/20 flex items-center justify-center border border-[#107e65]/30 text-[#107e65] dark:text-[#34d399] shrink-0">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Welcome to {business?.name || "Your New Workspace"}!
-                  </h2>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                    Your autonomous procurement agent is online. Import your SaaS contracts or PDF invoices to begin continuous renewal cliff monitoring, automated benchmarking, and smart contract escrow.
+        {contracts.length === 0 ? (
+          /* ── EMPTY STATE: no contracts → minimal Import Bills card ── */
+          <div className="w-full rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-[#111714]/50 py-16 flex flex-col items-center text-center gap-5">
+            <div className="h-12 w-12 rounded-2xl bg-[#107e65]/10 dark:bg-[#107e65]/20 flex items-center justify-center text-[#107e65] dark:text-[#34d399]">
+              <FileUp className="h-6 w-6" strokeWidth={1.5} />
+            </div>
+            <div className="space-y-1.5">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">No bills imported yet</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Upload invoices or vendor contracts to get started.</p>
+            </div>
+            <Link
+              href="/import-bills"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] active:bg-[#0a5944] text-white transition-colors shadow-sm"
+            >
+              <FileUp className="h-3.5 w-3.5" />
+              Import Bills
+            </Link>
+          </div>
+        ) : (
+          /* ── NORMAL STATE: contracts exist → full dashboard ── */
+          <>
+            {/* 1. HERO SAVINGS DISPLAY FIRST */}
+            <section
+              id="hero-savings"
+              aria-label="Discovered and Realized Savings Overview"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <Caption className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">
+                      Net Realized Savings
+                    </Caption>
+
+                    {/* Inline Real/Demo Badge */}
+                    {business?.is_real ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Live Verified (Real Org)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        Demo Co (Simulated)
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Large Display Typography for Hero Savings */}
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="font-mono text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#107e65] dark:text-[#34d399]">
+                      ${savingsRealized.toLocaleString()}
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 font-sans">
+                      {currency} secured on Arc
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
+                    Tavryn autonomously executed {negotiationsCount} renewal concessions, reducing baseline overhead while locking funds into non-custodial smart contracts.
                   </p>
                 </div>
+
+                {/* Supporting Micro-Metrics */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/80 pt-4 lg:pt-0 lg:pl-6 shrink-0">
+                  <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
+                      <TrendingDown className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Identified Waste</span>
+                    </div>
+                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                      ${savingsDiscovered.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      Across {contractOpportunities.filter((o) => o.savings > 0).length} opportunities
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
+                      <Layers className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                      <span>Monthly Spend</span>
+                    </div>
+                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                      ${spendThisMonth.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      ${totalAnnualSpend.toLocaleString()} / year
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 col-span-2 sm:col-span-1">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399]" />
+                      <span>Active Contracts</span>
+                    </div>
+                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                      {contracts.filter((c) => c.status === "active").length}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      {latestTx?.tx_hash ? (
+                        <TransactionHashBadge
+                          txHash={latestTx.tx_hash}
+                          isSimulated={latestTx.is_simulated}
+                          status={latestTx.status}
+                          compact={true}
+                        />
+                      ) : (
+                        "Audited regularly"
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2.5 shrink-0">
-                <Link
-                  href="/import-bills"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] text-white transition-colors shadow-xs"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Import Bills &amp; Invoices</span>
-                </Link>
-                <Link
-                  href="/settings"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
-                >
-                  <span>Policy Settings</span>
-                </Link>
-              </div>
-            </div>
-          </div>
+            </section>
+
+            {/* 2. ACTIVITY TIMELINE SECOND */}
+            <section
+              id="activity-timeline"
+              aria-label="Autonomous Agent Execution Timeline"
+              className="space-y-2"
+            >
+              <ActivityTimeline
+                businessId={business?.id}
+                businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
+                isReal={Boolean(business?.is_real)}
+              />
+            </section>
+
+            {/* 3. OPPORTUNITIES TABLE THIRD */}
+            <section
+              id="opportunities-ledger"
+              aria-label="Contracts and Opportunities Ledger"
+              className="space-y-2"
+            >
+              <OpportunitiesTable
+                opportunities={contractOpportunities}
+                businessId={business?.id}
+              />
+            </section>
+          </>
         )}
-
-        {/* 1. HERO SAVINGS DISPLAY FIRST */}
-        <section
-          id="hero-savings"
-          aria-label="Discovered and Realized Savings Overview"
-          className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <Caption className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">
-                  Net Realized Savings
-                </Caption>
-
-                {/* Inline Real/Demo Badge */}
-                {business?.is_real ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live Verified (Real Org)
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    Demo Co (Simulated)
-                  </span>
-                )}
-              </div>
-
-              {/* Large Display Typography for Hero Savings */}
-              <div className="flex flex-wrap items-baseline gap-3">
-                <span className="font-mono text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#107e65] dark:text-[#34d399]">
-                  ${savingsRealized.toLocaleString()}
-                </span>
-                <span className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 font-sans">
-                  {currency} secured on Arc
-                </span>
-              </div>
-
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
-                Tavryn autonomously executed {negotiationsCount} renewal concessions, reducing baseline overhead while locking funds into non-custodial smart contracts.
-              </p>
-            </div>
-
-            {/* Supporting Micro-Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/80 pt-4 lg:pt-0 lg:pl-6 shrink-0">
-              <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
-                  <TrendingDown className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Identified Waste</span>
-                </div>
-                <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
-                  ${savingsDiscovered.toLocaleString()}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  Across {contractOpportunities.filter((o) => o.savings > 0).length} opportunities
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
-                  <Layers className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-                  <span>Monthly Spend</span>
-                </div>
-                <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
-                  ${spendThisMonth.toLocaleString()}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  ${totalAnnualSpend.toLocaleString()} / year
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399]" />
-                  <span>Active Contracts</span>
-                </div>
-                <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
-                  {contracts.filter((c) => c.status === "active").length}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  {latestTx?.tx_hash ? (
-                    <TransactionHashBadge
-                      txHash={latestTx.tx_hash}
-                      isSimulated={latestTx.is_simulated}
-                      status={latestTx.status}
-                      compact={true}
-                    />
-                  ) : (
-                    "Audited regularly"
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 2. ACTIVITY TIMELINE SECOND */}
-        <section
-          id="activity-timeline"
-          aria-label="Autonomous Agent Execution Timeline"
-          className="space-y-2"
-        >
-          <ActivityTimeline
-            businessId={business?.id}
-            businessName={business?.name || (business?.is_real ? "Organization" : "Demo Co")}
-            isReal={Boolean(business?.is_real)}
-          />
-        </section>
-
-        {/* 3. OPPORTUNITIES TABLE THIRD */}
-        <section
-          id="opportunities-ledger"
-          aria-label="Contracts and Opportunities Ledger"
-          className="space-y-2"
-        >
-          <OpportunitiesTable
-            opportunities={contractOpportunities}
-            businessId={business?.id}
-          />
-        </section>
       </div>
     </AppShell>
   );

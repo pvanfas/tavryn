@@ -53,16 +53,24 @@ export async function POST(req: NextRequest) {
         .eq("id", requestedBusinessId)
         .maybeSingle();
       business = data;
+    } else {
+      const { getAuthUser } = await import("@/lib/auth-guard");
+      const authUser = await getAuthUser(req);
+      if (authUser && !authUser.isDemo) {
+        const { data: member } = await supabase
+          .from("business_members")
+          .select("business_id, businesses(id, name, wallet_address, treasury_balance, is_real)")
+          .eq("user_id", authUser.userId)
+          .limit(1)
+          .maybeSingle();
+        if (member?.businesses) {
+          business = member.businesses;
+        }
+      }
     }
 
     if (!business) {
-      const { data } = await supabase
-        .from("businesses")
-        .select("id, name, wallet_address, treasury_balance, is_real")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      business = data;
+      return apiError("Organization not found or unauthorized", 400);
     }
 
     const targetAddress =

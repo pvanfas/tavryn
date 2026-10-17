@@ -31,9 +31,12 @@ export default async function ActivityPage({
     : 0;
   if (business?.wallet_address) {
     try {
-      liveTreasuryBalance = await getOnChainUSDCBalance(
+      const chainBal = await getOnChainUSDCBalance(
         business.wallet_address,
       );
+      if (chainBal > 0) {
+        liveTreasuryBalance = chainBal;
+      }
     } catch {
       // fallback
     }

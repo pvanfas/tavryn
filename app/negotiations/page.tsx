@@ -57,7 +57,9 @@ export default async function NegotiationsPage({
     if (nRes.data) {
       negotiations = nRes.data as unknown as NegotiationRow[];
     }
-    liveTreasuryBalance = balRes;
+    if (balRes > 0) {
+      liveTreasuryBalance = balRes;
+    }
   }
 
   return (
