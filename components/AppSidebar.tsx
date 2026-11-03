@@ -234,15 +234,15 @@ export function AppSidebar({
         <div className="px-3 pt-3.5 pb-2 shrink-0">
           <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#121915]/80 border border-slate-200/70 dark:border-slate-800/70 flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Organization
               </span>
               {activeBusiness?.is_real ? (
-                <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-2xs font-medium">
                   Real
                 </span>
               ) : (
-                <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[9px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-2xs font-medium">
                   Demo
                 </span>
               )}
@@ -285,7 +285,7 @@ export function AppSidebar({
         {WORKSPACE_NAV_SECTIONS.map((section) => (
           <div key={section.title} className="space-y-1">
             {!collapsed && (
-              <p className="px-3 mb-1.5 text-[0.625rem] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 select-none">
+              <p className="px-3 mb-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 select-none">
                 {section.title}
               </p>
             )}
@@ -333,7 +333,7 @@ export function AppSidebar({
                     )}
 
                     {!collapsed && item.badgeText && (
-                      <span className="px-1.5 py-0.2 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <span className="px-1.5 py-0.5 rounded-md text-2xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                         {item.badgeText}
                       </span>
                     )}
@@ -410,7 +410,7 @@ export function AppSidebar({
                 <Wallet className="h-3.5 w-3.5" />
               </div>
               <div className="min-w-0">
-                <div className="text-[9px] uppercase font-bold text-slate-400 leading-none">
+                <div className="text-2xs font-medium text-slate-500 dark:text-slate-400 leading-none">
                   Arc Treasury
                 </div>
                 <div className="font-mono text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">

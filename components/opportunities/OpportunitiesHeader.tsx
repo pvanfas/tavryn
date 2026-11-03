@@ -33,7 +33,7 @@ export function OpportunitiesHeader({
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/70">
-        <H3 as="h2" className="text-slate-900 dark:text-white">
+        <H3 as="h2" className="text-slate-900 dark:text-white font-semibold">
           Contracts Ledger
         </H3>
 
@@ -43,13 +43,13 @@ export function OpportunitiesHeader({
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search contracts..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 onResetPage();
               }}
-              className="w-48 sm:w-56 pl-9 pr-7 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#107e65]/20 focus:border-[#107e65] transition-all"
+              className="w-48 sm:w-56 pl-9 pr-7 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/50 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#107e65] focus:border-[#107e65] transition-colors"
             />
             {searchQuery && (
               <button
@@ -63,8 +63,8 @@ export function OpportunitiesHeader({
             )}
           </div>
 
-          {/* Segmented Category Filter Pills */}
-          <div className="flex items-center p-0.5 rounded-xl bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/60 dark:border-slate-800/60">
+          {/* Segmented Category Filter */}
+          <div className="flex items-center p-0.5 rounded-lg bg-slate-100/70 dark:bg-[#151c19] border border-slate-200/60 dark:border-slate-800/60">
             {(["all", "software", "cloud", "contractors"] as const).map(
               (cat) => (
                 <button
@@ -74,9 +74,9 @@ export function OpportunitiesHeader({
                     setCategoryFilter(cat);
                     onResetPage();
                   }}
-                  className={`px-2.5 py-1 rounded-xl text-xs capitalize transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs capitalize transition-colors cursor-pointer ${
                     categoryFilter === cat
-                      ? "bg-white dark:bg-[#1c2622] text-slate-900 dark:text-white shadow-2xs font-bold"
+                      ? "bg-white dark:bg-[#1c2622] text-slate-900 dark:text-white shadow-2xs font-semibold"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium"
                   }`}
                 >
@@ -92,7 +92,7 @@ export function OpportunitiesHeader({
             type="button"
             onClick={onRunAgentNow}
             disabled={isRunningAgent}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5745] text-white text-xs font-bold shadow-2xs transition-all disabled:opacity-60 cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-xs font-semibold shadow-xs transition-colors duration-150 disabled:opacity-60 cursor-pointer shrink-0"
             title="Scan renewing contracts for idle seats, usage drops, and autonomous negotiation opportunities"
           >
             {isRunningAgent ? (
@@ -111,7 +111,7 @@ export function OpportunitiesHeader({
           {/* Primary Action Button (Icon only) */}
           <Link
             href="/import-bills"
-            className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white shadow-2xs transition-colors shrink-0"
+            className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 shadow-xs transition-colors shrink-0"
             title="Import Bills"
             aria-label="Import Bills"
           >

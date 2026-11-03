@@ -26,66 +26,34 @@ export function DesktopOpportunitiesTable({
     <div className="hidden sm:block overflow-x-auto mt-4 rounded-xl border border-slate-200/70 dark:border-slate-800/60 shadow-2xs">
       <table className="w-full text-left text-xs font-sans border-collapse">
         <thead>
-          <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-3.5 w-12 text-center"
-            >
+          <tr className="border-b border-slate-200/70 dark:border-slate-800/60 bg-slate-50/70 dark:bg-[#141b18]/60 text-slate-500 dark:text-slate-400 text-xs font-medium">
+            <th scope="col" className="py-3 px-3.5 w-12 text-center font-medium">
               #
-            </Caption>
-            <Caption as="th" scope="col" className="py-3.5 px-4 min-w-[200px]">
+            </th>
+            <th scope="col" className="py-3 px-4 min-w-[200px] font-medium">
               Service &amp; Vendor
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-3.5 min-w-[110px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-3.5 min-w-[110px] font-medium">
               Category
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-3.5 min-w-[130px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-3.5 min-w-[130px] font-medium">
               Contract Ref
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-4 text-right min-w-[120px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-4 text-right min-w-[120px] font-medium">
               Annual Spend
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-3.5 min-w-[140px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-3.5 min-w-[140px] font-medium">
               Renewal Date
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-4 text-right min-w-[130px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-4 text-right min-w-[130px] font-medium">
               Savings Target
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-3.5 text-center min-w-[110px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-3.5 text-center min-w-[110px] font-medium">
               Status
-            </Caption>
-            <Caption
-              as="th"
-              scope="col"
-              className="py-3.5 px-4 text-center min-w-[220px]"
-            >
+            </th>
+            <th scope="col" className="py-3 px-4 text-center min-w-[220px] font-medium">
               Actions
-            </Caption>
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white/70 dark:bg-[#111714]/70">
@@ -139,21 +107,21 @@ export function DesktopOpportunitiesTable({
                   </td>
 
                   {/* Category */}
-                  <td className="py-4 px-3.5">
-                    <span className="inline-block px-2.5 py-0.5 rounded-xl capitalize text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 text-xs font-medium border border-slate-200/50 dark:border-slate-700/50">
+                  <td className="py-3 px-3.5">
+                    <span className="inline-block px-2 py-0.5 rounded-md capitalize text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 text-xs font-medium border border-slate-200/50 dark:border-slate-700/50">
                       {opp.category}
                     </span>
                   </td>
 
                   {/* Contract Ref */}
-                  <td className="py-4 px-3.5">
-                    <span className="font-mono text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                  <td className="py-3 px-3.5">
+                    <span className="font-mono text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60 tabular-nums">
                       {contractCode}
                     </span>
                   </td>
 
                   {/* Annual Spend */}
-                  <td className="py-4 px-4 text-right font-mono font-bold text-xs text-slate-900 dark:text-white">
+                  <td className="py-3 px-4 text-right font-mono font-semibold text-xs text-slate-900 dark:text-white tabular-nums">
                     $
                     {Number(opp.current_price).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -162,8 +130,8 @@ export function DesktopOpportunitiesTable({
                   </td>
 
                   {/* Renewal Date */}
-                  <td className="py-4 px-3.5">
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  <td className="py-3 px-3.5">
+                    <div className="text-xs font-medium text-slate-800 dark:text-slate-200">
                       {new Date(opp.renewal_date).toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "short",
@@ -172,11 +140,11 @@ export function DesktopOpportunitiesTable({
                     </div>
                     <div className="mt-0.5">
                       {isExpiringSoon ? (
-                        <span className="inline-block px-1.5 py-0.2 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20">
+                        <span className="inline-block px-1.5 py-0.5 rounded-md text-2xs font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20">
                           {opp.daysRemaining}d remaining
                         </span>
                       ) : (
-                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                        <span className="text-xs font-normal text-slate-400 dark:text-slate-500">
                           {opp.daysRemaining}d remaining
                         </span>
                       )}
@@ -184,33 +152,23 @@ export function DesktopOpportunitiesTable({
                   </td>
 
                   {/* Savings Target */}
-                  <td className="py-4 px-4 text-right">
-                    <span className="font-mono font-bold text-xs text-[#107e65] dark:text-[#34d399] bg-emerald-500/10 dark:bg-emerald-500/15 px-2.5 py-1 rounded-xl border border-emerald-500/20 inline-block">
-                      $
-                      {opp.savings.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
+                  <td className="py-3 px-4 text-right font-mono font-semibold text-xs text-[#107e65] dark:text-[#34d399] tabular-nums">
+                    $
+                    {opp.savings.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </td>
 
                   {/* Status */}
-                  <td className="py-4 px-3.5 text-center">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        opp.status === "active"
-                          ? "bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
-                          : opp.status === "negotiating"
-                            ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                      }`}
-                    >
+                  <td className="py-3 px-3.5 text-center">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 capitalize">
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
                           opp.status === "active"
                             ? "bg-[#107e65]"
                             : opp.status === "negotiating"
-                              ? "bg-blue-500 animate-pulse"
+                              ? "bg-sky-500"
                               : "bg-slate-400"
                         }`}
                       />
@@ -219,7 +177,7 @@ export function DesktopOpportunitiesTable({
                   </td>
 
                   {/* Actions */}
-                  <td className="py-4 px-4 text-center">
+                  <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <button
                         type="button"
@@ -230,19 +188,19 @@ export function DesktopOpportunitiesTable({
                             currentPrice: Number(opp.current_price),
                           })
                         }
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 transition-colors cursor-pointer"
                       >
                         Analyze
                       </button>
                       <Link
                         href={`/negotiate/${opp.id}`}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#142620] hover:bg-[#1b332b] dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 transition-colors shadow-2xs"
+                        className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 transition-colors shadow-2xs"
                       >
                         Negotiate
                       </Link>
                       <Link
                         href={`/decision/${opp.id}`}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 transition-colors shadow-2xs"
+                        className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 transition-colors shadow-2xs"
                       >
                         Decision
                       </Link>

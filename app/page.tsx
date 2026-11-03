@@ -143,7 +143,7 @@ function LandingPage({
             <Link
               id="landing-signup-btn"
               href="/auth/register"
-              className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-xs sm:text-sm font-medium shadow-xs transition-colors duration-150 cursor-pointer"
             >
               <span>Free Signup</span>
               <ArrowRight className="h-4 w-4" />
@@ -155,30 +155,27 @@ function LandingPage({
       {/* Hero Section */}
       <main className="flex-1">
         <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
-          {/* Subtle Ambient Background Gradients */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
-
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
               {/* Left Column: Content */}
               <div className="lg:col-span-7 z-10">
-                {/* Protocol Pill */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#121915] border border-slate-200/80 dark:border-slate-800/80 shadow-xs mb-8">
-                  <span className="h-2 w-2 rounded-full bg-[#107e65] animate-pulse" />
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Autonomous Procurement • Arc & Circle Track
+                {/* Protocol Tag */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white dark:bg-[#121915] border border-slate-200/80 dark:border-slate-800/80 shadow-xs mb-8">
+                  <span className="h-2 w-2 rounded-full bg-[#107e65]" />
+                  <span className="text-2xs font-medium text-slate-700 dark:text-slate-300">
+                    Autonomous Procurement • Arc &amp; Circle
                   </span>
                 </div>
 
                 {/* Main Catchphrase Headline */}
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.2] sm:leading-[1.16]">
-                  An open-source AI agent that turns spend inefficiencies into
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white leading-[1.2] sm:leading-[1.16]">
+                  An open-source spend agent that turns SaaS waste into
                   real savings.
                 </h1>
 
                 {/* Subtitle */}
                 <p className="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl font-normal leading-relaxed">
-                  Tavryn autonomously monitors SaaS and cloud renewal cliffs,
+                  Tavryn autonomously monitors software renewal cliffs,
                   negotiates multi-round concession curves, enforces
                   deterministic financial policy, and escrows USDC on Arc smart
                   contracts until vendor delivery is verified.
@@ -189,7 +186,7 @@ function LandingPage({
                   <Link
                     id="hero-primary-cta"
                     href="/auth/login?demo=true"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-base font-bold shadow-lg shadow-emerald-950/20 hover:shadow-emerald-950/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-sm font-medium shadow-xs transition-colors duration-150 cursor-pointer"
                   >
                     <span>Try the demo</span>
                     <ArrowRight className="h-4 w-4 ml-0.5" />
@@ -198,20 +195,11 @@ function LandingPage({
                   <a
                     id="hero-video-cta"
                     href="#how-it-works"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-white dark:bg-[#121915] hover:bg-slate-50 dark:hover:bg-[#16201b] border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 text-sm font-medium shadow-xs transition-colors duration-150 cursor-pointer"
                   >
-                    <PlayCircle className="h-5 w-5 text-[#107e65] dark:text-[#34d399]" />
-                    <span>Watch the Video</span>
+                    <PlayCircle className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
+                    <span>Watch walkthrough</span>
                   </a>
-
-                  <Link
-                    id="hero-metrics-cta"
-                    href="/public-metrics"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 text-[#107e65] dark:text-[#34d399] text-base font-semibold shadow-xs transition-all duration-200 cursor-pointer"
-                  >
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Live Metrics</span>
-                  </Link>
                 </div>
               </div>
 
@@ -308,15 +296,15 @@ function LandingPage({
               <div className="rounded-3xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/70 p-6 sm:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] backdrop-blur-md">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
                   {/* Metric 1 */}
-                  <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
+                  <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
                           <TrendingDown className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
-                          <span>Waste Identified</span>
+                          <span>Waste identified</span>
                         </div>
                       </div>
-                      <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
+                      <div className="mt-3 text-3xl sm:text-4xl font-semibold font-mono text-slate-900 dark:text-white">
                         {card1Formatted}
                       </div>
                     </div>
@@ -326,15 +314,15 @@ function LandingPage({
                   </div>
 
                   {/* Metric 2 */}
-                  <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
+                  <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
                           <Zap className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
-                          <span>Negotiation Yield</span>
+                          <span>Negotiation yield</span>
                         </div>
                       </div>
-                      <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-[#107e65] dark:text-[#34d399]">
+                      <div className="mt-3 text-3xl sm:text-4xl font-semibold font-mono text-[#107e65] dark:text-[#34d399]">
                         {card2Formatted}
                       </div>
                     </div>
@@ -344,15 +332,15 @@ function LandingPage({
                   </div>
 
                   {/* Metric 3 */}
-                  <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
+                  <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
                           <ShieldCheck className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
-                          <span>Deterministic Policy</span>
+                          <span>Deterministic policy</span>
                         </div>
                       </div>
-                      <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
+                      <div className="mt-3 text-3xl sm:text-4xl font-semibold font-mono text-slate-900 dark:text-white">
                         {card3Formatted}
                       </div>
                     </div>
@@ -362,15 +350,15 @@ function LandingPage({
                   </div>
 
                   {/* Metric 4 */}
-                  <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
+                  <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
                           <Lock className="h-4 w-4 text-[#107e65] dark:text-[#34d399]" />
-                          <span>Arc Escrow</span>
+                          <span>Arc escrow</span>
                         </div>
                       </div>
-                      <div className="mt-3 text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
+                      <div className="mt-3 text-3xl sm:text-4xl font-semibold font-mono text-slate-900 dark:text-white">
                         {card4Formatted}
                       </div>
                     </div>

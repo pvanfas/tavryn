@@ -404,7 +404,7 @@ export function ActivityTimeline({
         const savings =
           data.result?.savingsRealized ?? data.savingsRealized ?? 2688;
         setLastRunNotice(
-          `Full loop executed: $${savings.toLocaleString()} annual savings secured, reviewer verified, escrowed & settled on Arc!`,
+          `Full loop completed: $${savings.toLocaleString()} annual savings verified, escrowed, and settled on Arc.`,
         );
       }
 
@@ -424,26 +424,24 @@ export function ActivityTimeline({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200/70 dark:border-slate-800/60">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            {/* Redesigned Autonomous Agent radar ping */}
-            <span className="relative flex h-3 w-3 shrink-0 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80 duration-1000" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#107e65] dark:bg-[#34d399] shadow-[0_0_8px_rgba(16,126,101,0.8)]" />
+            {/* Disciplined autonomous agent status indicator */}
+            <span className="flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+              <span className="h-2 w-2 rounded-full bg-[#107e65] dark:bg-[#34d399]" />
             </span>
-            <H3 className="text-slate-900 dark:text-white font-bold truncate">
+            <H3 className="text-slate-900 dark:text-white font-semibold truncate">
               Autonomous Agent Timeline
             </H3>
             {isRunning ? (
               <span
-                title="Percentage of Full loop completed"
-                className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 animate-pulse flex items-center gap-1.5"
+                title="Percentage of full loop completed"
+                className="px-2 py-0.5 rounded-md text-xs font-mono font-medium bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 flex items-center gap-1.5"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-[#107e65] dark:bg-[#34d399] animate-ping" />
                 <span>{percentCompleted}%</span>
               </span>
             ) : (
               <span
-                title="Percentage of Full loop completed"
-                className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20"
+                title="Percentage of full loop completed"
+                className="px-2 py-0.5 rounded-md text-xs font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60"
               >
                 {percentCompleted}%
               </span>
@@ -452,25 +450,25 @@ export function ActivityTimeline({
           <div className="flex flex-wrap items-center gap-2 mt-1">
             {isRunning ? (
               <>
-                <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/15 text-[#107e65] dark:text-[#34d399] border border-emerald-500/30 shrink-0 flex items-center gap-1.5 animate-pulse">
+                <span className="px-2 py-0.5 rounded-md text-2xs font-medium bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#107e65] dark:bg-[#34d399]" />
                   {currentPhase}
                 </span>
-                <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {currentPhase} for{" "}
-                  <strong className="text-slate-700 dark:text-slate-200 font-semibold">
+                  <strong className="text-slate-700 dark:text-slate-200 font-medium">
                     {businessName}
                   </strong>
                 </p>
               </>
             ) : (
               <>
-                <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/10 text-[#107e65] dark:text-[#34d399] border border-emerald-500/20 shrink-0">
-                  Live Loop
+                <span className="px-2 py-0.5 rounded-md text-2xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 shrink-0">
+                  Active
                 </span>
-                <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400">
-                  Observe → Analyze → Negotiate → Decide → Execute → Learn for{" "}
-                  <strong className="text-slate-700 dark:text-slate-200">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Autonomous spend monitoring and settlement for{" "}
+                  <strong className="text-slate-700 dark:text-slate-200 font-medium">
                     {businessName}
                   </strong>
                 </p>
@@ -487,12 +485,12 @@ export function ActivityTimeline({
             onClick={handleRunFullDemo}
             disabled={isRunning}
             title="Simulate Tavryn's full 7-step autonomous loop: Detect → Negotiate → AI Review → Policy → Arc Escrow → Verify → Settle"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#107e65] to-[#0d6b55] hover:from-[#0d6b55] hover:to-[#0a5644] text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isRunning ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>{isReal ? "Running Agent Scan..." : `Simulating 7-Step Loop (${percentCompleted}%)...`}</span>
+                <span>{isReal ? "Running Agent Scan..." : `Simulating Loop (${percentCompleted}%)...`}</span>
               </>
             ) : (
               <>
@@ -569,33 +567,29 @@ export function ActivityTimeline({
                         </div>
                       </>
                     ) : (
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-500/15 text-[#107e65] dark:text-[#34d399]">
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-[#107e65] dark:text-[#34d399]">
                         <Icon className="h-4 w-4" />
                       </div>
                     )}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                      <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate">
                         {item.title}
                       </span>
                       {item.status === "running" && (
                         <span
-                          title="Percentage of Full loop completed"
-                          className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20 animate-pulse"
+                          title="Percentage of full loop completed"
+                          className="px-2 py-0.5 rounded-md text-2xs font-mono font-medium bg-[#107e65]/10 text-[#107e65] dark:text-[#34d399] border border-[#107e65]/20"
                         >
                           {percentCompleted}%
                         </span>
                       )}
-                      {item.details?.isSimulated ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                          Simulated (testnet mock)
+                      {item.details?.isSimulated && (
+                        <span className="px-2 py-0.5 rounded-md text-2xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                          Simulated
                         </span>
-                      ) : item.status === "completed" ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-[#107e65] dark:text-emerald-300 border border-emerald-500/20">
-                          Verified
-                        </span>
-                      ) : null}
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
                       {item.summary}

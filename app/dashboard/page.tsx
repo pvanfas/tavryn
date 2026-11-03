@@ -224,7 +224,7 @@ export default async function DashboardPage({
         {/* Header Bar with Collapsed Treasury Chip */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
               Autonomous Procurement &amp; Treasury
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -233,22 +233,22 @@ export default async function DashboardPage({
           </div>
 
           {/* Treasury Balance Collapsed Header Chip */}
-          <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/80 dark:border-slate-800/80 shadow-2xs self-start sm:self-auto shrink-0">
+          <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-[#111714]/90 border border-slate-200/80 dark:border-slate-800/80 shadow-2xs self-start sm:self-auto shrink-0">
             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-[#107e65] dark:text-[#34d399]">
               <Wallet className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Treasury Balance
+                <span className="text-2xs font-medium text-slate-500 dark:text-slate-400">
+                  Treasury balance
                 </span>
                 {balanceSource === "chain" ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Arc Live RPC" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" title="Arc Live RPC" />
                 ) : (
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title="Snapshot Balance" />
                 )}
               </div>
-              <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+              <span className="font-mono text-xs font-semibold text-slate-900 dark:text-white">
                 ${treasuryBalance.toLocaleString(undefined, {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 2,
@@ -277,12 +277,12 @@ export default async function DashboardPage({
               <FileUp className="h-6 w-6" strokeWidth={1.5} />
             </div>
             <div className="space-y-1.5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">No bills imported yet</h2>
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">No bills imported yet</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">Upload invoices or vendor contracts to get started.</p>
             </div>
             <Link
               href="/import-bills"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#107e65] hover:bg-[#0d6b55] active:bg-[#0a5944] text-white transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-[#107e65] hover:bg-[#0d6954] text-white transition-colors"
             >
               <FileUp className="h-3.5 w-3.5" />
               Import Bills
@@ -295,23 +295,23 @@ export default async function DashboardPage({
             <section
               id="hero-savings"
               aria-label="Discovered and Realized Savings Overview"
-              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
+              className="rounded-2xl bg-white/95 dark:bg-[#111714]/95 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-7 shadow-xs"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <Caption className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">
-                      Net Realized Savings
-                    </Caption>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Net realized savings
+                    </span>
 
                     {/* Inline Real/Demo Badge */}
                     {business?.is_real ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Live Verified (Real Org)
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         Demo Co (Simulated)
                       </span>
@@ -320,10 +320,10 @@ export default async function DashboardPage({
 
                   {/* Large Display Typography for Hero Savings */}
                   <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="font-mono text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#107e65] dark:text-[#34d399]">
+                    <span className="font-mono text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#107e65] dark:text-[#34d399]">
                       ${savingsRealized.toLocaleString()}
                     </span>
-                    <span className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 font-sans">
+                    <span className="text-sm sm:text-base font-medium text-slate-500 dark:text-slate-400 font-sans">
                       {currency} secured on Arc
                     </span>
                   </div>
@@ -336,40 +336,40 @@ export default async function DashboardPage({
                 {/* Supporting Micro-Metrics */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/80 pt-4 lg:pt-0 lg:pl-6 shrink-0">
                   <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
-                      <TrendingDown className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Identified Waste</span>
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                      <TrendingDown className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399]" />
+                      <span>Identified waste</span>
                     </div>
-                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                    <div className="font-mono text-lg font-semibold text-slate-900 dark:text-white mt-1">
                       ${savingsDiscovered.toLocaleString()}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
+                    <div className="text-2xs text-slate-400 mt-0.5">
                       Across {contractOpportunities.filter((o) => o.savings > 0).length} opportunities
                     </div>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
-                      <Layers className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-                      <span>Monthly Spend</span>
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                      <Layers className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <span>Monthly spend</span>
                     </div>
-                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                    <div className="font-mono text-lg font-semibold text-slate-900 dark:text-white mt-1">
                       ${spendThisMonth.toLocaleString()}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
+                    <div className="text-2xs text-slate-400 mt-0.5">
                       ${totalAnnualSpend.toLocaleString()} / year
                     </div>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 col-span-2 sm:col-span-1">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium">
                       <CheckCircle2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399]" />
-                      <span>Active Contracts</span>
+                      <span>Active contracts</span>
                     </div>
-                    <div className="font-mono text-lg font-bold text-slate-900 dark:text-white mt-1">
+                    <div className="font-mono text-lg font-semibold text-slate-900 dark:text-white mt-1">
                       {contracts.filter((c) => c.status === "active").length}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
+                    <div className="text-2xs text-slate-400 mt-0.5">
                       {latestTx?.tx_hash ? (
                         <TransactionHashBadge
                           txHash={latestTx.tx_hash}
