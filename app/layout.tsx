@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist_Mono, Manrope } from "next/font/google";
 
@@ -106,6 +107,7 @@ export default function RootLayout({
         <TopLineLoader />
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
