@@ -3,8 +3,6 @@
 import Link from "next/link";
 import React from "react";
 
-import { Caption } from "@/components/ui/text";
-
 import { OpportunityItem } from "./types";
 
 interface DesktopOpportunitiesTableProps {
