@@ -31,6 +31,7 @@ import {
   isRouteActive,
   WORKSPACE_NAV_SECTIONS,
 } from "@/lib/nav";
+import { usePendingApprovals } from "@/lib/use-pending-approvals";
 
 import { BusinessItem } from "./BusinessSwitcher";
 import { formatBusinessName } from "./UserDropdown";
@@ -65,7 +66,7 @@ export function AppSidebar({
   const [userInitials, setUserInitials] = useState("??");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
-  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const pendingApprovalsCount = usePendingApprovals(activeBusinessId);
 
   const collapsed =
     controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
@@ -101,34 +102,6 @@ export function AppSidebar({
     }
     loadUser();
   }, []);
-
-  // Poll pending approvals count
-  useEffect(() => {
-    let isMounted = true;
-    async function loadPending() {
-      try {
-        const query = activeBusinessId
-          ? `?businessId=${encodeURIComponent(activeBusinessId)}`
-          : "";
-        const res = await fetch(`/api/approvals/count${query}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && typeof data.count === "number") {
-            setPendingApprovalsCount(data.count);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    loadPending();
-    const interval = setInterval(loadPending, 20000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [activeBusinessId]);
 
   // Keyboard shortcut: Cmd/Ctrl + B toggles sidebar
   useEffect(() => {
