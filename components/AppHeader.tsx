@@ -51,8 +51,7 @@ export function AppHeader({
   onOpenMobileMenu,
 }: AppHeaderProps) {
   const isRealAccount = isReal || businesses.some((b) => b.is_real);
-  const businessName =
-    rawBusinessName || (isRealAccount ? "Organization" : "");
+  const businessName = rawBusinessName || (isRealAccount ? "Organization" : "");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -80,6 +79,8 @@ export function AppHeader({
 
     let isMounted = true;
     async function loadUnread() {
+      // Skip background polls when tab is hidden
+      if (typeof document !== "undefined" && document.hidden) return;
       try {
         const res = await fetch(
           `/api/notifications?businessId=${encodeURIComponent(activeBusinessId!)}&limit=20`,
@@ -96,10 +97,19 @@ export function AppHeader({
     }
 
     loadUnread();
-    const interval = setInterval(loadUnread, 30000);
+    const interval = setInterval(loadUnread, 60000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadUnread();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       isMounted = false;
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [activeBusinessId]);
 
@@ -108,6 +118,8 @@ export function AppHeader({
     if (!activeBusinessId) return;
     let isMounted = true;
     async function loadBalance() {
+      // Skip background polls when tab is hidden
+      if (typeof document !== "undefined" && document.hidden) return;
       try {
         const res = await fetch(
           `/api/wallet/balance?businessId=${encodeURIComponent(activeBusinessId!)}`,
@@ -127,10 +139,19 @@ export function AppHeader({
       }
     }
     loadBalance();
-    const interval = setInterval(loadBalance, 45000);
+    const interval = setInterval(loadBalance, 60000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadBalance();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       isMounted = false;
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [activeBusinessId]);
 

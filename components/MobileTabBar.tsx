@@ -31,6 +31,7 @@ import {
   NavItemConfig,
   WORKSPACE_NAV_SECTIONS,
 } from "@/lib/nav";
+import { usePendingApprovals } from "@/lib/use-pending-approvals";
 
 import { BusinessItem } from "./BusinessSwitcher";
 import { formatBusinessName } from "./UserDropdown";
@@ -53,35 +54,7 @@ export function MobileTabBar({
   const pathname = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState<number>(0);
-
-  // Poll pending approvals count
-  useEffect(() => {
-    let isMounted = true;
-    async function loadPending() {
-      try {
-        const query = activeBusinessId
-          ? `?businessId=${encodeURIComponent(activeBusinessId)}`
-          : "";
-        const res = await fetch(`/api/approvals/count${query}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && typeof data.count === "number") {
-            setPendingCount(data.count);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    loadPending();
-    const interval = setInterval(loadPending, 20000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [activeBusinessId]);
+  const pendingCount = usePendingApprovals(activeBusinessId);
 
   // Close more sheet on route change
   useEffect(() => {
@@ -147,6 +120,7 @@ export function MobileTabBar({
               <Link
                 key={item.id}
                 href={item.href}
+                prefetch={false}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl m-1 ${
                   active
@@ -268,6 +242,7 @@ export function MobileTabBar({
                   <Link
                     key={item.id}
                     href={item.href}
+                    prefetch={false}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-colors ${

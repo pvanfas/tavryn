@@ -157,6 +157,7 @@ export function AppSidebar({
       <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/70 shrink-0">
         <Link
           href="/dashboard"
+          prefetch={false}
           className={`flex items-center gap-3 transition-opacity ${
             collapsed ? "justify-center w-full" : ""
           }`}
@@ -233,7 +234,8 @@ export function AppSidebar({
                 <Building2 className="h-3.5 w-3.5 text-[#107e65] dark:text-[#34d399] shrink-0" />
               )}
               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                {formatBusinessName(activeBusiness?.name || businessName) || (hasReal ? "Organization" : "")}
+                {formatBusinessName(activeBusiness?.name || businessName) ||
+                  (hasReal ? "Organization" : "")}
               </span>
             </div>
           </div>
@@ -277,6 +279,7 @@ export function AppSidebar({
                 <div key={item.id} className="relative group">
                   <Link
                     href={item.href}
+                    prefetch={false}
                     aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                       collapsed ? "justify-center px-0 py-2.5" : ""
@@ -344,6 +347,7 @@ export function AppSidebar({
               <div key={item.id} className="relative group">
                 <Link
                   href={item.href}
+                  prefetch={false}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                     collapsed ? "justify-center px-0 py-2" : ""

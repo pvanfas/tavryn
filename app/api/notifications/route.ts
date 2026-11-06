@@ -50,10 +50,18 @@ export async function GET(req: Request) {
     const notifications = await getNotifications(businessId, limit);
     const unreadCount = notifications.filter((n) => !n.read).length;
 
-    return apiSuccess({
-      notifications,
-      unreadCount,
-    });
+    return apiSuccess(
+      {
+        notifications,
+        unreadCount,
+      },
+      200,
+      {
+        headers: {
+          "Cache-Control": "private, max-age=15, stale-while-revalidate=30",
+        },
+      },
+    );
   } catch (err) {
     logger.error("GET notifications error", err);
     return handleApiError(err, "Failed to fetch notifications");

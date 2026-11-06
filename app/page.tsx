@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  BarChart3,
   CheckCircle2,
   Database,
   ExternalLink,
@@ -136,6 +135,7 @@ function LandingPage({
             <ThemeToggle />
             <Link
               href="/auth/login"
+              prefetch={false}
               className="hidden sm:inline-flex text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#107e65] dark:hover:text-[#34d399] transition-colors"
             >
               Sign in
@@ -143,6 +143,7 @@ function LandingPage({
             <Link
               id="landing-signup-btn"
               href="/auth/register"
+              prefetch={false}
               className="inline-flex items-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-xs sm:text-sm font-medium shadow-xs transition-colors duration-150 cursor-pointer"
             >
               <span>Free Signup</span>
@@ -169,8 +170,8 @@ function LandingPage({
 
                 {/* Main Catchphrase Headline */}
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white leading-[1.2] sm:leading-[1.16]">
-                  An open-source spend agent that turns SaaS waste into
-                  real savings.
+                  An open-source spend agent that turns SaaS waste into real
+                  savings.
                 </h1>
 
                 {/* Subtitle */}
@@ -186,6 +187,7 @@ function LandingPage({
                   <Link
                     id="hero-primary-cta"
                     href="/auth/login?demo=true"
+                    prefetch={false}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#107e65] hover:bg-[#0d6954] active:bg-[#0a5644] text-white text-sm font-medium shadow-xs transition-colors duration-150 cursor-pointer"
                   >
                     <span>Try the demo</span>
@@ -379,6 +381,7 @@ function LandingPage({
                   </div>
                   <Link
                     href="/public-metrics"
+                    prefetch={false}
                     className="inline-flex items-center gap-1 font-semibold text-[#107e65] dark:text-[#34d399] hover:underline"
                   >
                     <span>
@@ -554,6 +557,7 @@ function LandingPage({
               <div className="mt-8 flex items-center gap-4">
                 <Link
                   href="/audit"
+                  prefetch={false}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#107e65] dark:text-[#34d399] hover:underline"
                 >
                   <span>Explore Cryptographic Audit Ledger</span>
@@ -622,6 +626,7 @@ await release_escrow({
               <Link
                 id="footer-demo-cta"
                 href="/auth/login?demo=true"
+                prefetch={false}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#107e65] hover:bg-[#0d6b55] text-white text-base font-bold shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer"
               >
                 <span>Launch Demo Co</span>
@@ -666,6 +671,7 @@ await release_escrow({
                 <Link
                   key={link.label}
                   href={link.href}
+                  prefetch={false}
                   className="hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   {link.label}

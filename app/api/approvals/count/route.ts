@@ -19,17 +19,23 @@ export async function GET(request: Request) {
     if (businessId) {
       const authCheck = await requireBusinessAccess(request, businessId);
       if (!authCheck.authorized) {
-        return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+        return NextResponse.json(
+          { error: authCheck.error },
+          { status: authCheck.status },
+        );
       }
       query = query.eq("business_id", businessId);
     }
 
     const { count, error } = await query;
+    const headers = {
+      "Cache-Control": "private, max-age=15, stale-while-revalidate=30",
+    };
     if (error) {
-      return NextResponse.json({ count: 0 }, { status: 200 });
+      return NextResponse.json({ count: 0 }, { status: 200, headers });
     }
 
-    return NextResponse.json({ count: count || 0 });
+    return NextResponse.json({ count: count || 0 }, { headers });
   } catch {
     return NextResponse.json({ count: 0 }, { status: 200 });
   }

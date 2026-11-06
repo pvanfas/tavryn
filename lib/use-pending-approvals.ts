@@ -84,3 +84,4 @@ export function usePendingApprovals(activeBusinessId?: string): number {
 
   return count;
 }
+

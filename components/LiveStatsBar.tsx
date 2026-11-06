@@ -50,9 +50,13 @@ export function LiveStatsBar() {
 
   const fetchStats = useCallback(
     async (manual = false) => {
+      // Skip background polls when tab is hidden
+      if (!manual && typeof document !== "undefined" && document.hidden) {
+        return;
+      }
       if (manual) setIsRefreshing(true);
       try {
-        const res = await fetch("/api/stats", { cache: "no-store" });
+        const res = await fetch("/api/stats");
         if (!res.ok) {
           if (!stats) setHasError(true);
           return;
@@ -83,9 +87,20 @@ export function LiveStatsBar() {
 
   useEffect(() => {
     fetchStats();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => fetchStats(false), 30_000);
-    return () => clearInterval(interval);
+    // Auto-refresh every 60 seconds only when tab is active
+    const interval = setInterval(() => fetchStats(false), 60_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchStats(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [fetchStats]);
 
   // Loading skeleton with identical layout to prevent layout shift

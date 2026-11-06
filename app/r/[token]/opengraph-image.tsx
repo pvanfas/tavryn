@@ -5,6 +5,7 @@ import path from "path";
 import { getPublicReceipt } from "@/lib/receipt";
 
 export const runtime = "nodejs";
+export const revalidate = 86400; // Cache generated OG images for 24h on Vercel CDN
 export const alt = "Tavryn Proof of Savings";
 export const size = {
   width: 1200,

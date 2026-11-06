@@ -58,9 +58,9 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except static assets.
-     * Auth check runs on all app routes.
+     * Match all request paths except static assets and API routes.
+     * Auth check runs on app routes; API routes enforce their own auth/rate-limiting.
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|csv)$).*)",
+    "/((?!_next/static|_next/image|api/|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|csv)$).*)",
   ],
 };

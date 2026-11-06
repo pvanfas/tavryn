@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
+  // Optimize image caching on Vercel CDN
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 31536000,
+  },
+
   async headers() {
     return [
       {
@@ -33,6 +39,26 @@ const nextConfig: NextConfig = {
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
+      // Long-term immutable caching for static assets on Vercel CDN
+      {
+        source: "/:path*.(svg|png|jpg|jpeg|gif|webp|ico|csv)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Edge CDN caching for the public landing page
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },

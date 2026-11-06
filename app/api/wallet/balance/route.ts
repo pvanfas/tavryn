@@ -43,13 +43,21 @@ export async function GET(req: NextRequest) {
 
     const isLow = liveBalance < 100;
 
-    return apiSuccess({
-      address: walletAddress,
-      balance: liveBalance,
-      isLow,
-      faucetUrl: ARC_CONFIG.faucetUrl,
-      explorerUrl: ARC_CONFIG.explorerUrl,
-    });
+    return apiSuccess(
+      {
+        address: walletAddress,
+        balance: liveBalance,
+        isLow,
+        faucetUrl: ARC_CONFIG.faucetUrl,
+        explorerUrl: ARC_CONFIG.explorerUrl,
+      },
+      200,
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (err) {
     logger.error("GET wallet balance error", err);
     return handleApiError(err, "Failed to retrieve wallet balance");
