@@ -20,6 +20,9 @@ import { useCallback, useEffect, useState } from "react";
 
 interface PublicStats {
   generatedAt: string;
+  interval?: string;
+  nextUpdateAt?: string;
+  isCustomRefresh?: boolean;
   totalRealBusinesses: number;
   totalContractsAnalyzed: number;
   totalNegotiations: number;
@@ -56,7 +59,14 @@ export function LiveStatsBar() {
       }
       if (manual) setIsRefreshing(true);
       try {
-        const res = await fetch("/api/stats");
+        // Custom refresh requests fresh real-time metrics and bypasses cache
+        const url = manual
+          ? `/api/stats?refresh=true&_t=${Date.now()}`
+          : "/api/stats";
+        const res = await fetch(
+          url,
+          manual ? { cache: "no-store" } : undefined,
+        );
         if (!res.ok) {
           if (!stats) setHasError(true);
           return;
@@ -87,8 +97,12 @@ export function LiveStatsBar() {
 
   useEffect(() => {
     fetchStats();
-    // Auto-refresh every 60 seconds only when tab is active
-    const interval = setInterval(() => fetchStats(false), 60_000);
+    // Auto-refresh in the latest 5-minute interval only when tab is active
+    const STATS_POLL_INTERVAL_MS = 5 * 60 * 1000;
+    const interval = setInterval(
+      () => fetchStats(false),
+      STATS_POLL_INTERVAL_MS,
+    );
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -208,18 +222,21 @@ export function LiveStatsBar() {
           {/* Sync Time & Action Controls */}
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 self-start md:self-auto">
             {lastUpdated && (
-              <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
-                Synced at {lastUpdated}
-              </span>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                <span>Synced at {lastUpdated}</span>
+                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-sans border border-slate-200/50 dark:border-slate-700/50">
+                  5m interval
+                </span>
+              </div>
             )}
 
-            {/* Manual Sync Button */}
+            {/* Custom Refresh Button */}
             <button
               onClick={() => fetchStats(true)}
               disabled={isRefreshing}
-              title="Refresh telemetry"
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors disabled:opacity-50"
-              aria-label="Refresh live stats"
+              title="Custom refresh telemetry (bypasses 5m interval)"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
+              aria-label="Custom refresh live stats"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-[#107e65]" : ""}`}
